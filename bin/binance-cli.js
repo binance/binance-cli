@@ -250,7 +250,7 @@ program
   .option('-l, --limit <limit>', 'Default 500; max 1000.')
   .action(async (symbol, args) => await Market.trades(symbol, args.limit))
 
-program.version('0.1.0', '-v, --version', 'current version')
+program.version('1.0.0', '-v, --version', 'current version')
 
 // Parse arguments
 program.parse(process.argv)
