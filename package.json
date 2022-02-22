@@ -1,0 +1,26 @@
+{
+  "name": "binance-cli",
+  "version": "0.1.0",
+  "description": "A simple cli that interact with Binance API",
+  "bin": {
+    "binance-cli": "./bin/binance-cli.js"
+  },
+  "scripts": {
+    "standard": "standard",
+    "standard:fix": "standard --fix"
+  },
+  "keywords": [
+    "Binance",
+    "API",
+    "CLI"
+  ],
+  "author": "Binance",
+  "license": "MIT",
+  "dependencies": {
+    "@binance/connector": "^1.7.0",
+    "commander": "^9.0.0"
+  },
+  "devDependencies": {
+    "standard": "^16.0.4"
+  }
+}
