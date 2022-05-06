@@ -1,6 +1,6 @@
 {
   "name": "binance-cli",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A simple cli that interact with Binance API",
   "bin": {
     "binance-cli": "./bin/binance-cli.js"
