@@ -4,8 +4,9 @@ const { checkKeyAndSecret, removeEmptyValue } = require('../helpers/util')
 
 const apiKey = process.env.BINANCE_API_KEY
 const apiSecret = process.env.BINANCE_API_SECRET
+const server = process.env.SERVER || "https://api.binance.com"
 
-const client = new Spot(apiKey, apiSecret)
+const client = new Spot(apiKey, apiSecret, { baseURL: server})
 
 const getOrder = async (symbol, { orderId, origClientOrderId }) => {
   if (checkKeyAndSecret(apiKey, apiSecret)) {

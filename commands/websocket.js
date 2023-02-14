@@ -1,7 +1,9 @@
 const { Spot } = require('@binance/connector')
 const { print } = require('../helpers/prettyPrint')
+const server = process.env.SERVER || "wss://stream.binance.com:443"
 
-const client = new Spot()
+
+const client = new Spot(null, null, { baseURL: server })
 
 const listen = (streams) => {
   const callbacks = {
