@@ -21,6 +21,10 @@ npm install -g
 # Display help command
 binance-cli -h
 
+# It's possible to change the baseURL to connect to testnet
+export SERVER=https://testnet.binance.vision
+# then the command request will be sent to the testnet.
+
 ```
 
 ### Market Data

@@ -3,8 +3,9 @@ const { print, printError } = require('../helpers/prettyPrint')
 const { checkAPIKey } = require('../helpers/util')
 
 const apiKey = process.env.BINANCE_API_KEY
+const server = process.env.SERVER || "https://api.binance.com"
 
-const client = new Spot()
+const client = new Spot(apiKey, null, { baseURL: server})
 
 const time = async () =>
   client.time().then(response => print(response.data))
