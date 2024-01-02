@@ -17,7 +17,7 @@
   "author": "Binance",
   "license": "MIT",
   "dependencies": {
-    "@binance/connector": "^2.0.0",
+    "@binance/connector": "^3.1.0",
     "commander": "^9.0.0"
   },
   "devDependencies": {
