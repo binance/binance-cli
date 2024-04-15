@@ -1,6 +1,6 @@
 # Change log
 
-## 1.2.0 - 2024-04-12
+## 1.2.0 - 2024-04-15
 
 ### Added
 - Add UM and CM futures commands
