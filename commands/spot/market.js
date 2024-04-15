@@ -1,6 +1,6 @@
 const { Spot } = require('@binance/connector')
-const { print, printError } = require('../helpers/prettyPrint')
-const { checkAPIKey } = require('../helpers/util')
+const { print, printError } = require('../../helpers/prettyPrint')
+const { checkAPIKey } = require('../../helpers/util')
 
 const apiKey = process.env.BINANCE_API_KEY
 const server = process.env.SERVER || "https://api.binance.com"
