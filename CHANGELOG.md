@@ -1,5 +1,10 @@
 # Change log
 
+## 1.2.2 - 2024-08-21
+
+### Updated
+- upgrade dependency packages
+
 ## 1.2.1 - 2024-07-03
 
 ### Updated
