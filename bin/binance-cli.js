@@ -225,7 +225,7 @@ program
   .option('-u, --quoteOrderQty [quoteOrderQty]', 'For market order, please see details from API document.')
   .action(async (args) => await Trade.newOrder({ side: 'SELL', ...args }))
 
-// get 24hr ticker data
+// get latest price for a symbol or symbols
 //
 // binance-cli ticker -s <symbol>
 //
@@ -233,9 +233,34 @@ program
 //  - `binance-cli ticker -s bnbusdt`
 program
   .command('ticker')
-  .description('Get 24hr ticker data')
+  .description('Get latest price for a symbol or symbols')
   .option('-s, --symbol <symbol>', 'trading symbol, e.g. bnbusdt')
   .action(async (args) => await Market.ticker(args))
+
+// get 24hr ticker data
+//
+// binance-cli ticker24 -s <symbol>
+//
+// Example:
+//  - `binance-cli ticker24 -s bnbusdt`
+program
+  .command('ticker24')
+  .description('Get 24hr ticker data')
+  .option('-s, --symbol <symbol>', 'trading symbol, e.g. bnbusdt')
+  .action(async (args) => await Market.ticker24hr(args))
+
+// get Price change statistics for a trading day
+//
+// binance-cli ticker_day -s <symbol>
+//
+// Example:
+//  - `binance-cli ticker_day -s bnbusdt`
+program
+    .command('ticker_day')
+    .alias('td')
+    .description('Get Price change statistics for a trading day')
+    .option('-s, --symbol <symbol>', 'trading symbol, e.g. bnbusdt')
+    .action(async (args) => await Market.tickerTradingDay(args))
 
 // get current server time
 //
@@ -258,6 +283,24 @@ program
   .argument('<symbol>', 'trading symbol, e.g. bnbusdt')
   .option('-l, --limit <limit>', 'Default 500; max 1000.')
   .action(async (symbol, args) => await Market.trades(symbol, args.limit))
+
+// get UIKlines data
+//
+// binance-cli uik <symbol> <interval>
+//
+// Example:
+//  - `binance-cli ui_k bnbusdt 1m`
+//  - `binance-cli ui_k -l 10 -s 1722336104001 -e 1722336214030 bnbusdt 3m`
+program
+    .command('uiklines')
+    .description('Get UI Kline/Candlestick data')
+    .alias('ui_k')
+    .argument('<symbol>', 'trading symbol, e.g. bnbusdt')
+    .argument('<interval>', 'kline interval, values: 1m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d, 3d, 1w, 1M')
+    .option('-l, --limit <limit>', 'Default 500; max 1000.')
+    .option('-s, --startTime <startTime>', 'Timestamp in ms to get aggregate trades from INCLUSIVE.')
+    .option('-e, --endTime <endTime>', 'Timestamp in ms to get aggregate trades until INCLUSIVE.')
+    .action(async (symbol, interval, args) => await Market.uiKlines(symbol, interval, args))
 
 // Futures UM
 

@@ -1,5 +1,11 @@
 # Change log
 
+## 2.0.0 - 2025-11-06
+
+### Updated
+- update connector dependencies to new connector
+- upgrade dependency packages
+
 ## 1.2.2 - 2024-08-21
 
 ### Updated
