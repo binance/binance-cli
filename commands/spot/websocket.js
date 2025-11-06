@@ -1,22 +1,43 @@
-const { Spot } = require('@binance/connector')
+const { Spot } = require('@binance/spot')
 const { print } = require('../../helpers/prettyPrint')
-const server = process.env.SERVER || "wss://stream.binance.com:443"
 
 
-const client = new Spot(null, null, { baseURL: server })
+const listen = async (streams) => {
+  if (streams.length === 0) {
+    try {
+      const configurationWebsocketAPI = {
+        wsURL: process.env.SERVER || "wss://ws-api.binance.com:443/ws-api/v3",
+      };
 
-const listen = (streams) => {
-  const callbacks = {
-    open: () => print('open'),
-    close: () => print('closed'),
-    message: (data) => print(data)
-  }
+      const client = new Spot({ configurationWebsocketAPI })
 
-  if (streams.length > 1) {
-    client.combinedStreams(streams, callbacks)
-  }else{
-    // borrow the ability of userData that can do raw subscription.
-    client.userData(streams[0], callbacks)
+      connection = await client.websocketAPI.connect();
+      await connection.sessionLogon();
+
+      const subscription = await connection.userDataStreamSubscribe();
+      const stream = subscription.stream
+      stream.on('message', (data) => {
+        print(data)
+      })
+
+      while (true) {
+        await new Promise(resolve => setTimeout(resolve, 30000))
+      }
+    } catch (e) {
+      print(e)
+    }
+  } else {
+    const configurationWebsocketStreams = {
+      wsURL: process.env.SERVER || "wss://stream.binance.com:443",
+    };
+
+    const client = new Spot({ configurationWebsocketStreams })
+
+    connection = await client.websocketStreams.connect()
+    await connection.subscribe(streams)
+    connection.on('message', (data) => {
+      print(data)
+    })
   }
 }
 

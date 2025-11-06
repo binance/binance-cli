@@ -34,6 +34,9 @@ export BINANCE_FUTURES_API_SECRET=<the_api_secret>
 # For SPOT
 export SERVER=https://testnet.binance.vision
 
+# For Websocket Streams
+export SERVER=wss://stream.binance.com:9443
+
 # For Futures
 export FUTURES_SERVER=https://testnet.binancefuture.com
 # then the command request will be sent to the testnet.
@@ -62,58 +65,77 @@ binance-cli i | jq '.symbols[] | select(.symbol == "BNBUSDT") |.filters'
 ```bash
 # binance-cli book <symbol>
 # binance-cli book -l <limit> <symbol>
-binance-cli book bnbusdt
-binance-cli book --limit 10 bnbusdt
+binance-cli book BNBUSDT
+binance-cli book --limit 10 BNBUSDT
 ```
 
 ##### Get Trades
 ```bash
 # binance-cli trades <symbol>
-binance-cli trades bnbusdt
-binance-cli trades -l 10 bnbusdt
+binance-cli trades BNBUSDT
+binance-cli trades -l 10 BNBUSDT
+```
+
+##### UI Klines Data
+```bash
+# binance-cli ui_k <symbol> <interval>
+binance-cli ui_k BNBUSDT 1m
+binance-cli ui_k -l 1 BNBUSDT 1m
 ```
 
 ##### Get Aggregate Trades List
 ```bash
 # binance-cli at <symbol>
-binance-cli at bnbusdt
+binance-cli at BNBUSDT
 
 # get aggregate Trades List with parameters
 # binance-cli at <symbol>
-binance-cli at --limit 10 --startTime 1595937694913 --endTime 1595937794913 bnbusdt
+binance-cli at --limit 10 --startTime 1595937694913 --endTime 1595937794913 BNBUSDT
 ```
 
 ##### Get Klines Data
 ```bash
 # binance-cli k <symbol> <interval>
-binance-cli k bnbusdt 1m
-binance-cli k -l 1 bnbusdt 1m
+binance-cli k BNBUSDT 1m
+binance-cli k -l 1 BNBUSDT 1m
 
 ```
 ##### Get Average Price
 ```bash
 # binance-cli ap <symbol>
-binance-cli ap bnbusdt
+binance-cli ap BNBUSDT
+```
+
+##### Get Ticker
+```bash
+# binance-cli ticker -s <symbol>
+binance-cli ticker -s BNBUSDT
 ```
 
 ##### Get 24hr Ticker
 ```bash
-# binance-cli ticker -s <symbol>
-binance-cli ticker -s bnbusdt
+# binance-cli ticker24 -s <symbol>
+binance-cli ticker24 -s BNBUSDT
+```
+
+##### Get Ticker Trading Day
+```bash
+# binance-cli td -s <symbol>
+binance-cli td -s BNBUSDT
 ```
 
 ##### Get Ticker Price
 ```bash
 binance-cli price
 # or with a symbol
-binance-cli price -s bnbusdt
+binance-cli price -s BNBUSDT
 ```
 
 ##### Get Order Book Ticker
 ```bash
 # binance-cli bt
 # binance-cli bt -s <symbol>
-binance-cli bt -s bnbusdt
+binance-cli bt -s BNBUSDT
 ```
 
 #### Listen To Streams
@@ -133,26 +155,30 @@ binance-cli buy -s BNBUSDT -t LIMIT -q 0.05 -p 350 -f GTC
 ##### Sell
 ```bash
 # place a limit sell order on BNBUSDT with price=500 and qty=0.03
-binance-cli sell -s bnbusdt -t limit -q 0.03 -p 500 -f GTC
+binance-cli sell -s BNBUSDT -t limit -q 0.03 -p 500 -f GTC
 ```
 
 ##### Get Order Details
 ```bash
-binance-cli get bnbusdt -i 12345
-binance-cli get bnbusdt -c my_order_123
+binance-cli get BNBUSDT -i 12345
+binance-cli get BNBUSDT -c my_order_123
 ```
 
 ##### Cancel An Order
 ```bash
-binance-cli cancel bnbusdt -i 12345
-binance-cli cancel bnbusdt -c my_order_123
+binance-cli cancel BNBUSDT -i 12345
+binance-cli cancel BNBUSDT -c my_order_123
 ```
 
 ##### Cancel All Open Orders
 ```bash
-binance-cli cancel_all bnbusdt
+binance-cli cancel_all BNBUSDT
 ```
 
+##### Get Account Information
+```bash
+binance-cli account
+```
 
 
 ### UM Futures
