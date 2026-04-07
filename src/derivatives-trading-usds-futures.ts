@@ -1127,7 +1127,7 @@ Weight: 1`),
 
         try {
             const response = await client.restAPI.toggleBnbBurnOnFuturesTrade(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : {}
+                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
             );
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
@@ -1253,7 +1253,7 @@ Weight: 200(IP)`),
 
         try {
             const response = await client.restAPI.acceptTheOfferedQuote(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : {}
+                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
             );
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
@@ -1399,7 +1399,7 @@ Weight: 50(IP)`),
 
         try {
             const response = await client.restAPI.sendQuoteRequest(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : {}
+                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
             );
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
@@ -3747,7 +3747,7 @@ Weight: 10`),
 
         try {
             const response = await client.restAPI.autoCancelAllOpenOrders(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : {}
+                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
             );
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
@@ -4134,7 +4134,7 @@ Weight: 1`),
 
         try {
             const response = await client.restAPI.changeInitialLeverage(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : {}
+                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
             );
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
@@ -4196,7 +4196,7 @@ Weight: 1`),
 
         try {
             const response = await client.restAPI.changeMarginType(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : {}
+                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
             );
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
@@ -4261,7 +4261,7 @@ Weight: 1`),
 
         try {
             const response = await client.restAPI.changeMultiAssetsMode(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : {}
+                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
             );
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
@@ -4324,7 +4324,7 @@ Weight: 1`),
 
         try {
             const response = await client.restAPI.changePositionMode(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : {}
+                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
             );
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
@@ -4489,7 +4489,7 @@ Weight: 0`),
 
         try {
             const response = await client.restAPI.futuresTradfiPerpsContract(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : {}
+                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
             );
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
@@ -4734,7 +4734,7 @@ Weight: 1`),
 
         try {
             const response = await client.restAPI.modifyIsolatedPositionMargin(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : {}
+                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
             );
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
@@ -4803,7 +4803,7 @@ Weight: 5 on 10s order rate limit(X-MBX-ORDER-COUNT-10S);
 
         try {
             const response = await client.restAPI.modifyMultipleOrders(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : {}
+                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
             );
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
@@ -4876,7 +4876,7 @@ Weight: 1 on 10s order rate limit(X-MBX-ORDER-COUNT-10S);
 
         try {
             const response = await client.restAPI.modifyOrder(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : {}
+                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
             );
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
@@ -4969,7 +4969,7 @@ Weight: 0 on IP rate limit(x-mbx-used-weight-1m)`),
 
         try {
             const response = await client.restAPI.newAlgoOrder(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : {}
+                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
             );
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
@@ -5039,7 +5039,7 @@ Weight: 1 on 10s order rate limit(X-MBX-ORDER-COUNT-10S);
 
         try {
             const response = await client.restAPI.newOrder(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : {}
+                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
             );
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
@@ -5107,7 +5107,7 @@ Weight: 5 on 10s order rate limit(X-MBX-ORDER-COUNT-10S);
 
         try {
             const response = await client.restAPI.placeMultipleOrders(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : {}
+                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
             );
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
@@ -5649,7 +5649,7 @@ Weight: 0`),
 
         try {
             const response = await client.restAPI.testOrder(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : {}
+                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
             );
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
