@@ -1,20 +1,36 @@
 # Binance CLI
 
+[![Latest Release](https://img.shields.io/github/release/binance/binance-cli.svg)](https://github.com/binance/binance-cli/releases)
+[![npm Downloads](https://img.shields.io/npm/dm/@binance/binance-cli.svg)](https://www.npmjs.com/package/@binance/binance-cli)
+
 A simple CLI that interacts with the Binance API
 
+<img src="./assets/demo.gif" alt="binance-cli demo" width="1400" align="center">
 
 ## Installation
 
 ```bash
-
-# download the code
-git clone git@github.com:binance/binance-cli.git
-cd binance-cli
-npm install -g
-
+# Install from npm
+npm install -g @binance/binance-cli
 ```
+
 ## Usage
 
+### Help
+
+Use `--help` to consult all the available commands
+
+```bash
+binance-cli --help
+```
+
+`--help` is supported for each product and each command.
+
+<img src="./assets/help.gif" alt="binance-cli demo" width="1400" align="center">
+
+### Authentication
+
+#### Using Environment variable
 
 ```bash
 
@@ -22,375 +38,131 @@ npm install -g
 binance-cli -h
 
 # Set the API key and secret as global variables
-# For SPOT
 export BINANCE_API_KEY=<the_api_key>
-export BINANCE_API_SECRET=<the_api_secret>
+export BINANCE_API_SECRET=<the_api_secret> # Can be secret key, path to private key or content of private key
 
-# For Futures
-export BINANCE_FUTURES_API_KEY=<the_api_key>
-export BINANCE_FUTURES_API_SECRET=<the_api_secret>
+# Set the environment (prod by default, valid options: prod, demo and testnet)
+export BINANCE_API_ENV=test
 
-# It's possible to change the base URL to connect to testnet
-# For SPOT
-export SERVER=https://testnet.binance.vision
-
-# For Websocket Streams
-export SERVER=wss://stream.binance.com:9443
-
-# For Futures
-export FUTURES_SERVER=https://testnet.binancefuture.com
-# then the command request will be sent to the testnet.
+# It is possible to have a custom base URL
+export BINANCE_SPOT_BASE_PATH=https://testnet.binance.vision
+export BINANCE_FUTURES_USDS_BASE_PATH=https://testnet.binancefuture.com
 ```
 
+#### Using profile (non-interactive)
 
+##### Create a new profile
 
-### SPOT
-
-#### Market Data
-
-##### Get Server Time
 ```bash
-binance-cli t
-binance-cli time
+binance-cli profile create --name new-name --api-key <the_api_key> --api-secret <the_api_secret> --env prod
 ```
 
-##### Get Exchange Infomation
+##### Change the active profile
+
 ```bash
-binance-cli i
-# get BTCUSDT pair's filters. jq is required.
-binance-cli i | jq '.symbols[] | select(.symbol == "BNBUSDT") |.filters'
+binance-cli profile change --name new-name
 ```
 
-##### Get Order Book
+#### View the current active profile
+
 ```bash
-# binance-cli book <symbol>
-# binance-cli book -l <limit> <symbol>
-binance-cli book BNBUSDT
-binance-cli book --limit 10 BNBUSDT
+binance-cli profile view
 ```
 
-##### Get Trades
+#### Specify profile
+
+It is also possible to specify the profile for a single command.
+
 ```bash
-# binance-cli trades <symbol>
-binance-cli trades BNBUSDT
-binance-cli trades -l 10 BNBUSDT
+binance-cli spot get-account --profile my_profile
 ```
 
-##### UI Klines Data
+#### Using profile (interactive)
+
+##### Create a new profile
+
 ```bash
-# binance-cli ui_k <symbol> <interval>
-binance-cli ui_k BNBUSDT 1m
-binance-cli ui_k -l 1 BNBUSDT 1m
+binance-cli profile create -i # binance-cli will prompt the questions to create a new profile
 ```
 
-##### Get Aggregate Trades List
-```bash
-# binance-cli at <symbol>
-binance-cli at BNBUSDT
+##### Change the active profile
 
-# get aggregate Trades List with parameters
-# binance-cli at <symbol>
-binance-cli at --limit 10 --startTime 1595937694913 --endTime 1595937794913 BNBUSDT
+```bash
+binance-cli profile change -i # select the profile to activate
 ```
 
-##### Get Klines Data
-```bash
-# binance-cli k <symbol> <interval>
-binance-cli k BNBUSDT 1m
-binance-cli k -l 1 BNBUSDT 1m
+##### View the current active profile
 
-```
-##### Get Average Price
 ```bash
-# binance-cli ap <symbol>
-binance-cli ap BNBUSDT
+binance-cli profile view
 ```
 
-##### Get Ticker
+### Commands
+
+#### Available commands
+
+- [Convert](./examples/convert.md) - Convert connector
+
+- [Spot](./examples/spot.md) - Spot Trading connector
+
+- [Derivatives Trading (USDS-M Futures)](./examples/derivatives-trading-usds-futures.md) - Derivatives Trading (USDS-M Futures) connector
+
+#### Parameters
+
+##### CLI Argument
+
 ```bash
-# binance-cli ticker -s <symbol>
-binance-cli ticker -s BNBUSDT
+binance-cli spot klines --symbol "BNBUSDT" --interval "1s"
 ```
 
-##### Get 24hr Ticker
+##### Using pipe
+
 ```bash
-# binance-cli ticker24 -s <symbol>
-binance-cli ticker24 -s BNBUSDT
+echo '{"symbol": "BNBUSDT", "interval": "1s"}' | binance-cli spot klines
 ```
 
-##### Get Ticker Trading Day
+#### Using interactive mode
+
 ```bash
-# binance-cli td -s <symbol>
-binance-cli td -s BNBUSDT
+binance-cli spot klines -i
 ```
 
-##### Get Ticker Price
+#### Completion
+
+In order to add completion, the following steps can be followed:
+
+##### For Bash:
+
+Append the output to the .bashrc file:
+
 ```bash
-binance-cli price
-# or with a symbol
-binance-cli price -s BNBUSDT
+binance-cli completion >> ~/.bashrc
 ```
 
-##### Get Order Book Ticker
+##### For Zsh:
+
+Append the output to the .zshrc file:
+
 ```bash
-# binance-cli bt
-# binance-cli bt -s <symbol>
-binance-cli bt -s BNBUSDT
+binance-cli completion >> ~/.zshrc
 ```
 
-#### Listen To Streams
+After updating the file, the terminal needs to be restarted or activate the completion with `source ~/.bashrc (or .zshrc)`.
+
+#### Custom request
+
+Custom request can also be sent using binance-cli, any parameter can be added to the command and will be sent in the request.
+
 ```bash
-# binance-cli listen <stream> <stream> <listenKey>
-binance-cli listen bnbusdt@depth bnbusdt@bookTicker
+binance-cli request GET https://api.binance.com/api/v3/trades --symbol BNBUSDT --limit 5
 ```
 
-#### User Data And Trade
-
-##### Buy
-```bash
-# place a limit buy order on BNBUSDT with price=350 and qty=0.05
-binance-cli buy -s BNBUSDT -t LIMIT -q 0.05 -p 350 -f GTC
-```
-
-##### Sell
-```bash
-# place a limit sell order on BNBUSDT with price=500 and qty=0.03
-binance-cli sell -s BNBUSDT -t limit -q 0.03 -p 500 -f GTC
-```
-
-##### Get Order Details
-```bash
-binance-cli get BNBUSDT -i 12345
-binance-cli get BNBUSDT -c my_order_123
-```
-
-##### Cancel An Order
-```bash
-binance-cli cancel BNBUSDT -i 12345
-binance-cli cancel BNBUSDT -c my_order_123
-```
-
-##### Cancel All Open Orders
-```bash
-binance-cli cancel_all BNBUSDT
-```
-
-##### Get Account Information
-```bash
-binance-cli account
-```
-
-
-### UM Futures
-
-#### Market Data
-
-##### Get Server Time
-```bash
-binance-cli um_t
-binance-cli um_time
-```
-
-##### Get Exchange Infomation
-```bash
-binance-cli um_i
-# get BTCUSDT pair's filters. jq is required.
-binance-cli um_info | jq '.symbols[] | select(.symbol == "BNBUSDT") |.filters'
-
-```
-
-##### Get Order Book
+Signed endpoints are also supported.
 
 ```bash
-# binance-cli um_book <symbol>
-# binance-cli um_book -l <limit> <symbol>
-binance-cli um_book bnbusdt
-binance-cli um_book --limit 10 bnbusdt
-```
-
-##### Get Trades
-```bash
-# binance-cli um_trades <symbol>
-binance-cli um_trades bnbusdt
-binance-cli um_trades -l 10 bnbusdt
-```
-
-##### Get Aggregate Trades List
-```bash
-# binance-cli um_at <symbol>
-binance-cli um_at bnbusdt
-
-# get aggregate Trades List with parameters
-# binance-cli um_at <symbol>
-binance-cli um_at --limit 10 --startTime 1595937694913 --endTime 1595937794913 bnbusdt
-```
-
-##### Get Klines Data
-```bash
-# binance-cli um_k <symbol> <interval>
-binance-cli um_k bnbusdt 1m
-binance-cli um_k -l 1 bnbusdt 1m
-```
-
-##### Get 24hr Ticker
-```bash
-# binance-cli um_ticker -s <symbol>
-binance-cli um_ticker -s bnbusdt
-```
-
-##### Get Ticker Price
-```bash
-binance-cli um_price
-# or with a symbol
-binance-cli um_price -s bnbusdt
-```
-
-##### Get Order Book Ticker
-```bash
-# binance-cli um_bt
-# binance-cli um_bt -s <symbol>
-binance-cli um_bt -s bnbusdt
-```
-
-#### User Data And Trade
-
-##### Buy
-```bash
-# place a limit buy order on BNBUSDT with price=350 and qty=0.05
-binance-cli um_buy -s BNBUSDT -t LIMIT -q 0.05 -p 350 -f GTC
-```
-
-##### Sell
-```bash
-# place a limit sell order on BNBUSDT with price=600 and qty=0.03
-binance-cli um_sell -s bnbusdt -t limit -q 0.03 -p 600 -f GTC
-```
-
-##### Get Order Details
-```bash
-binance-cli um_get bnbusdt -i 12345
-binance-cli um_get bnbusdt -c my_order_123
-```
-
-##### Cancel An Order
-```bash
-binance-cli um_cancel bnbusdt -i 12345
-binance-cli um_cancel bnbusdt -c my_order_123
-```
-
-##### Cancel All Open Orders
-```bash
-binance-cli um_cancel_all bnbusdt
-```
-
-
-
-### CM Futures
-
-#### Market Data
-
-##### Get Server Time
-```bash
-binance-cli cm_t
-binance-cli cm_time
-```
-
-##### Get Exchange Infomation
-```bash
-binance-cli cm_i
-# get BTCUSDT pair's filters. jq is required.
-binance-cli cm_info | jq '.symbols[] | select(.symbol == "BNBUSD_PERP") |.filters'
-```
-##### Get Order Book
-```bash
-# binance-cli cm_book <symbol>
-# binance-cli cm_book -l <limit> <symbol>
-binance-cli cm_book BNBUSD_PERP
-binance-cli cm_book --limit 10 BNBUSD_PERP
-```
-
-##### Get Trades
-```bash
-# binance-cli cm_t <symbol>
-binance-cli cm_trades BNBUSD_PERP
-binance-cli cm_trades -l 10 BNBUSD_PERP
-```
-
-##### Get Aggregate Trades List
-```bash
-# binance-cli cm_at <symbol>
-binance-cli cm_at BNBUSD_PERP
-
-# get aggregate Trades List with parameters
-# binance-cli cm_at <symbol>
-binance-cli cm_at --limit 10 --startTime 1701367424920 --endTime 1702037809993 BNBUSD_PERP
-```
-
-##### Get Klines Data
-```bash
-# binance-cli cm_k <symbol> <interval>
-binance-cli cm_k BNBUSD_PERP 1m
-binance-cli cm_k -l 1 BNBUSD_PERP 1m
-
-```
-
-##### Get 24hr Ticker
-```bash
-# binance-cli cm_ticker -s <symbol>
-binance-cli cm_ticker -s BNBUSD_PERP
-```
-
-##### Get Ticker Price
-```bash
-binance-cli cm_price
-# or with a symbol
-binance-cli cm_price -s BNBUSD_PERP
-```
-
-##### Get Order Book Ticker
-```bash
-# binance-cli cm_bt
-# binance-cli cm_bt -s <symbol>
-binance-cli cm_bt -s BNBUSD_PERP
-```
-
-#### User Data And Trade
-
-##### Buy
-```bash
-# place a limit buy order on BNBUSDT with price=350 and qty=1
-binance-cli cm_buy -s BNBUSD_PERP -t LIMIT -q 1 -p 350 -f GTC
-```
-
-##### Sell
-```bash
-# place a limit sell order on BNBUSDT with price=600 and qty=1
-binance-cli cm_sell -s BNBUSD_PERP -t limit -q 1 -p 600 -f GTC
-```
-
-##### Get Order Details
-```bash
-binance-cli cm_get BNBUSD_PERP -i 12345
-binance-cli cm_get BNBUSD_PERP -c my_order_123
-```
-
-##### Cancel An Order
-```bash
-binance-cli cm_cancel BNBUSD_PERP -i 12345
-binance-cli cm_cancel BNBUSD_PERP -c my_order_123
-```
-
-##### Cancel All Open Orders
-```bash
-binance-cli cm_cancel_all BNBUSD_PERP
-```
-
-### Annex
-
-Use `--help` to consult all the available commands
-```bash
-binance-cli --help
+binance-cli request GET https://testnet.binance.vision/api/v3/account --signed
 ```
 
 ## LICENSE
+
 MIT

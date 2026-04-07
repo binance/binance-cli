@@ -1,28 +1,42 @@
 {
-  "name": "binance-cli",
-  "version": "2.0.0",
-  "description": "A simple CLI that interact with Binance API",
-  "bin": {
-    "binance-cli": "./bin/binance-cli.js"
-  },
-  "scripts": {
-    "standard": "standard",
-    "standard:fix": "standard --fix"
-  },
-  "keywords": [
-    "Binance",
-    "API",
-    "CLI"
-  ],
-  "author": "Binance",
-  "license": "MIT",
-  "dependencies": {
-    "@binance/spot": "^22.0.0",
-    "@binance/derivatives-trading-coin-futures": "^8.0.1",
-    "@binance/derivatives-trading-usds-futures": "^14.0.0",
-    "commander": "9.5.0"
-  },
-  "devDependencies": {
-    "standard": "^16.0.4"
-  }
+    "name": "@binance/binance-cli",
+    "description": "Official Binance CLI - A lightweight cli tool that provides a convenient interface to Binance's REST API.",
+    "version": "1.0.0",
+    "module": "./dist/index.mjs",
+    "type": "module",
+    "private": true,
+    "bin": {
+        "binance-cli": "./dist/index.mjs"
+    },
+    "scripts": {
+        "prepare": "npm run build",
+        "prepublishOnly": "npm run build",
+        "build": "npm run clean && tsdown",
+        "typecheck": "tsc --noEmit",
+        "clean": "rm -rf dist",
+        "lint": "npx eslint 'src/**/*.ts' --fix"
+    },
+    "devDependencies": {
+        "@eslint/js": "^10.0.1",
+        "@types/bun": "latest",
+        "@types/html-to-text": "^9.0.4",
+        "@types/yargs": "^17.0.35",
+        "prettier": "3.8.1",
+        "tsdown": "^0.21.7",
+        "typescript-eslint": "^8.58.0"
+    },
+    "peerDependencies": {
+        "typescript": "^5"
+    },
+    "dependencies": {
+        "@binance/convert": "^5.0.9",
+        "@binance/derivatives-trading-usds-futures": "^26.0.4",
+        "@binance/spot": "^28.0.5",
+        "commander": "^14.0.3",
+        "html-to-text": "^9.0.5",
+        "inquirer": "^13.3.2",
+        "lodash": "^4.18.1",
+        "markdown-to-txt": "^2.0.1",
+        "yargs": "^18.0.0"
+    }
 }
