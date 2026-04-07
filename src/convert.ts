@@ -172,7 +172,7 @@ Weight: 500(UID)`),
 
         try {
             const response = await client.restAPI.acceptQuote(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : {}
+                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
             );
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
@@ -234,7 +234,7 @@ Weight: 200(UID)`),
 
         try {
             const response = await client.restAPI.cancelLimitOrder(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : {}
+                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
             );
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
@@ -429,7 +429,7 @@ Weight: 500(UID)`),
 
         try {
             const response = await client.restAPI.placeLimitOrder(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : {}
+                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
             );
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
@@ -532,7 +532,7 @@ Weight: 200(UID)`),
 
         try {
             const response = await client.restAPI.sendQuoteRequest(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : {}
+                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
             );
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));

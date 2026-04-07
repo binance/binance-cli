@@ -2260,7 +2260,7 @@ Weight: 1`),
 
         try {
             const response = await client.restAPI.newOrder(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : {}
+                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
             );
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
@@ -2327,7 +2327,7 @@ Weight: 4`),
 
         try {
             const response = await client.restAPI.orderAmendKeepPriority(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : {}
+                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
             );
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
@@ -2392,7 +2392,7 @@ Weight: 1`),
 
         try {
             const response = await client.restAPI.orderCancelReplace(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : {}
+                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
             );
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
@@ -2466,7 +2466,7 @@ Unfilled Order Count: 2`),
 
         try {
             const response = await client.restAPI.orderListOco(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : {}
+                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
             );
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
@@ -2530,7 +2530,7 @@ Unfilled Order Count: 2`),
 
         try {
             const response = await client.restAPI.orderListOpo(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : {}
+                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
             );
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
@@ -2593,7 +2593,7 @@ Unfilled Order Count: 3`),
 
         try {
             const response = await client.restAPI.orderListOpoco(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : {}
+                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
             );
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
@@ -2662,7 +2662,7 @@ Unfilled Order Count: 2`),
 
         try {
             const response = await client.restAPI.orderListOto(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : {}
+                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
             );
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
@@ -2732,7 +2732,7 @@ Unfilled Order Count: 3`),
 
         try {
             const response = await client.restAPI.orderListOtoco(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : {}
+                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
             );
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
@@ -2802,7 +2802,7 @@ Unfilled Order Count: 2`),
 
         try {
             const response = await client.restAPI.orderOco(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : {}
+                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
             );
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
@@ -2866,7 +2866,7 @@ Weight: |Condition| Request Weight|
 
         try {
             const response = await client.restAPI.orderTest(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : {}
+                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
             );
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
@@ -2932,7 +2932,7 @@ Unfilled Order Count: 1`),
 
         try {
             const response = await client.restAPI.sorOrder(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : {}
+                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
             );
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
@@ -2997,7 +2997,7 @@ Weight: | Condition | Request Weight |
 
         try {
             const response = await client.restAPI.sorOrderTest(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : {}
+                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
             );
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
