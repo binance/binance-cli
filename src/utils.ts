@@ -186,5 +186,5 @@ export const getUserAgent = (product: string = 'unkown'): string => {
         clientType = 'skill';
     }
 
-    return `binance-${clientType}/${product}/1.0.2 (Node.js/${process.version}; ${platform()}; ${arch()})`;
+    return `binance-${clientType}/${product}/1.0.3 (Node.js/${process.version}; ${platform()}; ${arch()})`;
 };

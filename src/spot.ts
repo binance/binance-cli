@@ -86,7 +86,7 @@ Weight: 20`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -281,7 +281,7 @@ Weight: 20`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -503,7 +503,7 @@ Weight: 4`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -689,7 +689,7 @@ Weight: 20`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -779,7 +779,7 @@ Weight: 40`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -900,7 +900,7 @@ Querying by &#x60;orderId&#x60;           | 20`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -1022,7 +1022,7 @@ Weight: Condition| Weight|
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -1182,11 +1182,11 @@ Weight: 4`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
-                if (!options?.['orderId'] && !stdinObj?.['orderId'] && !options?.interactive) {
+                if (!options?.['orderId'] && !options?.interactive) {
                     requiredParams.push('orderId');
                 }
 
@@ -1515,7 +1515,7 @@ Weight: 4`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -1591,7 +1591,7 @@ Weight: 2`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -1684,7 +1684,7 @@ Weight: Adjusted based on the limit:
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -1765,7 +1765,7 @@ Weight: 25`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -1851,7 +1851,7 @@ Weight: 25`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -1957,11 +1957,11 @@ Weight: 2`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
-                if (!options?.['interval'] && !stdinObj?.['interval'] && !options?.interactive) {
+                if (!options?.['interval'] && !options?.interactive) {
                     requiredParams.push('interval');
                 }
 
@@ -2045,7 +2045,7 @@ Weight: 2`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -2127,7 +2127,7 @@ Weight: 2`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -2625,11 +2625,11 @@ Weight: 2`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
-                if (!options?.['interval'] && !stdinObj?.['interval'] && !options?.interactive) {
+                if (!options?.['interval'] && !options?.interactive) {
                     requiredParams.push('interval');
                 }
 
@@ -2723,7 +2723,7 @@ Weight: 1`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -2835,7 +2835,7 @@ Weight: 1`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -2944,7 +2944,7 @@ Weight: 1`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
