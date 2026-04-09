@@ -180,11 +180,30 @@ export const getExistingProfiles = (): string[] => {
     return profiles;
 };
 
+export const isAIAgent = (): boolean => {
+    if (process.env.AGENT) {
+        return true;
+    }
+    if (process.env.AI_AGENT) {
+        return true;
+    }
+    if (process.env.CLAUDECODE) {
+        return true;
+    }
+    if (process.env.GEMINI_CLI) {
+        return true;
+    }
+    if (process.env.CODEX_SANDBOX) {
+        return true;
+    }
+    return false;
+}
+
 export const getUserAgent = (product: string = 'unkown'): string => {
     let clientType = 'cli';
-    if (process.env.BINANCE_IS_SKILL) {
+    if (isAIAgent()) {
         clientType = 'skill';
     }
 
-    return `binance-${clientType}/${product}/1.0.3 (Node.js/${process.version}; ${platform()}; ${arch()})`;
+    return `binance-${clientType}/${product}/1.0.4 (Node.js/${process.version}; ${platform()}; ${arch()})`;
 };

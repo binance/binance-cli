@@ -1,5 +1,11 @@
 # Change log
 
+## 1.0.4 - 2026-04-09
+
+### Updated
+
+- Different User-Agent if used from AI Agent
+
 ## 1.0.3 - 2026-04-09
 
 ### Updated
