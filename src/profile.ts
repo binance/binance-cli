@@ -1,4 +1,4 @@
-import { getConfigDir, getCurrentProfile } from './utils';
+import { getConfigDir, getCurrentProfile, getExistingProfiles, getProfileConfig } from './utils';
 import inquirer from 'inquirer';
 import fs from 'fs';
 const profileCommands: any[] = [];
@@ -50,8 +50,8 @@ profileCommands.push({
             questions.push({
                 type: 'input',
                 name: 'name',
-                message: 'Please input the profile name:',
-                validate: (input: string) => (input ? true : 'api-secret cannot be empty'),
+                message: 'Please choose the profile name:',
+                validate: (input: string) => (input ? true : 'profile name cannot be empty'),
             });
         }
 
@@ -61,7 +61,7 @@ profileCommands.push({
                 name: 'env',
                 message: 'Please choose the environment:',
                 choices: ['prod', 'testnet', 'demo'],
-                validate: (input: string) => (input ? true : 'api-secret cannot be empty'),
+                validate: (input: string) => (input ? true : 'env cannot be empty'),
             });
         }
 
@@ -70,7 +70,7 @@ profileCommands.push({
                 type: 'input',
                 name: 'api-key',
                 message: 'Please input your API Key:',
-                validate: (input: string) => (input ? true : 'api-secret cannot be empty'),
+                validate: (input: string) => (input ? true : 'api-key cannot be empty'),
             });
         }
 
@@ -124,13 +124,19 @@ profileCommands.push({
     },
     handler: async (options: any) => {
         const questions = [];
+        const profiles = getExistingProfiles();
 
         if (options.interactive && !options.name) {
-            const files = fs.readdirSync(getConfigDir());
             questions.push({
                 type: 'rawlist',
                 name: 'name',
-                choices: files.filter((a) => a != 'active_profile'),
+                choices: profiles.map((profile) => {
+                    const profileConfig = getProfileConfig(profile);
+                    return {
+                        name: `${profile} (${profileConfig && profileConfig['env'] ? profileConfig['env'] : 'prod'})`,
+                        value: profile,
+                    };
+                }),
                 message: 'Please input the profile name:',
                 validate: (input: string) => (input ? true : 'name cannot be empty'),
             });
@@ -140,8 +146,30 @@ profileCommands.push({
             const answers = await inquirer.prompt(questions);
             options = { ...options, ...answers };
         }
-        fs.writeFileSync(`${configDir}/active_profile`, `name=${options.name}`);
-        console.log(`Profile ${options.name} was selected successfully ✅`);
+
+        if (profiles.includes(options.name)) {
+            fs.writeFileSync(`${configDir}/active_profile`, `name=${options.name}`);
+            console.log(`Profile ${options.name} was selected successfully ✅`);
+        } else {
+            console.log(`Profile ${options.name} was not found ❌`);
+        }
+    },
+});
+
+profileCommands.push({
+    command: 'list',
+    describe: 'List all the profiles',
+    handler: async () => {
+        const profiles = getExistingProfiles();
+        let output = '';
+        profiles.forEach((profile, index) => {
+            const profileConfig = getProfileConfig(profile);
+            output = `${output}${profile} (${profileConfig && profileConfig['env'] ? profileConfig['env'] : 'prod'})`;
+            if (index !== profiles.length - 1) {
+                output = `${output}\n`;
+            }
+        });
+        console.log(output);
     },
 });
 
@@ -155,14 +183,17 @@ profileCommands.push({
                 'There is no active profile found, please create one using "binance-cli profile create"'
             );
         } else {
-            console.log(`The current active profile is: ${profile}`);
+            const profileConfig = getProfileConfig(profile);
+            console.log(
+                `The current active profile is: ${profile}${profileConfig && profileConfig['env'] ? ` (${profileConfig['env']})` : 'prod'}`
+            );
         }
     },
 });
 
 export default {
     command: 'profile',
-    description: 'Profile commands (create, change, view)',
+    description: 'Profile commands (create, change, view, list)',
     builder: (yargs: any) => {
         profileCommands.forEach((command: any) => {
             yargs.command(command);

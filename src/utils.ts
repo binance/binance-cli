@@ -36,20 +36,56 @@ export const getCurrentProfile = (): string | null => {
     return null;
 };
 
+export const getProfileConfig = (profileName: string, packageName: string = '') => {
+    const creds: Record<string, string> = {};
+
+    if (!fs.existsSync(`${BINANCE_LOGIN_DIR}/${profileName}`)) {
+        console.log(
+            `The profile ${profileName} does not exist, please create it using "binance-cli profile create"`
+        );
+        return null;
+    }
+
+    const content = fs.readFileSync(`${BINANCE_LOGIN_DIR}/${profileName}`, 'utf-8');
+
+    content.split('\n').forEach((line) => {
+        const trimmed = line.trim();
+        if (trimmed && trimmed.includes('=')) {
+            const [key, value] = trimmed.split('=');
+            if (key && value) {
+                creds[key.trim()] = value.trim();
+            }
+        }
+    });
+
+    if (isEmpty(creds)) {
+        return null;
+    }
+
+    return {
+        apiKey: creds['api-key'] ?? '',
+        apiSecret: creds['api-secret'] ? creds['api-secret'].replace(/\\n/g, '\n') : '',
+        env: creds['env'] ?? process.env.BINANCE_API_ENV ?? 'prod',
+        basePath:
+            packageName && creds[`${packageName}-base-path`]
+                ? creds[`${packageName}-base-path`]
+                : '',
+        ...creds,
+    };
+};
+
 export const getSessionCreds = (
     profile: string,
     packageName: string = ''
 ): CliConfiguration | null => {
-    if (process.env.BINANCE_API_KEY && process.env.BINANCE_API_SECRET) {
+    if (process.env.BINANCE_API_KEY && process.env.BINANCE_SECRET_KEY) {
         return {
             apiKey: process.env.BINANCE_API_KEY,
-            apiSecret: process.env.BINANCE_API_SECRET,
+            apiSecret: process.env.BINANCE_SECRET_KEY,
             env: process.env.BINANCE_API_ENV ?? 'prod',
         };
     } else {
-        const creds: Record<string, string> = {};
         let profileName;
-
         if (profile === undefined) {
             profileName = getCurrentProfile();
         } else {
@@ -60,39 +96,7 @@ export const getSessionCreds = (
             return null;
         }
 
-        if (!fs.existsSync(`${BINANCE_LOGIN_DIR}/${profileName}`)) {
-            console.log(
-                `The profile ${profileName} does not exist, please create it using "binance-cli profile create"`
-            );
-            return null;
-        }
-
-        const content = fs.readFileSync(`${BINANCE_LOGIN_DIR}/${profileName}`, 'utf-8');
-
-        content.split('\n').forEach((line) => {
-            const trimmed = line.trim();
-            if (trimmed && trimmed.includes('=')) {
-                const [key, value] = trimmed.split('=');
-                if (key && value) {
-                    creds[key.trim()] = value.trim();
-                }
-            }
-        });
-
-        if (isEmpty(creds)) {
-            return null;
-        }
-
-        return {
-            apiKey: creds['api-key'] ?? '',
-            apiSecret: creds['api-secret'] ? creds['api-secret'].replace(/\\n/g, '\n') : '',
-            env: creds['env'] ?? process.env.BINANCE_API_ENV ?? 'prod',
-            basePath:
-                packageName && creds[`${packageName}-base-path`]
-                    ? creds[`${packageName}-base-path`]
-                    : '',
-            ...creds,
-        };
+        return getProfileConfig(profileName, packageName);
     }
 };
 
@@ -170,11 +174,17 @@ export const getConfigDir = (): string => {
     return BINANCE_LOGIN_DIR;
 };
 
+export const getExistingProfiles = (): string[] => {
+    const files = fs.readdirSync(getConfigDir());
+    const profiles = files.filter((a) => a != 'active_profile');
+    return profiles;
+};
+
 export const getUserAgent = (product: string = 'unkown'): string => {
     let clientType = 'cli';
     if (process.env.BINANCE_IS_SKILL) {
         clientType = 'skill';
     }
 
-    return `binance-${clientType}/${product}/1.0.0 (Node.js/${process.version}; ${platform()}; ${arch()})`;
+    return `binance-${clientType}/${product}/1.0.2 (Node.js/${process.version}; ${platform()}; ${arch()})`;
 };

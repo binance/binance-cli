@@ -58,6 +58,7 @@ const derivativesTradingUsdsFuturesCommands: any[] = [];
 derivativesTradingUsdsFuturesCommands.push({
     command: 'account-information-v2',
     describe:
+        'Authentication required. ' +
         decodeSelectedEntities(`Get current account information. User in single-asset/ multi-assets mode will see different value, see comments in response section for detail.
 
 Weight: 5`),
@@ -66,11 +67,27 @@ Weight: 5`),
             'recv-window': {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log('account-information-v2 is signed. Please login using `binance-cli login`');
             return;
@@ -82,7 +99,7 @@ Weight: 5`),
         }
 
         try {
-            const response = await client.restAPI.accountInformationV2({ ...stdinObj, ...options });
+            const response = await client.restAPI.accountInformationV2(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -95,6 +112,7 @@ Weight: 5`),
 derivativesTradingUsdsFuturesCommands.push({
     command: 'account-information-v3',
     describe:
+        'Authentication required. ' +
         decodeSelectedEntities(`Get current account information. User in single-asset/ multi-assets mode will see different value, see comments in response section for detail.
 
 Weight: 5`),
@@ -103,11 +121,27 @@ Weight: 5`),
             'recv-window': {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log('account-information-v3 is signed. Please login using `binance-cli login`');
             return;
@@ -119,7 +153,7 @@ Weight: 5`),
         }
 
         try {
-            const response = await client.restAPI.accountInformationV3({ ...stdinObj, ...options });
+            const response = await client.restAPI.accountInformationV3(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -131,7 +165,9 @@ Weight: 5`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'futures-account-balance-v2',
-    describe: decodeSelectedEntities(`Query account balance info
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Query account balance info
 
 Weight: 5`),
     builder: (yargsCmd: any) => {
@@ -139,11 +175,27 @@ Weight: 5`),
             'recv-window': {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log(
                 'futures-account-balance-v2 is signed. Please login using `binance-cli login`'
@@ -157,10 +209,7 @@ Weight: 5`),
         }
 
         try {
-            const response = await client.restAPI.futuresAccountBalanceV2({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.futuresAccountBalanceV2(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -172,7 +221,9 @@ Weight: 5`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'futures-account-balance-v3',
-    describe: decodeSelectedEntities(`Query account balance info
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Query account balance info
 
 Weight: 5`),
     builder: (yargsCmd: any) => {
@@ -180,11 +231,27 @@ Weight: 5`),
             'recv-window': {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log(
                 'futures-account-balance-v3 is signed. Please login using `binance-cli login`'
@@ -198,10 +265,7 @@ Weight: 5`),
         }
 
         try {
-            const response = await client.restAPI.futuresAccountBalanceV3({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.futuresAccountBalanceV3(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -213,7 +277,9 @@ Weight: 5`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'futures-account-configuration',
-    describe: decodeSelectedEntities(`Query account configuration
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Query account configuration
 
 Weight: 5`),
     builder: (yargsCmd: any) => {
@@ -221,11 +287,27 @@ Weight: 5`),
             'recv-window': {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log(
                 'futures-account-configuration is signed. Please login using `binance-cli login`'
@@ -239,10 +321,7 @@ Weight: 5`),
         }
 
         try {
-            const response = await client.restAPI.futuresAccountConfiguration({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.futuresAccountConfiguration(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -255,6 +334,7 @@ Weight: 5`),
 derivativesTradingUsdsFuturesCommands.push({
     command: 'futures-trading-quantitative-rules-indicators',
     describe:
+        'Authentication required. ' +
         decodeSelectedEntities(`Futures trading quantitative rules indicators, for more information on this, please refer to the [Futures Trading Quantitative Rules](https://www.binance.com/en/support/faq/4f462ebe6ff445d4a170be7d9e897272)
 
 Weight: - 1 for a single symbol
@@ -264,15 +344,32 @@ Weight: - 1 for a single symbol
             symbol: {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
             },
             'recv-window': {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log(
                 'futures-trading-quantitative-rules-indicators is signed. Please login using `binance-cli login`'
@@ -286,10 +383,8 @@ Weight: - 1 for a single symbol
         }
 
         try {
-            const response = await client.restAPI.futuresTradingQuantitativeRulesIndicators({
-                ...stdinObj,
-                ...options,
-            });
+            const response =
+                await client.restAPI.futuresTradingQuantitativeRulesIndicators(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -302,6 +397,7 @@ Weight: - 1 for a single symbol
 derivativesTradingUsdsFuturesCommands.push({
     command: 'get-bnb-burn-status',
     describe:
+        'Authentication required. ' +
         decodeSelectedEntities(`Get user&#39;s BNB Fee Discount (Fee Discount On or Fee Discount Off )
 
 Weight: 30`),
@@ -310,11 +406,27 @@ Weight: 30`),
             'recv-window': {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log('get-bnb-burn-status is signed. Please login using `binance-cli login`');
             return;
@@ -326,7 +438,7 @@ Weight: 30`),
         }
 
         try {
-            const response = await client.restAPI.getBnbBurnStatus({ ...stdinObj, ...options });
+            const response = await client.restAPI.getBnbBurnStatus(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -339,6 +451,7 @@ Weight: 30`),
 derivativesTradingUsdsFuturesCommands.push({
     command: 'get-current-multi-assets-mode',
     describe:
+        'Authentication required. ' +
         decodeSelectedEntities(`Get user&#39;s Multi-Assets mode (Multi-Assets Mode or Single-Asset Mode) on ***Every symbol***
 
 Weight: 30`),
@@ -347,11 +460,27 @@ Weight: 30`),
             'recv-window': {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log(
                 'get-current-multi-assets-mode is signed. Please login using `binance-cli login`'
@@ -365,10 +494,7 @@ Weight: 30`),
         }
 
         try {
-            const response = await client.restAPI.getCurrentMultiAssetsMode({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.getCurrentMultiAssetsMode(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -381,6 +507,7 @@ Weight: 30`),
 derivativesTradingUsdsFuturesCommands.push({
     command: 'get-current-position-mode',
     describe:
+        'Authentication required. ' +
         decodeSelectedEntities(`Get user&#39;s position mode (Hedge Mode or One-way Mode ) on ***EVERY symbol***
 
 Weight: 30`),
@@ -389,11 +516,27 @@ Weight: 30`),
             'recv-window': {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log(
                 'get-current-position-mode is signed. Please login using `binance-cli login`'
@@ -407,10 +550,7 @@ Weight: 30`),
         }
 
         try {
-            const response = await client.restAPI.getCurrentPositionMode({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.getCurrentPositionMode(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -422,7 +562,9 @@ Weight: 30`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'get-download-id-for-futures-order-history',
-    describe: decodeSelectedEntities(`Get Download Id For Futures Order History
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Get Download Id For Futures Order History
 
 * Request Limitation is 10 times per month, shared by front end download page and rest api
 * The time between &#x60;startTime&#x60; and &#x60;endTime&#x60; can not be longer than 1 year
@@ -434,24 +576,40 @@ Weight: 1000`),
                 'start-time': {
                     describe: decodeSelectedEntities('Timestamp in ms'),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'end-time': {
                     describe: decodeSelectedEntities('Timestamp in ms'),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'recv-window': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.startTime && !stdinObj?.startTime && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['startTime'] && !stdinObj?.['startTime'] && !options?.interactive) {
                     requiredParams.push('startTime');
                 }
 
-                if (!options?.endTime && !stdinObj?.endTime && !options?.interactive) {
+                if (!options?.['endTime'] && !stdinObj?.['endTime'] && !options?.interactive) {
                     requiredParams.push('endTime');
                 }
 
@@ -464,6 +622,16 @@ Weight: 1000`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log(
                 'get-download-id-for-futures-order-history is signed. Please login using `binance-cli login`'
@@ -493,10 +661,7 @@ Weight: 1000`),
         }
 
         try {
-            const response = await client.restAPI.getDownloadIdForFuturesOrderHistory({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.getDownloadIdForFuturesOrderHistory(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -508,7 +673,9 @@ Weight: 1000`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'get-download-id-for-futures-trade-history',
-    describe: decodeSelectedEntities(`Get download id for futures trade history
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Get download id for futures trade history
 
 * Request Limitation is 5 times per month, shared by front end download page and rest api
 * The time between &#x60;startTime&#x60; and &#x60;endTime&#x60; can not be longer than 1 year
@@ -520,24 +687,40 @@ Weight: 1000`),
                 'start-time': {
                     describe: decodeSelectedEntities('Timestamp in ms'),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'end-time': {
                     describe: decodeSelectedEntities('Timestamp in ms'),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'recv-window': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.startTime && !stdinObj?.startTime && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['startTime'] && !stdinObj?.['startTime'] && !options?.interactive) {
                     requiredParams.push('startTime');
                 }
 
-                if (!options?.endTime && !stdinObj?.endTime && !options?.interactive) {
+                if (!options?.['endTime'] && !stdinObj?.['endTime'] && !options?.interactive) {
                     requiredParams.push('endTime');
                 }
 
@@ -550,6 +733,16 @@ Weight: 1000`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log(
                 'get-download-id-for-futures-trade-history is signed. Please login using `binance-cli login`'
@@ -579,10 +772,7 @@ Weight: 1000`),
         }
 
         try {
-            const response = await client.restAPI.getDownloadIdForFuturesTradeHistory({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.getDownloadIdForFuturesTradeHistory(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -594,7 +784,9 @@ Weight: 1000`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'get-download-id-for-futures-transaction-history',
-    describe: decodeSelectedEntities(`Get download id for futures transaction history
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Get download id for futures transaction history
 
 * Request Limitation is 5 times per month, shared by front end download page and rest api
 * The time between &#x60;startTime&#x60; and &#x60;endTime&#x60; can not be longer than 1 year
@@ -606,24 +798,40 @@ Weight: 1000`),
                 'start-time': {
                     describe: decodeSelectedEntities('Timestamp in ms'),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'end-time': {
                     describe: decodeSelectedEntities('Timestamp in ms'),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'recv-window': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.startTime && !stdinObj?.startTime && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['startTime'] && !stdinObj?.['startTime'] && !options?.interactive) {
                     requiredParams.push('startTime');
                 }
 
-                if (!options?.endTime && !stdinObj?.endTime && !options?.interactive) {
+                if (!options?.['endTime'] && !stdinObj?.['endTime'] && !options?.interactive) {
                     requiredParams.push('endTime');
                 }
 
@@ -636,6 +844,16 @@ Weight: 1000`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log(
                 'get-download-id-for-futures-transaction-history is signed. Please login using `binance-cli login`'
@@ -665,10 +883,8 @@ Weight: 1000`),
         }
 
         try {
-            const response = await client.restAPI.getDownloadIdForFuturesTransactionHistory({
-                ...stdinObj,
-                ...options,
-            });
+            const response =
+                await client.restAPI.getDownloadIdForFuturesTransactionHistory(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -680,7 +896,9 @@ Weight: 1000`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'get-futures-order-history-download-link-by-id',
-    describe: decodeSelectedEntities(`Get futures order history download link by Id
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Get futures order history download link by Id
 
 * Download link expiration: 24h
 
@@ -691,16 +909,35 @@ Weight: 10`),
                 'download-id': {
                     describe: decodeSelectedEntities('get by download id api'),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'recv-window': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.downloadId && !stdinObj?.downloadId && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (
+                    !options?.['downloadId'] &&
+                    !stdinObj?.['downloadId'] &&
+                    !options?.interactive
+                ) {
                     requiredParams.push('downloadId');
                 }
 
@@ -713,6 +950,16 @@ Weight: 10`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log(
                 'get-futures-order-history-download-link-by-id is signed. Please login using `binance-cli login`'
@@ -734,10 +981,7 @@ Weight: 10`),
         }
 
         try {
-            const response = await client.restAPI.getFuturesOrderHistoryDownloadLinkById({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.getFuturesOrderHistoryDownloadLinkById(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -749,7 +993,9 @@ Weight: 10`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'get-futures-trade-download-link-by-id',
-    describe: decodeSelectedEntities(`Get futures trade download link by Id
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Get futures trade download link by Id
 
 * Download link expiration: 24h
 
@@ -760,16 +1006,35 @@ Weight: 10`),
                 'download-id': {
                     describe: decodeSelectedEntities('get by download id api'),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'recv-window': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.downloadId && !stdinObj?.downloadId && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (
+                    !options?.['downloadId'] &&
+                    !stdinObj?.['downloadId'] &&
+                    !options?.interactive
+                ) {
                     requiredParams.push('downloadId');
                 }
 
@@ -782,6 +1047,16 @@ Weight: 10`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log(
                 'get-futures-trade-download-link-by-id is signed. Please login using `binance-cli login`'
@@ -803,10 +1078,7 @@ Weight: 10`),
         }
 
         try {
-            const response = await client.restAPI.getFuturesTradeDownloadLinkById({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.getFuturesTradeDownloadLinkById(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -818,7 +1090,9 @@ Weight: 10`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'get-futures-transaction-history-download-link-by-id',
-    describe: decodeSelectedEntities(`Get futures transaction history download link by Id
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Get futures transaction history download link by Id
 
 * Download link expiration: 24h
 
@@ -829,16 +1103,35 @@ Weight: 10`),
                 'download-id': {
                     describe: decodeSelectedEntities('get by download id api'),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'recv-window': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.downloadId && !stdinObj?.downloadId && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (
+                    !options?.['downloadId'] &&
+                    !stdinObj?.['downloadId'] &&
+                    !options?.interactive
+                ) {
                     requiredParams.push('downloadId');
                 }
 
@@ -851,6 +1144,16 @@ Weight: 10`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log(
                 'get-futures-transaction-history-download-link-by-id is signed. Please login using `binance-cli login`'
@@ -872,10 +1175,8 @@ Weight: 10`),
         }
 
         try {
-            const response = await client.restAPI.getFuturesTransactionHistoryDownloadLinkById({
-                ...stdinObj,
-                ...options,
-            });
+            const response =
+                await client.restAPI.getFuturesTransactionHistoryDownloadLinkById(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -887,7 +1188,9 @@ Weight: 10`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'get-income-history',
-    describe: decodeSelectedEntities(`Query income history
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Query income history
 
 * If neither &#x60;startTime&#x60; nor &#x60;endTime&#x60; is sent, the recent 7-day data will be returned.
 * If &#x60;incomeType &#x60; is not sent, all kinds of flow will be returned
@@ -900,37 +1203,59 @@ Weight: 30`),
             symbol: {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
             },
             'income-type': {
                 describe: decodeSelectedEntities(
                     'TRANSFER, WELCOME_BONUS, REALIZED_PNL, FUNDING_FEE, COMMISSION, INSURANCE_CLEAR, REFERRAL_KICKBACK, COMMISSION_REBATE, API_REBATE, CONTEST_REWARD, CROSS_COLLATERAL_TRANSFER, OPTIONS_PREMIUM_FEE, OPTIONS_SETTLE_PROFIT, INTERNAL_TRANSFER, AUTO_EXCHANGE, DELIVERED_SETTELMENT, COIN_SWAP_DEPOSIT, COIN_SWAP_WITHDRAW, POSITION_LIMIT_INCREASE_FEE, STRATEGY_UMFUTURES_TRANSFER，FEE_RETURN，BFUSD_REWARD'
                 ),
                 type: 'string',
+                group: 'Command Options:',
             },
             'start-time': {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
             },
             'end-time': {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
             },
             page: {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
             },
             limit: {
                 describe: decodeSelectedEntities('Default 100; max 1000'),
                 type: 'string',
+                group: 'Command Options:',
             },
             'recv-window': {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log('get-income-history is signed. Please login using `binance-cli login`');
             return;
@@ -942,7 +1267,7 @@ Weight: 30`),
         }
 
         try {
-            const response = await client.restAPI.getIncomeHistory({ ...stdinObj, ...options });
+            const response = await client.restAPI.getIncomeHistory(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -954,7 +1279,9 @@ Weight: 30`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'notional-and-leverage-brackets',
-    describe: decodeSelectedEntities(`Query user notional and leverage bracket on speicfic symbol
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Query user notional and leverage bracket on speicfic symbol
 
 Weight: 1`),
     builder: (yargsCmd: any) => {
@@ -962,15 +1289,32 @@ Weight: 1`),
             symbol: {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
             },
             'recv-window': {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log(
                 'notional-and-leverage-brackets is signed. Please login using `binance-cli login`'
@@ -984,10 +1328,7 @@ Weight: 1`),
         }
 
         try {
-            const response = await client.restAPI.notionalAndLeverageBrackets({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.notionalAndLeverageBrackets(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -999,7 +1340,9 @@ Weight: 1`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'query-user-rate-limit',
-    describe: decodeSelectedEntities(`Query User Rate Limit
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Query User Rate Limit
 
 Weight: 1`),
     builder: (yargsCmd: any) => {
@@ -1007,11 +1350,27 @@ Weight: 1`),
             'recv-window': {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log('query-user-rate-limit is signed. Please login using `binance-cli login`');
             return;
@@ -1023,7 +1382,7 @@ Weight: 1`),
         }
 
         try {
-            const response = await client.restAPI.queryUserRateLimit({ ...stdinObj, ...options });
+            const response = await client.restAPI.queryUserRateLimit(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -1035,7 +1394,9 @@ Weight: 1`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'symbol-configuration',
-    describe: decodeSelectedEntities(`Get current account symbol configuration.
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Get current account symbol configuration.
 
 Weight: 5`),
     builder: (yargsCmd: any) => {
@@ -1043,15 +1404,32 @@ Weight: 5`),
             symbol: {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
             },
             'recv-window': {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log('symbol-configuration is signed. Please login using `binance-cli login`');
             return;
@@ -1063,7 +1441,7 @@ Weight: 5`),
         }
 
         try {
-            const response = await client.restAPI.symbolConfiguration({ ...stdinObj, ...options });
+            const response = await client.restAPI.symbolConfiguration(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -1076,22 +1454,40 @@ Weight: 5`),
 derivativesTradingUsdsFuturesCommands.push({
     command: 'toggle-bnb-burn-on-futures-trade',
     describe:
+        'Authentication required. ' +
         decodeSelectedEntities(`Change user&#39;s BNB Fee Discount (Fee Discount On or Fee Discount Off ) on ***EVERY symbol***
 
 Weight: 1`),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
-                json: {
-                    describe: 'toggleBnbBurnOnFuturesTradeRequest: ',
+                'fee-burn': {
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                'recv-window': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options.json && !stdinObj) {
-                    requiredParams.push('json');
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['feeBurn'] && !options?.interactive) {
+                    requiredParams.push('feeBurn');
                 }
 
                 if (requiredParams.length > 0) {
@@ -1103,6 +1499,16 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log(
                 'toggle-bnb-burn-on-futures-trade is signed. Please login using `binance-cli login`'
@@ -1110,13 +1516,12 @@ Weight: 1`),
             return;
         }
 
-        if (options.interactive && !options.json) {
+        if (options.interactive && !options?.['feeBurn']) {
             questions.push({
                 type: 'input',
-                name: 'json',
-                message: 'Input toggleBnbBurnOnFuturesTradeRequest:',
-                validate: (input: string) =>
-                    input ? true : 'toggleBnbBurnOnFuturesTradeRequest cannot be empty',
+                name: 'feeBurn',
+                message: 'Input feeBurn:',
+                validate: (input: string) => (input ? true : 'feeBurn cannot be empty'),
             });
         }
 
@@ -1126,9 +1531,7 @@ Weight: 1`),
         }
 
         try {
-            const response = await client.restAPI.toggleBnbBurnOnFuturesTrade(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
-            );
+            const response = await client.restAPI.toggleBnbBurnOnFuturesTrade(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -1140,7 +1543,9 @@ Weight: 1`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'user-commission-rate',
-    describe: decodeSelectedEntities(`Get User Commission Rate
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Get User Commission Rate
 
 Weight: 20`),
     builder: (yargsCmd: any) => {
@@ -1149,16 +1554,31 @@ Weight: 20`),
                 symbol: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'recv-window': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.symbol && !stdinObj?.symbol && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -1171,6 +1591,16 @@ Weight: 20`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log('user-commission-rate is signed. Please login using `binance-cli login`');
             return;
@@ -1190,7 +1620,7 @@ Weight: 20`),
         }
 
         try {
-            const response = await client.restAPI.userCommissionRate({ ...stdinObj, ...options });
+            const response = await client.restAPI.userCommissionRate(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -1202,22 +1632,41 @@ Weight: 20`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'accept-the-offered-quote',
-    describe: decodeSelectedEntities(`Accept the offered quote by quote ID.
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Accept the offered quote by quote ID.
 
 Weight: 200(IP)`),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
-                json: {
-                    describe: 'acceptTheOfferedQuoteRequest: ',
+                'quote-id': {
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                'recv-window': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options.json && !stdinObj) {
-                    requiredParams.push('json');
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['quoteId'] && !options?.interactive) {
+                    requiredParams.push('quoteId');
                 }
 
                 if (requiredParams.length > 0) {
@@ -1229,6 +1678,16 @@ Weight: 200(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log(
                 'accept-the-offered-quote is signed. Please login using `binance-cli login`'
@@ -1236,13 +1695,12 @@ Weight: 200(IP)`),
             return;
         }
 
-        if (options.interactive && !options.json) {
+        if (options.interactive && !options?.['quoteId']) {
             questions.push({
                 type: 'input',
-                name: 'json',
-                message: 'Input acceptTheOfferedQuoteRequest:',
-                validate: (input: string) =>
-                    input ? true : 'acceptTheOfferedQuoteRequest cannot be empty',
+                name: 'quoteId',
+                message: 'Input quoteId:',
+                validate: (input: string) => (input ? true : 'quoteId cannot be empty'),
             });
         }
 
@@ -1252,9 +1710,7 @@ Weight: 200(IP)`),
         }
 
         try {
-            const response = await client.restAPI.acceptTheOfferedQuote(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
-            );
+            const response = await client.restAPI.acceptTheOfferedQuote(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -1279,15 +1735,31 @@ Weight: 20(IP)`),
             'from-asset': {
                 describe: decodeSelectedEntities('User spends coin'),
                 type: 'string',
+                group: 'Command Options:',
             },
             'to-asset': {
                 describe: decodeSelectedEntities('User receives coin'),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
 
         if (questions.length > 0) {
             const answers = await inquirer.prompt(questions);
@@ -1295,7 +1767,7 @@ Weight: 20(IP)`),
         }
 
         try {
-            const response = await client.restAPI.listAllConvertPairs({ ...stdinObj, ...options });
+            const response = await client.restAPI.listAllConvertPairs(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -1307,7 +1779,9 @@ Weight: 20(IP)`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'order-status',
-    describe: decodeSelectedEntities(`Query order status by order ID.
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Query order status by order ID.
 
 Weight: 50(IP)`),
     builder: (yargsCmd: any) => {
@@ -1315,15 +1789,32 @@ Weight: 50(IP)`),
             'order-id': {
                 describe: decodeSelectedEntities('Either orderId or quoteId is required'),
                 type: 'string',
+                group: 'Command Options:',
             },
             'quote-id': {
                 describe: decodeSelectedEntities('Either orderId or quoteId is required'),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log('order-status is signed. Please login using `binance-cli login`');
             return;
@@ -1335,7 +1826,7 @@ Weight: 50(IP)`),
         }
 
         try {
-            const response = await client.restAPI.orderStatus({ ...stdinObj, ...options });
+            const response = await client.restAPI.orderStatus(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -1347,7 +1838,9 @@ Weight: 50(IP)`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'send-quote-request',
-    describe: decodeSelectedEntities(`Request a quote for the requested token pairs
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Request a quote for the requested token pairs
 
 * Either fromAmount or toAmount should be sent
 * &#x60;quoteId&#x60; will be returned only if you have enough funds to convert
@@ -1356,16 +1849,53 @@ Weight: 50(IP)`),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
-                json: {
-                    describe: 'sendQuoteRequestRequest: ',
+                'from-asset': {
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                'to-asset': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'from-amount': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'to-amount': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'valid-time': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'recv-window': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options.json && !stdinObj) {
-                    requiredParams.push('json');
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['fromAsset'] && !options?.interactive) {
+                    requiredParams.push('fromAsset');
+                }
+
+                if (!options?.['toAsset'] && !options?.interactive) {
+                    requiredParams.push('toAsset');
                 }
 
                 if (requiredParams.length > 0) {
@@ -1377,18 +1907,36 @@ Weight: 50(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log('send-quote-request is signed. Please login using `binance-cli login`');
             return;
         }
 
-        if (options.interactive && !options.json) {
+        if (options.interactive && !options?.['fromAsset']) {
             questions.push({
                 type: 'input',
-                name: 'json',
-                message: 'Input sendQuoteRequestRequest:',
-                validate: (input: string) =>
-                    input ? true : 'sendQuoteRequestRequest cannot be empty',
+                name: 'fromAsset',
+                message: 'Input fromAsset:',
+                validate: (input: string) => (input ? true : 'fromAsset cannot be empty'),
+            });
+        }
+
+        if (options.interactive && !options?.['toAsset']) {
+            questions.push({
+                type: 'input',
+                name: 'toAsset',
+                message: 'Input toAsset:',
+                validate: (input: string) => (input ? true : 'toAsset cannot be empty'),
             });
         }
 
@@ -1398,9 +1946,7 @@ Weight: 50(IP)`),
         }
 
         try {
-            const response = await client.restAPI.sendQuoteRequest(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
-            );
+            const response = await client.restAPI.sendQuoteRequest(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -1422,11 +1968,26 @@ Weight: 1`),
             symbol: {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
 
         if (questions.length > 0) {
             const answers = await inquirer.prompt(questions);
@@ -1434,7 +1995,7 @@ Weight: 1`),
         }
 
         try {
-            const response = await client.restAPI.adlRisk({ ...stdinObj, ...options });
+            const response = await client.restAPI.adlRisk(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -1458,46 +2019,69 @@ Weight: 0`),
                 pair: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'contract-type': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 period: {
                     describe: decodeSelectedEntities(
                         '\&quot;5m\&quot;,\&quot;15m\&quot;,\&quot;30m\&quot;,\&quot;1h\&quot;,\&quot;2h\&quot;,\&quot;4h\&quot;,\&quot;6h\&quot;,\&quot;12h\&quot;,\&quot;1d\&quot;'
                     ),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 limit: {
                     describe: decodeSelectedEntities('Default 30,Max 500'),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'start-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'end-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.pair && !stdinObj?.pair && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['pair'] && !stdinObj?.['pair'] && !options?.interactive) {
                     requiredParams.push('pair');
                 }
 
-                if (!options?.contractType && !stdinObj?.contractType && !options?.interactive) {
+                if (
+                    !options?.['contractType'] &&
+                    !stdinObj?.['contractType'] &&
+                    !options?.interactive
+                ) {
                     requiredParams.push('contractType');
                 }
 
-                if (!options?.period && !stdinObj?.period && !options?.interactive) {
+                if (!options?.['period'] && !stdinObj?.['period'] && !options?.interactive) {
                     requiredParams.push('period');
                 }
 
-                if (!options?.limit && !stdinObj?.limit && !options?.interactive) {
+                if (!options?.['limit'] && !stdinObj?.['limit'] && !options?.interactive) {
                     requiredParams.push('limit');
                 }
 
@@ -1510,6 +2094,15 @@ Weight: 0`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
 
         if (options.interactive && !options.pair) {
             questions.push({
@@ -1549,7 +2142,7 @@ Weight: 0`),
         }
 
         try {
-            const response = await client.restAPI.basis({ ...stdinObj, ...options });
+            const response = await client.restAPI.basis(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -1589,11 +2182,26 @@ Weight: 1`),
             symbol: {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
 
         if (questions.length > 0) {
             const answers = await inquirer.prompt(questions);
@@ -1601,10 +2209,7 @@ Weight: 1`),
         }
 
         try {
-            const response = await client.restAPI.compositeIndexSymbolInformation({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.compositeIndexSymbolInformation(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -1634,28 +2239,46 @@ Weight: 20`),
                 symbol: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'from-id': {
                     describe: decodeSelectedEntities('ID to get aggregate trades from INCLUSIVE.'),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'start-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'end-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 limit: {
                     describe: decodeSelectedEntities('Default 100; max 1000'),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.symbol && !stdinObj?.symbol && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -1668,6 +2291,15 @@ Weight: 20`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
 
         if (options.interactive && !options.symbol) {
             questions.push({
@@ -1683,10 +2315,7 @@ Weight: 20`),
         }
 
         try {
-            const response = await client.restAPI.compressedAggregateTradesList({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.compressedAggregateTradesList(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -1721,40 +2350,63 @@ Weight: based on parameter LIMIT
                 pair: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'contract-type': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 interval: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'start-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'end-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 limit: {
                     describe: decodeSelectedEntities('Default 100; max 1000'),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.pair && !stdinObj?.pair && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['pair'] && !stdinObj?.['pair'] && !options?.interactive) {
                     requiredParams.push('pair');
                 }
 
-                if (!options?.contractType && !stdinObj?.contractType && !options?.interactive) {
+                if (
+                    !options?.['contractType'] &&
+                    !stdinObj?.['contractType'] &&
+                    !options?.interactive
+                ) {
                     requiredParams.push('contractType');
                 }
 
-                if (!options?.interval && !stdinObj?.interval && !options?.interactive) {
+                if (!options?.['interval'] && !stdinObj?.['interval'] && !options?.interactive) {
                     requiredParams.push('interval');
                 }
 
@@ -1767,6 +2419,15 @@ Weight: based on parameter LIMIT
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
 
         if (options.interactive && !options.pair) {
             questions.push({
@@ -1798,10 +2459,7 @@ Weight: based on parameter LIMIT
         }
 
         try {
-            const response = await client.restAPI.continuousContractKlineCandlestickData({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.continuousContractKlineCandlestickData(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -1843,23 +2501,41 @@ Weight: share 500/5min/IP rate limit with GET /fapi/v1/fundingInfo`),
             symbol: {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
             },
             'start-time': {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
             },
             'end-time': {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
             },
             limit: {
                 describe: decodeSelectedEntities('Default 100; max 1000'),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
 
         if (questions.length > 0) {
             const answers = await inquirer.prompt(questions);
@@ -1867,10 +2543,7 @@ Weight: share 500/5min/IP rate limit with GET /fapi/v1/fundingInfo`),
         }
 
         try {
-            const response = await client.restAPI.getFundingRateHistory({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.getFundingRateHistory(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -1920,32 +2593,50 @@ Weight: based on parameter LIMIT
                 pair: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 interval: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'start-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'end-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 limit: {
                     describe: decodeSelectedEntities('Default 100; max 1000'),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.pair && !stdinObj?.pair && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['pair'] && !stdinObj?.['pair'] && !options?.interactive) {
                     requiredParams.push('pair');
                 }
 
-                if (!options?.interval && !stdinObj?.interval && !options?.interactive) {
+                if (!options?.['interval'] && !stdinObj?.['interval'] && !options?.interactive) {
                     requiredParams.push('interval');
                 }
 
@@ -1958,6 +2649,15 @@ Weight: based on parameter LIMIT
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
 
         if (options.interactive && !options.pair) {
             questions.push({
@@ -1981,10 +2681,7 @@ Weight: based on parameter LIMIT
         }
 
         try {
-            const response = await client.restAPI.indexPriceKlineCandlestickData({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.indexPriceKlineCandlestickData(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -2014,32 +2711,50 @@ Weight: based on parameter LIMIT
                 symbol: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 interval: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'start-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'end-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 limit: {
                     describe: decodeSelectedEntities('Default 100; max 1000'),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.symbol && !stdinObj?.symbol && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
-                if (!options?.interval && !stdinObj?.interval && !options?.interactive) {
+                if (!options?.['interval'] && !stdinObj?.['interval'] && !options?.interactive) {
                     requiredParams.push('interval');
                 }
 
@@ -2052,6 +2767,15 @@ Weight: based on parameter LIMIT
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
 
         if (options.interactive && !options.symbol) {
             questions.push({
@@ -2075,7 +2799,7 @@ Weight: based on parameter LIMIT
         }
 
         try {
-            const response = await client.restAPI.klineCandlestickData({ ...stdinObj, ...options });
+            const response = await client.restAPI.klineCandlestickData(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -2100,34 +2824,52 @@ Weight: 0`),
                 symbol: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 period: {
                     describe: decodeSelectedEntities(
                         '\&quot;5m\&quot;,\&quot;15m\&quot;,\&quot;30m\&quot;,\&quot;1h\&quot;,\&quot;2h\&quot;,\&quot;4h\&quot;,\&quot;6h\&quot;,\&quot;12h\&quot;,\&quot;1d\&quot;'
                     ),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 limit: {
                     describe: decodeSelectedEntities('Default 100; max 1000'),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'start-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'end-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.symbol && !stdinObj?.symbol && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
-                if (!options?.period && !stdinObj?.period && !options?.interactive) {
+                if (!options?.['period'] && !stdinObj?.['period'] && !options?.interactive) {
                     requiredParams.push('period');
                 }
 
@@ -2140,6 +2882,15 @@ Weight: 0`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
 
         if (options.interactive && !options.symbol) {
             questions.push({
@@ -2163,7 +2914,7 @@ Weight: 0`),
         }
 
         try {
-            const response = await client.restAPI.longShortRatio({ ...stdinObj, ...options });
+            const response = await client.restAPI.longShortRatio(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -2183,11 +2934,26 @@ Weight: 1 with symbol, 10 without symbol`),
             symbol: {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
 
         if (questions.length > 0) {
             const answers = await inquirer.prompt(questions);
@@ -2195,7 +2961,7 @@ Weight: 1 with symbol, 10 without symbol`),
         }
 
         try {
-            const response = await client.restAPI.markPrice({ ...stdinObj, ...options });
+            const response = await client.restAPI.markPrice(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -2225,32 +2991,50 @@ Weight: based on parameter LIMIT
                 symbol: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 interval: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'start-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'end-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 limit: {
                     describe: decodeSelectedEntities('Default 100; max 1000'),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.symbol && !stdinObj?.symbol && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
-                if (!options?.interval && !stdinObj?.interval && !options?.interactive) {
+                if (!options?.['interval'] && !stdinObj?.['interval'] && !options?.interactive) {
                     requiredParams.push('interval');
                 }
 
@@ -2263,6 +3047,15 @@ Weight: based on parameter LIMIT
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
 
         if (options.interactive && !options.symbol) {
             questions.push({
@@ -2286,10 +3079,7 @@ Weight: based on parameter LIMIT
         }
 
         try {
-            const response = await client.restAPI.markPriceKlineCandlestickData({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.markPriceKlineCandlestickData(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -2309,11 +3099,26 @@ Weight: 1 for a single symbol; 10 when the symbol parameter is omitted`),
             symbol: {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
 
         if (questions.length > 0) {
             const answers = await inquirer.prompt(questions);
@@ -2321,10 +3126,7 @@ Weight: 1 for a single symbol; 10 when the symbol parameter is omitted`),
         }
 
         try {
-            const response = await client.restAPI.multiAssetsModeAssetIndex({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.multiAssetsModeAssetIndex(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -2348,20 +3150,36 @@ Weight: 20`),
                 symbol: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 limit: {
                     describe: decodeSelectedEntities('Default 100; max 1000'),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'from-id': {
                     describe: decodeSelectedEntities('ID to get aggregate trades from INCLUSIVE.'),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.symbol && !stdinObj?.symbol && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -2374,6 +3192,15 @@ Weight: 20`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
 
         if (options.interactive && !options.symbol) {
             questions.push({
@@ -2389,7 +3216,7 @@ Weight: 20`),
         }
 
         try {
-            const response = await client.restAPI.oldTradesLookup({ ...stdinObj, ...options });
+            const response = await client.restAPI.oldTradesLookup(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -2410,12 +3237,26 @@ Weight: 1`),
                 symbol: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.symbol && !stdinObj?.symbol && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -2428,6 +3269,15 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
 
         if (options.interactive && !options.symbol) {
             questions.push({
@@ -2443,7 +3293,7 @@ Weight: 1`),
         }
 
         try {
-            const response = await client.restAPI.openInterest({ ...stdinObj, ...options });
+            const response = await client.restAPI.openInterest(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -2468,34 +3318,52 @@ Weight: 0`),
                 symbol: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 period: {
                     describe: decodeSelectedEntities(
                         '\&quot;5m\&quot;,\&quot;15m\&quot;,\&quot;30m\&quot;,\&quot;1h\&quot;,\&quot;2h\&quot;,\&quot;4h\&quot;,\&quot;6h\&quot;,\&quot;12h\&quot;,\&quot;1d\&quot;'
                     ),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 limit: {
                     describe: decodeSelectedEntities('Default 100; max 1000'),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'start-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'end-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.symbol && !stdinObj?.symbol && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
-                if (!options?.period && !stdinObj?.period && !options?.interactive) {
+                if (!options?.['period'] && !stdinObj?.['period'] && !options?.interactive) {
                     requiredParams.push('period');
                 }
 
@@ -2508,6 +3376,15 @@ Weight: 0`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
 
         if (options.interactive && !options.symbol) {
             questions.push({
@@ -2531,10 +3408,7 @@ Weight: 0`),
         }
 
         try {
-            const response = await client.restAPI.openInterestStatistics({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.openInterestStatistics(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -2563,16 +3437,31 @@ Weight: Adjusted based on the limit:
                 symbol: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 limit: {
                     describe: decodeSelectedEntities('Default 100; max 1000'),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.symbol && !stdinObj?.symbol && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -2585,6 +3474,15 @@ Weight: Adjusted based on the limit:
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
 
         if (options.interactive && !options.symbol) {
             questions.push({
@@ -2600,7 +3498,7 @@ Weight: Adjusted based on the limit:
         }
 
         try {
-            const response = await client.restAPI.orderBook({ ...stdinObj, ...options });
+            const response = await client.restAPI.orderBook(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -2631,32 +3529,50 @@ Weight: based on parameter LIMIT
                 symbol: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 interval: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'start-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'end-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 limit: {
                     describe: decodeSelectedEntities('Default 100; max 1000'),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.symbol && !stdinObj?.symbol && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
-                if (!options?.interval && !stdinObj?.interval && !options?.interactive) {
+                if (!options?.['interval'] && !stdinObj?.['interval'] && !options?.interactive) {
                     requiredParams.push('interval');
                 }
 
@@ -2669,6 +3585,15 @@ Weight: based on parameter LIMIT
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
 
         if (options.interactive && !options.symbol) {
             questions.push({
@@ -2692,10 +3617,7 @@ Weight: based on parameter LIMIT
         }
 
         try {
-            const response = await client.restAPI.premiumIndexKlineData({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.premiumIndexKlineData(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -2716,12 +3638,26 @@ Weight: 0`),
                 pair: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.pair && !stdinObj?.pair && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['pair'] && !stdinObj?.['pair'] && !options?.interactive) {
                     requiredParams.push('pair');
                 }
 
@@ -2734,6 +3670,15 @@ Weight: 0`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
 
         if (options.interactive && !options.pair) {
             questions.push({
@@ -2749,10 +3694,7 @@ Weight: 0`),
         }
 
         try {
-            const response = await client.restAPI.quarterlyContractSettlementPrice({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.quarterlyContractSettlementPrice(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -2778,12 +3720,26 @@ Weight: 2`),
                 symbol: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.symbol && !stdinObj?.symbol && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -2796,6 +3752,15 @@ Weight: 2`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
 
         if (options.interactive && !options.symbol) {
             questions.push({
@@ -2811,10 +3776,7 @@ Weight: 2`),
         }
 
         try {
-            const response = await client.restAPI.queryIndexPriceConstituents({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.queryIndexPriceConstituents(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -2834,11 +3796,26 @@ Weight: 1`),
             symbol: {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
 
         if (questions.length > 0) {
             const answers = await inquirer.prompt(questions);
@@ -2846,10 +3823,7 @@ Weight: 1`),
         }
 
         try {
-            const response = await client.restAPI.queryInsuranceFundBalanceSnapshot({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.queryInsuranceFundBalanceSnapshot(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -2872,16 +3846,31 @@ Weight: 5`),
                 symbol: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 limit: {
                     describe: decodeSelectedEntities('Default 100; max 1000'),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.symbol && !stdinObj?.symbol && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -2894,6 +3883,15 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
 
         if (options.interactive && !options.symbol) {
             questions.push({
@@ -2909,7 +3907,7 @@ Weight: 5`),
         }
 
         try {
-            const response = await client.restAPI.recentTradesList({ ...stdinObj, ...options });
+            const response = await client.restAPI.recentTradesList(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -2935,16 +3933,31 @@ Weight: Adjusted based on the limit:
                 symbol: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 limit: {
                     describe: decodeSelectedEntities('Default 100; max 1000'),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.symbol && !stdinObj?.symbol && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -2957,6 +3970,15 @@ Weight: Adjusted based on the limit:
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
 
         if (options.interactive && !options.symbol) {
             questions.push({
@@ -2972,7 +3994,7 @@ Weight: Adjusted based on the limit:
         }
 
         try {
-            const response = await client.restAPI.rpiOrderBook({ ...stdinObj, ...options });
+            const response = await client.restAPI.rpiOrderBook(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -2997,11 +4019,26 @@ Weight: 2 for a single symbol;
             symbol: {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
 
         if (questions.length > 0) {
             const answers = await inquirer.prompt(questions);
@@ -3009,10 +4046,7 @@ Weight: 2 for a single symbol;
         }
 
         try {
-            const response = await client.restAPI.symbolOrderBookTicker({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.symbolOrderBookTicker(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -3035,11 +4069,26 @@ Weight: 1 for a single symbol;
             symbol: {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
 
         if (questions.length > 0) {
             const answers = await inquirer.prompt(questions);
@@ -3047,7 +4096,7 @@ Weight: 1 for a single symbol;
         }
 
         try {
-            const response = await client.restAPI.symbolPriceTicker({ ...stdinObj, ...options });
+            const response = await client.restAPI.symbolPriceTicker(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -3071,11 +4120,26 @@ Weight: 1 for a single symbol;
             symbol: {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
 
         if (questions.length > 0) {
             const answers = await inquirer.prompt(questions);
@@ -3083,7 +4147,7 @@ Weight: 1 for a single symbol;
         }
 
         try {
-            const response = await client.restAPI.symbolPriceTickerV2({ ...stdinObj, ...options });
+            const response = await client.restAPI.symbolPriceTickerV2(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -3108,34 +4172,52 @@ Weight: 0`),
                 symbol: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 period: {
                     describe: decodeSelectedEntities(
                         '\&quot;5m\&quot;,\&quot;15m\&quot;,\&quot;30m\&quot;,\&quot;1h\&quot;,\&quot;2h\&quot;,\&quot;4h\&quot;,\&quot;6h\&quot;,\&quot;12h\&quot;,\&quot;1d\&quot;'
                     ),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 limit: {
                     describe: decodeSelectedEntities('Default 100; max 1000'),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'start-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'end-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.symbol && !stdinObj?.symbol && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
-                if (!options?.period && !stdinObj?.period && !options?.interactive) {
+                if (!options?.['period'] && !stdinObj?.['period'] && !options?.interactive) {
                     requiredParams.push('period');
                 }
 
@@ -3148,6 +4230,15 @@ Weight: 0`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
 
         if (options.interactive && !options.symbol) {
             questions.push({
@@ -3171,7 +4262,7 @@ Weight: 0`),
         }
 
         try {
-            const response = await client.restAPI.takerBuySellVolume({ ...stdinObj, ...options });
+            const response = await client.restAPI.takerBuySellVolume(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -3210,11 +4301,26 @@ Weight: 1 for a single symbol;
             symbol: {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
 
         if (questions.length > 0) {
             const answers = await inquirer.prompt(questions);
@@ -3222,10 +4328,7 @@ Weight: 1 for a single symbol;
         }
 
         try {
-            const response = await client.restAPI.ticker24hrPriceChangeStatistics({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.ticker24hrPriceChangeStatistics(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -3254,34 +4357,52 @@ Weight: 0`),
                 symbol: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 period: {
                     describe: decodeSelectedEntities(
                         '\&quot;5m\&quot;,\&quot;15m\&quot;,\&quot;30m\&quot;,\&quot;1h\&quot;,\&quot;2h\&quot;,\&quot;4h\&quot;,\&quot;6h\&quot;,\&quot;12h\&quot;,\&quot;1d\&quot;'
                     ),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 limit: {
                     describe: decodeSelectedEntities('Default 100; max 1000'),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'start-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'end-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.symbol && !stdinObj?.symbol && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
-                if (!options?.period && !stdinObj?.period && !options?.interactive) {
+                if (!options?.['period'] && !stdinObj?.['period'] && !options?.interactive) {
                     requiredParams.push('period');
                 }
 
@@ -3294,6 +4415,15 @@ Weight: 0`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
 
         if (options.interactive && !options.symbol) {
             questions.push({
@@ -3317,10 +4447,7 @@ Weight: 0`),
         }
 
         try {
-            const response = await client.restAPI.topTraderLongShortRatioAccounts({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.topTraderLongShortRatioAccounts(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -3349,34 +4476,52 @@ Weight: 0`),
                 symbol: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 period: {
                     describe: decodeSelectedEntities(
                         '\&quot;5m\&quot;,\&quot;15m\&quot;,\&quot;30m\&quot;,\&quot;1h\&quot;,\&quot;2h\&quot;,\&quot;4h\&quot;,\&quot;6h\&quot;,\&quot;12h\&quot;,\&quot;1d\&quot;'
                     ),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 limit: {
                     describe: decodeSelectedEntities('Default 100; max 1000'),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'start-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'end-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.symbol && !stdinObj?.symbol && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
-                if (!options?.period && !stdinObj?.period && !options?.interactive) {
+                if (!options?.['period'] && !stdinObj?.['period'] && !options?.interactive) {
                     requiredParams.push('period');
                 }
 
@@ -3389,6 +4534,15 @@ Weight: 0`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
 
         if (options.interactive && !options.symbol) {
             questions.push({
@@ -3412,10 +4566,7 @@ Weight: 0`),
         }
 
         try {
-            const response = await client.restAPI.topTraderLongShortRatioPositions({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.topTraderLongShortRatioPositions(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -3445,7 +4596,9 @@ Weight: 5`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'classic-portfolio-margin-account-information',
-    describe: decodeSelectedEntities(`Get Classic Portfolio Margin current account information.
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Get Classic Portfolio Margin current account information.
 
 
 * maxWithdrawAmount is for asset transfer out to the spot wallet.
@@ -3457,16 +4610,31 @@ Weight: 5`),
                 asset: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'recv-window': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.asset && !stdinObj?.asset && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['asset'] && !stdinObj?.['asset'] && !options?.interactive) {
                     requiredParams.push('asset');
                 }
 
@@ -3479,6 +4647,16 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log(
                 'classic-portfolio-margin-account-information is signed. Please login using `binance-cli login`'
@@ -3500,10 +4678,7 @@ Weight: 5`),
         }
 
         try {
-            const response = await client.restAPI.classicPortfolioMarginAccountInformation({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.classicPortfolioMarginAccountInformation(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -3515,7 +4690,9 @@ Weight: 5`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'account-trade-list',
-    describe: decodeSelectedEntities(`Get trades for a specific account and symbol.
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Get trades for a specific account and symbol.
 
 * If &#x60;startTime&#x60; and &#x60;endTime&#x60; are both not sent, then the last 7 days&#39; data will be returned.
 * The time between &#x60;startTime&#x60; and &#x60;endTime&#x60; cannot be longer than 7 days.
@@ -3529,36 +4706,56 @@ Weight: 5`),
                 symbol: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'order-id': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'start-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'end-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'from-id': {
                     describe: decodeSelectedEntities('ID to get aggregate trades from INCLUSIVE.'),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 limit: {
                     describe: decodeSelectedEntities('Default 100; max 1000'),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'recv-window': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.symbol && !stdinObj?.symbol && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -3571,6 +4768,16 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log('account-trade-list is signed. Please login using `binance-cli login`');
             return;
@@ -3590,7 +4797,7 @@ Weight: 5`),
         }
 
         try {
-            const response = await client.restAPI.accountTradeList({ ...stdinObj, ...options });
+            const response = await client.restAPI.accountTradeList(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -3602,7 +4809,9 @@ Weight: 5`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'all-orders',
-    describe: decodeSelectedEntities(`Get all account orders; active, canceled, or filled.
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Get all account orders; active, canceled, or filled.
 
 * These orders will not be found:
 * order status is &#x60;CANCELED&#x60; or &#x60;EXPIRED&#x60; **AND** order has NO filled trade **AND** created time + 3 days &lt; current time
@@ -3618,32 +4827,51 @@ Weight: 5`),
                 symbol: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'order-id': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'start-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'end-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 limit: {
                     describe: decodeSelectedEntities('Default 100; max 1000'),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'recv-window': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.symbol && !stdinObj?.symbol && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -3656,6 +4884,16 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log('all-orders is signed. Please login using `binance-cli login`');
             return;
@@ -3675,7 +4913,7 @@ Weight: 5`),
         }
 
         try {
-            const response = await client.restAPI.allOrders({ ...stdinObj, ...options });
+            const response = await client.restAPI.allOrders(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -3688,6 +4926,7 @@ Weight: 5`),
 derivativesTradingUsdsFuturesCommands.push({
     command: 'auto-cancel-all-open-orders',
     describe:
+        'Authentication required. ' +
         decodeSelectedEntities(`Cancel all open orders of the specified symbol at the end of the specified countdown.
 The endpoint should be called repeatedly as heartbeats so that the existing countdown time can be canceled and replaced by a new one.
 
@@ -3702,16 +4941,41 @@ Weight: 10`),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
-                json: {
-                    describe: 'autoCancelAllOpenOrdersRequest: ',
+                symbol: {
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                'countdown-time': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'recv-window': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options.json && !stdinObj) {
-                    requiredParams.push('json');
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !options?.interactive) {
+                    requiredParams.push('symbol');
+                }
+
+                if (!options?.['countdownTime'] && !options?.interactive) {
+                    requiredParams.push('countdownTime');
                 }
 
                 if (requiredParams.length > 0) {
@@ -3723,6 +4987,16 @@ Weight: 10`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log(
                 'auto-cancel-all-open-orders is signed. Please login using `binance-cli login`'
@@ -3730,13 +5004,21 @@ Weight: 10`),
             return;
         }
 
-        if (options.interactive && !options.json) {
+        if (options.interactive && !options?.['symbol']) {
             questions.push({
                 type: 'input',
-                name: 'json',
-                message: 'Input autoCancelAllOpenOrdersRequest:',
-                validate: (input: string) =>
-                    input ? true : 'autoCancelAllOpenOrdersRequest cannot be empty',
+                name: 'symbol',
+                message: 'Input symbol:',
+                validate: (input: string) => (input ? true : 'symbol cannot be empty'),
+            });
+        }
+
+        if (options.interactive && !options?.['countdownTime']) {
+            questions.push({
+                type: 'input',
+                name: 'countdownTime',
+                message: 'Input countdownTime:',
+                validate: (input: string) => (input ? true : 'countdownTime cannot be empty'),
             });
         }
 
@@ -3746,9 +5028,7 @@ Weight: 10`),
         }
 
         try {
-            const response = await client.restAPI.autoCancelAllOpenOrders(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
-            );
+            const response = await client.restAPI.autoCancelAllOpenOrders(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -3760,7 +5040,9 @@ Weight: 10`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'cancel-algo-order',
-    describe: decodeSelectedEntities(`Cancel an active algo order.
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Cancel an active algo order.
 
 * Either &#x60;algoId&#x60; or &#x60;clientAlgoId&#x60; must be sent.
 
@@ -3770,19 +5052,37 @@ Weight: 1`),
             'algo-id': {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
             },
             'client-algo-id': {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
             },
             'recv-window': {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log('cancel-algo-order is signed. Please login using `binance-cli login`');
             return;
@@ -3794,7 +5094,7 @@ Weight: 1`),
         }
 
         try {
-            const response = await client.restAPI.cancelAlgoOrder({ ...stdinObj, ...options });
+            const response = await client.restAPI.cancelAlgoOrder(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -3806,7 +5106,9 @@ Weight: 1`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'cancel-all-algo-open-orders',
-    describe: decodeSelectedEntities(`Cancel All Algo Open Orders
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Cancel All Algo Open Orders
 
 Weight: 1`),
     builder: (yargsCmd: any) => {
@@ -3815,16 +5117,31 @@ Weight: 1`),
                 symbol: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'recv-window': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.symbol && !stdinObj?.symbol && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -3837,6 +5154,16 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log(
                 'cancel-all-algo-open-orders is signed. Please login using `binance-cli login`'
@@ -3858,10 +5185,7 @@ Weight: 1`),
         }
 
         try {
-            const response = await client.restAPI.cancelAllAlgoOpenOrders({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.cancelAllAlgoOpenOrders(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -3873,7 +5197,9 @@ Weight: 1`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'cancel-all-open-orders',
-    describe: decodeSelectedEntities(`Cancel All Open Orders
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Cancel All Open Orders
 
 Weight: 1`),
     builder: (yargsCmd: any) => {
@@ -3882,16 +5208,31 @@ Weight: 1`),
                 symbol: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'recv-window': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.symbol && !stdinObj?.symbol && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -3904,6 +5245,16 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log('cancel-all-open-orders is signed. Please login using `binance-cli login`');
             return;
@@ -3923,7 +5274,7 @@ Weight: 1`),
         }
 
         try {
-            const response = await client.restAPI.cancelAllOpenOrders({ ...stdinObj, ...options });
+            const response = await client.restAPI.cancelAllOpenOrders(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -3935,7 +5286,9 @@ Weight: 1`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'cancel-multiple-orders',
-    describe: decodeSelectedEntities(`Cancel Multiple Orders
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Cancel Multiple Orders
 
 * Either &#x60;orderIdList&#x60; or &#x60;origClientOrderIdList &#x60; must be sent.
 
@@ -3946,28 +5299,45 @@ Weight: 1`),
                 symbol: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'order-id-list': {
                     describe: decodeSelectedEntities(
                         'max length 10 &lt;br /&gt; e.g. [1234567,2345678]'
                     ),
                     type: 'array',
+                    group: 'Command Options:',
                 },
                 'orig-client-order-id-list': {
                     describe: decodeSelectedEntities(
                         'max length 10&lt;br /&gt; e.g. [\&quot;my_id_1\&quot;,\&quot;my_id_2\&quot;], encode the double quotes. No space after comma.'
                     ),
                     type: 'array',
+                    group: 'Command Options:',
                 },
                 'recv-window': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.symbol && !stdinObj?.symbol && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -3980,6 +5350,16 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log('cancel-multiple-orders is signed. Please login using `binance-cli login`');
             return;
@@ -3999,7 +5379,7 @@ Weight: 1`),
         }
 
         try {
-            const response = await client.restAPI.cancelMultipleOrders({ ...stdinObj, ...options });
+            const response = await client.restAPI.cancelMultipleOrders(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -4011,7 +5391,9 @@ Weight: 1`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'cancel-order',
-    describe: decodeSelectedEntities(`Cancel an active order.
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Cancel an active order.
 
 * Either &#x60;orderId&#x60; or &#x60;origClientOrderId&#x60; must be sent.
 
@@ -4022,24 +5404,41 @@ Weight: 1`),
                 symbol: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'order-id': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'orig-client-order-id': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'recv-window': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.symbol && !stdinObj?.symbol && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -4052,6 +5451,16 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log('cancel-order is signed. Please login using `binance-cli login`');
             return;
@@ -4071,7 +5480,7 @@ Weight: 1`),
         }
 
         try {
-            const response = await client.restAPI.cancelOrder({ ...stdinObj, ...options });
+            const response = await client.restAPI.cancelOrder(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -4083,22 +5492,49 @@ Weight: 1`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'change-initial-leverage',
-    describe: decodeSelectedEntities(`Change user&#39;s initial leverage of specific symbol market.
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Change user&#39;s initial leverage of specific symbol market.
 
 Weight: 1`),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
-                json: {
-                    describe: 'changeInitialLeverageRequest: ',
+                symbol: {
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                leverage: {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'recv-window': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options.json && !stdinObj) {
-                    requiredParams.push('json');
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !options?.interactive) {
+                    requiredParams.push('symbol');
+                }
+
+                if (!options?.['leverage'] && !options?.interactive) {
+                    requiredParams.push('leverage');
                 }
 
                 if (requiredParams.length > 0) {
@@ -4110,6 +5546,16 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log(
                 'change-initial-leverage is signed. Please login using `binance-cli login`'
@@ -4117,13 +5563,21 @@ Weight: 1`),
             return;
         }
 
-        if (options.interactive && !options.json) {
+        if (options.interactive && !options?.['symbol']) {
             questions.push({
                 type: 'input',
-                name: 'json',
-                message: 'Input changeInitialLeverageRequest:',
-                validate: (input: string) =>
-                    input ? true : 'changeInitialLeverageRequest cannot be empty',
+                name: 'symbol',
+                message: 'Input symbol:',
+                validate: (input: string) => (input ? true : 'symbol cannot be empty'),
+            });
+        }
+
+        if (options.interactive && !options?.['leverage']) {
+            questions.push({
+                type: 'input',
+                name: 'leverage',
+                message: 'Input leverage:',
+                validate: (input: string) => (input ? true : 'leverage cannot be empty'),
             });
         }
 
@@ -4133,9 +5587,7 @@ Weight: 1`),
         }
 
         try {
-            const response = await client.restAPI.changeInitialLeverage(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
-            );
+            const response = await client.restAPI.changeInitialLeverage(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -4147,22 +5599,49 @@ Weight: 1`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'change-margin-type',
-    describe: decodeSelectedEntities(`Change symbol level margin type
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Change symbol level margin type
 
 Weight: 1`),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
-                json: {
-                    describe: 'changeMarginTypeRequest: ',
+                symbol: {
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                'margin-type': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'recv-window': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options.json && !stdinObj) {
-                    requiredParams.push('json');
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !options?.interactive) {
+                    requiredParams.push('symbol');
+                }
+
+                if (!options?.['marginType'] && !options?.interactive) {
+                    requiredParams.push('marginType');
                 }
 
                 if (requiredParams.length > 0) {
@@ -4174,18 +5653,36 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log('change-margin-type is signed. Please login using `binance-cli login`');
             return;
         }
 
-        if (options.interactive && !options.json) {
+        if (options.interactive && !options?.['symbol']) {
             questions.push({
                 type: 'input',
-                name: 'json',
-                message: 'Input changeMarginTypeRequest:',
-                validate: (input: string) =>
-                    input ? true : 'changeMarginTypeRequest cannot be empty',
+                name: 'symbol',
+                message: 'Input symbol:',
+                validate: (input: string) => (input ? true : 'symbol cannot be empty'),
+            });
+        }
+
+        if (options.interactive && !options?.['marginType']) {
+            questions.push({
+                type: 'input',
+                name: 'marginType',
+                message: 'Input marginType:',
+                validate: (input: string) => (input ? true : 'marginType cannot be empty'),
             });
         }
 
@@ -4195,9 +5692,7 @@ Weight: 1`),
         }
 
         try {
-            const response = await client.restAPI.changeMarginType(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
-            );
+            const response = await client.restAPI.changeMarginType(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -4210,22 +5705,40 @@ Weight: 1`),
 derivativesTradingUsdsFuturesCommands.push({
     command: 'change-multi-assets-mode',
     describe:
+        'Authentication required. ' +
         decodeSelectedEntities(`Change user&#39;s Multi-Assets mode (Multi-Assets Mode or Single-Asset Mode) on ***Every symbol***
 
 Weight: 1`),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
-                json: {
-                    describe: 'changeMultiAssetsModeRequest: ',
+                'multi-assets-margin': {
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                'recv-window': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options.json && !stdinObj) {
-                    requiredParams.push('json');
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['multiAssetsMargin'] && !options?.interactive) {
+                    requiredParams.push('multiAssetsMargin');
                 }
 
                 if (requiredParams.length > 0) {
@@ -4237,6 +5750,16 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log(
                 'change-multi-assets-mode is signed. Please login using `binance-cli login`'
@@ -4244,13 +5767,12 @@ Weight: 1`),
             return;
         }
 
-        if (options.interactive && !options.json) {
+        if (options.interactive && !options?.['multiAssetsMargin']) {
             questions.push({
                 type: 'input',
-                name: 'json',
-                message: 'Input changeMultiAssetsModeRequest:',
-                validate: (input: string) =>
-                    input ? true : 'changeMultiAssetsModeRequest cannot be empty',
+                name: 'multiAssetsMargin',
+                message: 'Input multiAssetsMargin:',
+                validate: (input: string) => (input ? true : 'multiAssetsMargin cannot be empty'),
             });
         }
 
@@ -4260,9 +5782,7 @@ Weight: 1`),
         }
 
         try {
-            const response = await client.restAPI.changeMultiAssetsMode(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
-            );
+            const response = await client.restAPI.changeMultiAssetsMode(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -4275,22 +5795,40 @@ Weight: 1`),
 derivativesTradingUsdsFuturesCommands.push({
     command: 'change-position-mode',
     describe:
+        'Authentication required. ' +
         decodeSelectedEntities(`Change user&#39;s position mode (Hedge Mode or One-way Mode ) on ***EVERY symbol***
 
 Weight: 1`),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
-                json: {
-                    describe: 'changePositionModeRequest: ',
+                'dual-side-position': {
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                'recv-window': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options.json && !stdinObj) {
-                    requiredParams.push('json');
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['dualSidePosition'] && !options?.interactive) {
+                    requiredParams.push('dualSidePosition');
                 }
 
                 if (requiredParams.length > 0) {
@@ -4302,18 +5840,27 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log('change-position-mode is signed. Please login using `binance-cli login`');
             return;
         }
 
-        if (options.interactive && !options.json) {
+        if (options.interactive && !options?.['dualSidePosition']) {
             questions.push({
                 type: 'input',
-                name: 'json',
-                message: 'Input changePositionModeRequest:',
-                validate: (input: string) =>
-                    input ? true : 'changePositionModeRequest cannot be empty',
+                name: 'dualSidePosition',
+                message: 'Input dualSidePosition:',
+                validate: (input: string) => (input ? true : 'dualSidePosition cannot be empty'),
             });
         }
 
@@ -4323,9 +5870,7 @@ Weight: 1`),
         }
 
         try {
-            const response = await client.restAPI.changePositionMode(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
-            );
+            const response = await client.restAPI.changePositionMode(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -4337,7 +5882,9 @@ Weight: 1`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'current-all-algo-open-orders',
-    describe: decodeSelectedEntities(`Get all algo open orders on a symbol.
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Get all algo open orders on a symbol.
 
 * If the symbol is not sent, orders for all symbols will be returned in an array.
 
@@ -4348,23 +5895,42 @@ Careful when accessing this with no symbol.`),
             'algo-type': {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
             },
             symbol: {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
             },
             'algo-id': {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
             },
             'recv-window': {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log(
                 'current-all-algo-open-orders is signed. Please login using `binance-cli login`'
@@ -4378,10 +5944,7 @@ Careful when accessing this with no symbol.`),
         }
 
         try {
-            const response = await client.restAPI.currentAllAlgoOpenOrders({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.currentAllAlgoOpenOrders(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -4393,7 +5956,9 @@ Careful when accessing this with no symbol.`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'current-all-open-orders',
-    describe: decodeSelectedEntities(`Get all open orders on a symbol.
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Get all open orders on a symbol.
 
 * If the symbol is not sent, orders for all symbols will be returned in an array.
 
@@ -4404,15 +5969,32 @@ Careful when accessing this with no symbol.`),
             symbol: {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
             },
             'recv-window': {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log(
                 'current-all-open-orders is signed. Please login using `binance-cli login`'
@@ -4426,7 +6008,7 @@ Careful when accessing this with no symbol.`),
         }
 
         try {
-            const response = await client.restAPI.currentAllOpenOrders({ ...stdinObj, ...options });
+            const response = await client.restAPI.currentAllOpenOrders(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -4438,48 +6020,41 @@ Careful when accessing this with no symbol.`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'futures-tradfi-perps-contract',
-    describe: decodeSelectedEntities(`Sign TradFi-Perps agreement contract
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Sign TradFi-Perps agreement contract
 
 Weight: 0`),
     builder: (yargsCmd: any) => {
-        return yargsCmd
-            .options({
-                json: {
-                    describe: 'futuresTradfiPerpsContractRequest: ',
-                    type: 'string',
-                },
-            })
-            .check((options: any) => {
-                const requiredParams: any = [];
-
-                if (!options.json && !stdinObj) {
-                    requiredParams.push('json');
-                }
-
-                if (requiredParams.length > 0) {
-                    return `Following arguments are required: ${requiredParams.join(', ')}`;
-                }
-
-                return true;
-            });
+        return yargsCmd.options({
+            'recv-window': {
+                type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
+            },
+        });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log(
                 'futures-tradfi-perps-contract is signed. Please login using `binance-cli login`'
             );
             return;
-        }
-
-        if (options.interactive && !options.json) {
-            questions.push({
-                type: 'input',
-                name: 'json',
-                message: 'Input futuresTradfiPerpsContractRequest:',
-                validate: (input: string) =>
-                    input ? true : 'futuresTradfiPerpsContractRequest cannot be empty',
-            });
         }
 
         if (questions.length > 0) {
@@ -4488,9 +6063,7 @@ Weight: 0`),
         }
 
         try {
-            const response = await client.restAPI.futuresTradfiPerpsContract(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
-            );
+            const response = await client.restAPI.futuresTradfiPerpsContract(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -4502,7 +6075,9 @@ Weight: 0`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'get-order-modify-history',
-    describe: decodeSelectedEntities(`Get order modification history
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Get order modification history
 
 * Either &#x60;orderId&#x60; or &#x60;origClientOrderId&#x60; must be sent, and the &#x60;orderId&#x60; will prevail if both are sent.
 * Order modify history longer than 3 month is not avaliable
@@ -4514,36 +6089,56 @@ Weight: 1`),
                 symbol: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'order-id': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'orig-client-order-id': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'start-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'end-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 limit: {
                     describe: decodeSelectedEntities('Default 100; max 1000'),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'recv-window': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.symbol && !stdinObj?.symbol && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -4556,6 +6151,16 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log(
                 'get-order-modify-history is signed. Please login using `binance-cli login`'
@@ -4577,10 +6182,7 @@ Weight: 1`),
         }
 
         try {
-            const response = await client.restAPI.getOrderModifyHistory({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.getOrderModifyHistory(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -4592,7 +6194,9 @@ Weight: 1`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'get-position-margin-change-history',
-    describe: decodeSelectedEntities(`Get Position Margin Change History
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Get Position Margin Change History
 
 * Support querying future histories that are not older than 30 days
 * The time between &#x60;startTime&#x60; and &#x60;endTime&#x60;can&#39;t be more than 30 days
@@ -4604,34 +6208,53 @@ Weight: 1`),
                 symbol: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 type: {
                     describe: decodeSelectedEntities(
                         '1: Add position margin，2: Reduce position margin'
                     ),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'start-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'end-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 limit: {
                     describe: decodeSelectedEntities('Default 100; max 1000'),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'recv-window': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.symbol && !stdinObj?.symbol && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -4644,6 +6267,16 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log(
                 'get-position-margin-change-history is signed. Please login using `binance-cli login`'
@@ -4665,10 +6298,7 @@ Weight: 1`),
         }
 
         try {
-            const response = await client.restAPI.getPositionMarginChangeHistory({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.getPositionMarginChangeHistory(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -4680,7 +6310,9 @@ Weight: 1`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'modify-isolated-position-margin',
-    describe: decodeSelectedEntities(`Modify Isolated Position Margin
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Modify Isolated Position Margin
 
 
 * Only for isolated symbol
@@ -4689,16 +6321,53 @@ Weight: 1`),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
-                json: {
-                    describe: 'modifyIsolatedPositionMarginRequest: ',
+                symbol: {
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                'position-side': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                amount: {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                type: {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'recv-window': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options.json && !stdinObj) {
-                    requiredParams.push('json');
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !options?.interactive) {
+                    requiredParams.push('symbol');
+                }
+
+                if (!options?.['amount'] && !options?.interactive) {
+                    requiredParams.push('amount');
+                }
+
+                if (!options?.['type'] && !options?.interactive) {
+                    requiredParams.push('type');
                 }
 
                 if (requiredParams.length > 0) {
@@ -4710,6 +6379,16 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log(
                 'modify-isolated-position-margin is signed. Please login using `binance-cli login`'
@@ -4717,13 +6396,30 @@ Weight: 1`),
             return;
         }
 
-        if (options.interactive && !options.json) {
+        if (options.interactive && !options?.['symbol']) {
             questions.push({
                 type: 'input',
-                name: 'json',
-                message: 'Input modifyIsolatedPositionMarginRequest:',
-                validate: (input: string) =>
-                    input ? true : 'modifyIsolatedPositionMarginRequest cannot be empty',
+                name: 'symbol',
+                message: 'Input symbol:',
+                validate: (input: string) => (input ? true : 'symbol cannot be empty'),
+            });
+        }
+
+        if (options.interactive && !options?.['amount']) {
+            questions.push({
+                type: 'input',
+                name: 'amount',
+                message: 'Input amount:',
+                validate: (input: string) => (input ? true : 'amount cannot be empty'),
+            });
+        }
+
+        if (options.interactive && !options?.['type']) {
+            questions.push({
+                type: 'input',
+                name: 'type',
+                message: 'Input type:',
+                validate: (input: string) => (input ? true : 'type cannot be empty'),
             });
         }
 
@@ -4733,9 +6429,7 @@ Weight: 1`),
         }
 
         try {
-            const response = await client.restAPI.modifyIsolatedPositionMargin(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
-            );
+            const response = await client.restAPI.modifyIsolatedPositionMargin(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -4747,7 +6441,9 @@ Weight: 1`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'modify-multiple-orders',
-    describe: decodeSelectedEntities(`Modify Multiple Orders (TRADE)
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Modify Multiple Orders (TRADE)
 
 * Parameter rules are same with &#x60;Modify Order&#x60;
 * Batch modify orders are processed concurrently, and the order of matching is not guaranteed.
@@ -4760,16 +6456,33 @@ Weight: 5 on 10s order rate limit(X-MBX-ORDER-COUNT-10S);
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
-                json: {
-                    describe: 'modifyMultipleOrdersRequest: ',
+                'batch-orders': {
+                    type: 'array',
+                    group: 'Command Options:',
+                },
+                'recv-window': {
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options.json && !stdinObj) {
-                    requiredParams.push('json');
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['batchOrders'] && !options?.interactive) {
+                    requiredParams.push('batchOrders');
                 }
 
                 if (requiredParams.length > 0) {
@@ -4781,18 +6494,27 @@ Weight: 5 on 10s order rate limit(X-MBX-ORDER-COUNT-10S);
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log('modify-multiple-orders is signed. Please login using `binance-cli login`');
             return;
         }
 
-        if (options.interactive && !options.json) {
+        if (options.interactive && !options?.['batchOrders']) {
             questions.push({
                 type: 'input',
-                name: 'json',
-                message: 'Input modifyMultipleOrdersRequest:',
-                validate: (input: string) =>
-                    input ? true : 'modifyMultipleOrdersRequest cannot be empty',
+                name: 'batchOrders',
+                message: 'Input batchOrders:',
+                validate: (input: string) => (input ? true : 'batchOrders cannot be empty'),
             });
         }
 
@@ -4802,9 +6524,7 @@ Weight: 5 on 10s order rate limit(X-MBX-ORDER-COUNT-10S);
         }
 
         try {
-            const response = await client.restAPI.modifyMultipleOrders(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
-            );
+            const response = await client.restAPI.modifyMultipleOrders(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -4817,6 +6537,7 @@ Weight: 5 on 10s order rate limit(X-MBX-ORDER-COUNT-10S);
 derivativesTradingUsdsFuturesCommands.push({
     command: 'modify-order',
     describe:
+        'Authentication required. ' +
         decodeSelectedEntities(`Order modify function, currently only LIMIT order modification is supported, modified orders will be reordered in the match queue
 
 
@@ -4834,16 +6555,69 @@ Weight: 1 on 10s order rate limit(X-MBX-ORDER-COUNT-10S);
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
-                json: {
-                    describe: 'modifyOrderRequest: ',
+                'order-id': {
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                'orig-client-order-id': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                symbol: {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                side: {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                quantity: {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                price: {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'price-match': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'recv-window': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options.json && !stdinObj) {
-                    requiredParams.push('json');
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !options?.interactive) {
+                    requiredParams.push('symbol');
+                }
+
+                if (!options?.['side'] && !options?.interactive) {
+                    requiredParams.push('side');
+                }
+
+                if (!options?.['quantity'] && !options?.interactive) {
+                    requiredParams.push('quantity');
+                }
+
+                if (!options?.['price'] && !options?.interactive) {
+                    requiredParams.push('price');
                 }
 
                 if (requiredParams.length > 0) {
@@ -4855,17 +6629,54 @@ Weight: 1 on 10s order rate limit(X-MBX-ORDER-COUNT-10S);
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log('modify-order is signed. Please login using `binance-cli login`');
             return;
         }
 
-        if (options.interactive && !options.json) {
+        if (options.interactive && !options?.['symbol']) {
             questions.push({
                 type: 'input',
-                name: 'json',
-                message: 'Input modifyOrderRequest:',
-                validate: (input: string) => (input ? true : 'modifyOrderRequest cannot be empty'),
+                name: 'symbol',
+                message: 'Input symbol:',
+                validate: (input: string) => (input ? true : 'symbol cannot be empty'),
+            });
+        }
+
+        if (options.interactive && !options?.['side']) {
+            questions.push({
+                type: 'input',
+                name: 'side',
+                message: 'Input side:',
+                validate: (input: string) => (input ? true : 'side cannot be empty'),
+            });
+        }
+
+        if (options.interactive && !options?.['quantity']) {
+            questions.push({
+                type: 'input',
+                name: 'quantity',
+                message: 'Input quantity:',
+                validate: (input: string) => (input ? true : 'quantity cannot be empty'),
+            });
+        }
+
+        if (options.interactive && !options?.['price']) {
+            questions.push({
+                type: 'input',
+                name: 'price',
+                message: 'Input price:',
+                validate: (input: string) => (input ? true : 'price cannot be empty'),
             });
         }
 
@@ -4875,9 +6686,7 @@ Weight: 1 on 10s order rate limit(X-MBX-ORDER-COUNT-10S);
         }
 
         try {
-            const response = await client.restAPI.modifyOrder(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
-            );
+            const response = await client.restAPI.modifyOrder(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -4889,7 +6698,9 @@ Weight: 1 on 10s order rate limit(X-MBX-ORDER-COUNT-10S);
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'new-algo-order',
-    describe: decodeSelectedEntities(`Send in a new Algo order.
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Send in a new Algo order.
 
 * Algo order with type &#x60;STOP&#x60;,  parameter &#x60;timeInForce&#x60; can be sent ( default &#x60;GTC&#x60;).
 * Algo order with type &#x60;TAKE_PROFIT&#x60;,  parameter &#x60;timeInForce&#x60; can be sent ( default &#x60;GTC&#x60;).
@@ -4927,16 +6738,121 @@ Weight: 0 on IP rate limit(x-mbx-used-weight-1m)`),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
-                json: {
-                    describe: 'newAlgoOrderRequest: ',
+                'algo-type': {
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                symbol: {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                side: {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'position-side': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                type: {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'time-in-force': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                quantity: {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                price: {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'trigger-price': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'working-type': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'price-match': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'close-position': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'price-protect': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'reduce-only': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'activate-price': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'callback-rate': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'client-algo-id': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'new-order-resp-type': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'self-trade-prevention-mode': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'good-till-date': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'recv-window': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options.json && !stdinObj) {
-                    requiredParams.push('json');
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['algoType'] && !options?.interactive) {
+                    requiredParams.push('algoType');
+                }
+
+                if (!options?.['symbol'] && !options?.interactive) {
+                    requiredParams.push('symbol');
+                }
+
+                if (!options?.['side'] && !options?.interactive) {
+                    requiredParams.push('side');
+                }
+
+                if (!options?.['type'] && !options?.interactive) {
+                    requiredParams.push('type');
                 }
 
                 if (requiredParams.length > 0) {
@@ -4948,17 +6864,54 @@ Weight: 0 on IP rate limit(x-mbx-used-weight-1m)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log('new-algo-order is signed. Please login using `binance-cli login`');
             return;
         }
 
-        if (options.interactive && !options.json) {
+        if (options.interactive && !options?.['algoType']) {
             questions.push({
                 type: 'input',
-                name: 'json',
-                message: 'Input newAlgoOrderRequest:',
-                validate: (input: string) => (input ? true : 'newAlgoOrderRequest cannot be empty'),
+                name: 'algoType',
+                message: 'Input algoType:',
+                validate: (input: string) => (input ? true : 'algoType cannot be empty'),
+            });
+        }
+
+        if (options.interactive && !options?.['symbol']) {
+            questions.push({
+                type: 'input',
+                name: 'symbol',
+                message: 'Input symbol:',
+                validate: (input: string) => (input ? true : 'symbol cannot be empty'),
+            });
+        }
+
+        if (options.interactive && !options?.['side']) {
+            questions.push({
+                type: 'input',
+                name: 'side',
+                message: 'Input side:',
+                validate: (input: string) => (input ? true : 'side cannot be empty'),
+            });
+        }
+
+        if (options.interactive && !options?.['type']) {
+            questions.push({
+                type: 'input',
+                name: 'type',
+                message: 'Input type:',
+                validate: (input: string) => (input ? true : 'type cannot be empty'),
             });
         }
 
@@ -4968,9 +6921,7 @@ Weight: 0 on IP rate limit(x-mbx-used-weight-1m)`),
         }
 
         try {
-            const response = await client.restAPI.newAlgoOrder(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
-            );
+            const response = await client.restAPI.newAlgoOrder(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -4982,7 +6933,9 @@ Weight: 0 on IP rate limit(x-mbx-used-weight-1m)`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'new-order',
-    describe: decodeSelectedEntities(`Send in a new order.
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Send in a new order.
 
 * If &#x60;newOrderRespType &#x60; is sent as &#x60;RESULT&#x60; :
 * &#x60;MARKET&#x60; order: the final FILLED result of the order will be return directly.
@@ -4997,16 +6950,89 @@ Weight: 1 on 10s order rate limit(X-MBX-ORDER-COUNT-10S);
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
-                json: {
-                    describe: 'newOrderRequest: ',
+                symbol: {
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                side: {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'position-side': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                type: {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'time-in-force': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                quantity: {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'reduce-only': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                price: {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'new-client-order-id': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'new-order-resp-type': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'price-match': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'self-trade-prevention-mode': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'good-till-date': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'recv-window': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options.json && !stdinObj) {
-                    requiredParams.push('json');
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !options?.interactive) {
+                    requiredParams.push('symbol');
+                }
+
+                if (!options?.['side'] && !options?.interactive) {
+                    requiredParams.push('side');
+                }
+
+                if (!options?.['type'] && !options?.interactive) {
+                    requiredParams.push('type');
                 }
 
                 if (requiredParams.length > 0) {
@@ -5018,17 +7044,45 @@ Weight: 1 on 10s order rate limit(X-MBX-ORDER-COUNT-10S);
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log('new-order is signed. Please login using `binance-cli login`');
             return;
         }
 
-        if (options.interactive && !options.json) {
+        if (options.interactive && !options?.['symbol']) {
             questions.push({
                 type: 'input',
-                name: 'json',
-                message: 'Input newOrderRequest:',
-                validate: (input: string) => (input ? true : 'newOrderRequest cannot be empty'),
+                name: 'symbol',
+                message: 'Input symbol:',
+                validate: (input: string) => (input ? true : 'symbol cannot be empty'),
+            });
+        }
+
+        if (options.interactive && !options?.['side']) {
+            questions.push({
+                type: 'input',
+                name: 'side',
+                message: 'Input side:',
+                validate: (input: string) => (input ? true : 'side cannot be empty'),
+            });
+        }
+
+        if (options.interactive && !options?.['type']) {
+            questions.push({
+                type: 'input',
+                name: 'type',
+                message: 'Input type:',
+                validate: (input: string) => (input ? true : 'type cannot be empty'),
             });
         }
 
@@ -5038,9 +7092,7 @@ Weight: 1 on 10s order rate limit(X-MBX-ORDER-COUNT-10S);
         }
 
         try {
-            const response = await client.restAPI.newOrder(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
-            );
+            const response = await client.restAPI.newOrder(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -5052,7 +7104,9 @@ Weight: 1 on 10s order rate limit(X-MBX-ORDER-COUNT-10S);
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'place-multiple-orders',
-    describe: decodeSelectedEntities(`Place Multiple Orders
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Place Multiple Orders
 
 * Paremeter rules are same with &#x60;New Order&#x60;
 * Batch orders are processed concurrently, and the order of matching is not guaranteed.
@@ -5064,16 +7118,33 @@ Weight: 5 on 10s order rate limit(X-MBX-ORDER-COUNT-10S);
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
-                json: {
-                    describe: 'placeMultipleOrdersRequest: ',
+                'batch-orders': {
+                    type: 'array',
+                    group: 'Command Options:',
+                },
+                'recv-window': {
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options.json && !stdinObj) {
-                    requiredParams.push('json');
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['batchOrders'] && !options?.interactive) {
+                    requiredParams.push('batchOrders');
                 }
 
                 if (requiredParams.length > 0) {
@@ -5085,18 +7156,27 @@ Weight: 5 on 10s order rate limit(X-MBX-ORDER-COUNT-10S);
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log('place-multiple-orders is signed. Please login using `binance-cli login`');
             return;
         }
 
-        if (options.interactive && !options.json) {
+        if (options.interactive && !options?.['batchOrders']) {
             questions.push({
                 type: 'input',
-                name: 'json',
-                message: 'Input placeMultipleOrdersRequest:',
-                validate: (input: string) =>
-                    input ? true : 'placeMultipleOrdersRequest cannot be empty',
+                name: 'batchOrders',
+                message: 'Input batchOrders:',
+                validate: (input: string) => (input ? true : 'batchOrders cannot be empty'),
             });
         }
 
@@ -5106,9 +7186,7 @@ Weight: 5 on 10s order rate limit(X-MBX-ORDER-COUNT-10S);
         }
 
         try {
-            const response = await client.restAPI.placeMultipleOrders(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
-            );
+            const response = await client.restAPI.placeMultipleOrders(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -5120,7 +7198,9 @@ Weight: 5 on 10s order rate limit(X-MBX-ORDER-COUNT-10S);
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'position-adl-quantile-estimation',
-    describe: decodeSelectedEntities(`Position ADL Quantile Estimation
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Position ADL Quantile Estimation
 
 * Values update every 30s.
 * Values 0, 1, 2, 3, 4 shows the queue position and possibility of ADL from low to high.
@@ -5135,15 +7215,32 @@ Weight: 5`),
             symbol: {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
             },
             'recv-window': {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log(
                 'position-adl-quantile-estimation is signed. Please login using `binance-cli login`'
@@ -5157,10 +7254,7 @@ Weight: 5`),
         }
 
         try {
-            const response = await client.restAPI.positionAdlQuantileEstimation({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.positionAdlQuantileEstimation(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -5172,7 +7266,9 @@ Weight: 5`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'position-information-v2',
-    describe: decodeSelectedEntities(`Get current position information.
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Get current position information.
 
 Please use with user data stream &#x60;ACCOUNT_UPDATE&#x60; to meet your timeliness and accuracy needs.
 
@@ -5182,15 +7278,32 @@ Weight: 5`),
             symbol: {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
             },
             'recv-window': {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log(
                 'position-information-v2 is signed. Please login using `binance-cli login`'
@@ -5204,10 +7317,7 @@ Weight: 5`),
         }
 
         try {
-            const response = await client.restAPI.positionInformationV2({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.positionInformationV2(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -5220,6 +7330,7 @@ Weight: 5`),
 derivativesTradingUsdsFuturesCommands.push({
     command: 'position-information-v3',
     describe:
+        'Authentication required. ' +
         decodeSelectedEntities(`Get current position information(only symbol that has position or open orders will be returned).
 
 Please use with user data stream &#x60;ACCOUNT_UPDATE&#x60; to meet your timeliness and accuracy needs.
@@ -5230,15 +7341,32 @@ Weight: 5`),
             symbol: {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
             },
             'recv-window': {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log(
                 'position-information-v3 is signed. Please login using `binance-cli login`'
@@ -5252,10 +7380,7 @@ Weight: 5`),
         }
 
         try {
-            const response = await client.restAPI.positionInformationV3({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.positionInformationV3(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -5267,7 +7392,9 @@ Weight: 5`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'query-algo-order',
-    describe: decodeSelectedEntities(`Check an algo order&#39;s status.
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Check an algo order&#39;s status.
 
 * These orders will not be found:
 * order status is &#x60;CANCELED&#x60; or &#x60;EXPIRED&#x60; **AND** order has NO filled trade **AND** created time + 3 days &lt; current time
@@ -5282,19 +7409,37 @@ Weight: 1`),
             'algo-id': {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
             },
             'client-algo-id': {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
             },
             'recv-window': {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log('query-algo-order is signed. Please login using `binance-cli login`');
             return;
@@ -5306,7 +7451,7 @@ Weight: 1`),
         }
 
         try {
-            const response = await client.restAPI.queryAlgoOrder({ ...stdinObj, ...options });
+            const response = await client.restAPI.queryAlgoOrder(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -5318,7 +7463,9 @@ Weight: 1`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'query-all-algo-orders',
-    describe: decodeSelectedEntities(`Get all algo orders; active, CANCELED, TRIGGERED or FINISHED .
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Get all algo orders; active, CANCELED, TRIGGERED or FINISHED .
 
 * These orders will not be found:
 * order status is &#x60;CANCELED&#x60; or &#x60;EXPIRED&#x60; **AND** order has NO filled trade **AND** created time + 3 days &lt; current time
@@ -5334,36 +7481,56 @@ Weight: 5`),
                 symbol: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'algo-id': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'start-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'end-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 page: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 limit: {
                     describe: decodeSelectedEntities('Default 100; max 1000'),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'recv-window': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.symbol && !stdinObj?.symbol && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -5376,6 +7543,16 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log('query-all-algo-orders is signed. Please login using `binance-cli login`');
             return;
@@ -5395,7 +7572,7 @@ Weight: 5`),
         }
 
         try {
-            const response = await client.restAPI.queryAllAlgoOrders({ ...stdinObj, ...options });
+            const response = await client.restAPI.queryAllAlgoOrders(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -5407,7 +7584,9 @@ Weight: 5`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'query-current-open-order',
-    describe: decodeSelectedEntities(`Query open order
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Query open order
 
 
 * Either&#x60;orderId&#x60; or &#x60;origClientOrderId&#x60; must be sent
@@ -5420,24 +7599,41 @@ Weight: 1`),
                 symbol: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'order-id': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'orig-client-order-id': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'recv-window': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.symbol && !stdinObj?.symbol && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -5450,6 +7646,16 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log(
                 'query-current-open-order is signed. Please login using `binance-cli login`'
@@ -5471,10 +7677,7 @@ Weight: 1`),
         }
 
         try {
-            const response = await client.restAPI.queryCurrentOpenOrder({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.queryCurrentOpenOrder(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -5486,7 +7689,9 @@ Weight: 1`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'query-order',
-    describe: decodeSelectedEntities(`Check an order&#39;s status.
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Check an order&#39;s status.
 
 * These orders will not be found:
 * order status is &#x60;CANCELED&#x60; or &#x60;EXPIRED&#x60; **AND** order has NO filled trade **AND** created time + 3 days &lt; current time
@@ -5502,24 +7707,41 @@ Weight: 1`),
                 symbol: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'order-id': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'orig-client-order-id': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'recv-window': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.symbol && !stdinObj?.symbol && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -5532,6 +7754,16 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log('query-order is signed. Please login using `binance-cli login`');
             return;
@@ -5551,7 +7783,7 @@ Weight: 1`),
         }
 
         try {
-            const response = await client.restAPI.queryOrder({ ...stdinObj, ...options });
+            const response = await client.restAPI.queryOrder(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -5564,6 +7796,7 @@ Weight: 1`),
 derivativesTradingUsdsFuturesCommands.push({
     command: 'test-order',
     describe:
+        'Authentication required. ' +
         decodeSelectedEntities(`Testing order request, this order will not be submitted to matching engine
 
 * Order with type &#x60;STOP&#x60;,  parameter &#x60;timeInForce&#x60; can be sent ( default &#x60;GTC&#x60;).
@@ -5607,16 +7840,113 @@ Weight: 0`),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
-                json: {
-                    describe: 'testOrderRequest: ',
+                symbol: {
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                side: {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'position-side': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                type: {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'time-in-force': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                quantity: {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'reduce-only': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                price: {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'new-client-order-id': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'stop-price': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'close-position': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'activation-price': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'callback-rate': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'working-type': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'price-protect': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'new-order-resp-type': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'price-match': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'self-trade-prevention-mode': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'good-till-date': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'recv-window': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options.json && !stdinObj) {
-                    requiredParams.push('json');
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !options?.interactive) {
+                    requiredParams.push('symbol');
+                }
+
+                if (!options?.['side'] && !options?.interactive) {
+                    requiredParams.push('side');
+                }
+
+                if (!options?.['type'] && !options?.interactive) {
+                    requiredParams.push('type');
                 }
 
                 if (requiredParams.length > 0) {
@@ -5628,17 +7958,45 @@ Weight: 0`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log('test-order is signed. Please login using `binance-cli login`');
             return;
         }
 
-        if (options.interactive && !options.json) {
+        if (options.interactive && !options?.['symbol']) {
             questions.push({
                 type: 'input',
-                name: 'json',
-                message: 'Input testOrderRequest:',
-                validate: (input: string) => (input ? true : 'testOrderRequest cannot be empty'),
+                name: 'symbol',
+                message: 'Input symbol:',
+                validate: (input: string) => (input ? true : 'symbol cannot be empty'),
+            });
+        }
+
+        if (options.interactive && !options?.['side']) {
+            questions.push({
+                type: 'input',
+                name: 'side',
+                message: 'Input side:',
+                validate: (input: string) => (input ? true : 'side cannot be empty'),
+            });
+        }
+
+        if (options.interactive && !options?.['type']) {
+            questions.push({
+                type: 'input',
+                name: 'type',
+                message: 'Input type:',
+                validate: (input: string) => (input ? true : 'type cannot be empty'),
             });
         }
 
@@ -5648,9 +8006,7 @@ Weight: 0`),
         }
 
         try {
-            const response = await client.restAPI.testOrder(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
-            );
+            const response = await client.restAPI.testOrder(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -5662,7 +8018,9 @@ Weight: 0`),
 
 derivativesTradingUsdsFuturesCommands.push({
     command: 'users-force-orders',
-    describe: decodeSelectedEntities(`Query user&#39;s Force Orders
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Query user&#39;s Force Orders
 
 * If &quot;autoCloseType&quot; is not sent, orders with both of the types will be returned
 * If &quot;startTime&quot; is not sent, data within 7 days before &quot;endTime&quot; can be queried
@@ -5673,33 +8031,54 @@ Weight: 20 with symbol, 50 without symbol`),
             symbol: {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
             },
             'auto-close-type': {
                 describe: decodeSelectedEntities(
                     '\&quot;LIQUIDATION\&quot; for liquidation orders, \&quot;ADL\&quot; for ADL orders.'
                 ),
                 type: 'string',
+                group: 'Command Options:',
             },
             'start-time': {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
             },
             'end-time': {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
             },
             limit: {
                 describe: decodeSelectedEntities('Default 100; max 1000'),
                 type: 'string',
+                group: 'Command Options:',
             },
             'recv-window': {
                 describe: decodeSelectedEntities(''),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log('users-force-orders is signed. Please login using `binance-cli login`');
             return;
@@ -5711,7 +8090,7 @@ Weight: 20 with symbol, 50 without symbol`),
         }
 
         try {
-            const response = await client.restAPI.usersForceOrders({ ...stdinObj, ...options });
+            const response = await client.restAPI.usersForceOrders(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {

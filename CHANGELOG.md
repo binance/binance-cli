@@ -1,5 +1,16 @@
 # Change log
 
+## 1.0.2 - 2026-04-09
+
+### Added
+
+- Add environment to profile commands
+
+### Updated
+
+- Add the request fields as options for POST/PUT endpoints
+- Renamed `BINANCE_API_SECRET` to `BINANCE_SECRET_KEY`
+
 ## 1.0.1 - 2026-04-07
 
 ### Updated

@@ -14,6 +14,8 @@ const yargsInstance = yargs(hideBin(process.argv));
 const allCommands = yargsInstance
     .usage('Usage: binance-cli <command> [options]')
     .scriptName('')
+    .group('help', 'Global Options:')
+    .group('version', 'Global Options:')
     .wrap(Math.min(150, yargsInstance.terminalWidth()));
 
 (BigInt.prototype as any).toJSON = function () {
@@ -106,14 +108,16 @@ if (hideBin(process.argv).length == 0) {
 } else {
     allCommands
         .option('interactive', {
+            group: 'Global Options:',
             alias: 'i',
             type: 'boolean',
             description: 'Run in interactive mode',
         })
         .option('profile', {
+            group: 'Global Options:',
             type: 'string',
             description: 'Choose the API profile',
         })
-        .completion('completion')
+        .completion('completion', 'Generate completion script')
         .parse();
 }
