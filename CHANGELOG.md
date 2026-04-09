@@ -1,5 +1,11 @@
 # Change log
 
+## 1.0.3 - 2026-04-09
+
+### Updated
+
+- Simplified checks for required params
+
 ## 1.0.2 - 2026-04-09
 
 ### Added

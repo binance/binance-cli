@@ -378,11 +378,11 @@ Weight: 3000`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['startTime'] && !stdinObj?.['startTime'] && !options?.interactive) {
+                if (!options?.['startTime'] && !options?.interactive) {
                     requiredParams.push('startTime');
                 }
 
-                if (!options?.['endTime'] && !stdinObj?.['endTime'] && !options?.interactive) {
+                if (!options?.['endTime'] && !options?.interactive) {
                     requiredParams.push('endTime');
                 }
 

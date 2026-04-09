@@ -605,11 +605,11 @@ Weight: 1000`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['startTime'] && !stdinObj?.['startTime'] && !options?.interactive) {
+                if (!options?.['startTime'] && !options?.interactive) {
                     requiredParams.push('startTime');
                 }
 
-                if (!options?.['endTime'] && !stdinObj?.['endTime'] && !options?.interactive) {
+                if (!options?.['endTime'] && !options?.interactive) {
                     requiredParams.push('endTime');
                 }
 
@@ -716,11 +716,11 @@ Weight: 1000`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['startTime'] && !stdinObj?.['startTime'] && !options?.interactive) {
+                if (!options?.['startTime'] && !options?.interactive) {
                     requiredParams.push('startTime');
                 }
 
-                if (!options?.['endTime'] && !stdinObj?.['endTime'] && !options?.interactive) {
+                if (!options?.['endTime'] && !options?.interactive) {
                     requiredParams.push('endTime');
                 }
 
@@ -827,11 +827,11 @@ Weight: 1000`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['startTime'] && !stdinObj?.['startTime'] && !options?.interactive) {
+                if (!options?.['startTime'] && !options?.interactive) {
                     requiredParams.push('startTime');
                 }
 
-                if (!options?.['endTime'] && !stdinObj?.['endTime'] && !options?.interactive) {
+                if (!options?.['endTime'] && !options?.interactive) {
                     requiredParams.push('endTime');
                 }
 
@@ -933,11 +933,7 @@ Weight: 10`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (
-                    !options?.['downloadId'] &&
-                    !stdinObj?.['downloadId'] &&
-                    !options?.interactive
-                ) {
+                if (!options?.['downloadId'] && !options?.interactive) {
                     requiredParams.push('downloadId');
                 }
 
@@ -1030,11 +1026,7 @@ Weight: 10`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (
-                    !options?.['downloadId'] &&
-                    !stdinObj?.['downloadId'] &&
-                    !options?.interactive
-                ) {
+                if (!options?.['downloadId'] && !options?.interactive) {
                     requiredParams.push('downloadId');
                 }
 
@@ -1127,11 +1119,7 @@ Weight: 10`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (
-                    !options?.['downloadId'] &&
-                    !stdinObj?.['downloadId'] &&
-                    !options?.interactive
-                ) {
+                if (!options?.['downloadId'] && !options?.interactive) {
                     requiredParams.push('downloadId');
                 }
 
@@ -1578,7 +1566,7 @@ Weight: 20`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -2065,23 +2053,19 @@ Weight: 0`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['pair'] && !stdinObj?.['pair'] && !options?.interactive) {
+                if (!options?.['pair'] && !options?.interactive) {
                     requiredParams.push('pair');
                 }
 
-                if (
-                    !options?.['contractType'] &&
-                    !stdinObj?.['contractType'] &&
-                    !options?.interactive
-                ) {
+                if (!options?.['contractType'] && !options?.interactive) {
                     requiredParams.push('contractType');
                 }
 
-                if (!options?.['period'] && !stdinObj?.['period'] && !options?.interactive) {
+                if (!options?.['period'] && !options?.interactive) {
                     requiredParams.push('period');
                 }
 
-                if (!options?.['limit'] && !stdinObj?.['limit'] && !options?.interactive) {
+                if (!options?.['limit'] && !options?.interactive) {
                     requiredParams.push('limit');
                 }
 
@@ -2278,7 +2262,7 @@ Weight: 20`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -2394,19 +2378,15 @@ Weight: based on parameter LIMIT
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['pair'] && !stdinObj?.['pair'] && !options?.interactive) {
+                if (!options?.['pair'] && !options?.interactive) {
                     requiredParams.push('pair');
                 }
 
-                if (
-                    !options?.['contractType'] &&
-                    !stdinObj?.['contractType'] &&
-                    !options?.interactive
-                ) {
+                if (!options?.['contractType'] && !options?.interactive) {
                     requiredParams.push('contractType');
                 }
 
-                if (!options?.['interval'] && !stdinObj?.['interval'] && !options?.interactive) {
+                if (!options?.['interval'] && !options?.interactive) {
                     requiredParams.push('interval');
                 }
 
@@ -2632,11 +2612,11 @@ Weight: based on parameter LIMIT
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['pair'] && !stdinObj?.['pair'] && !options?.interactive) {
+                if (!options?.['pair'] && !options?.interactive) {
                     requiredParams.push('pair');
                 }
 
-                if (!options?.['interval'] && !stdinObj?.['interval'] && !options?.interactive) {
+                if (!options?.['interval'] && !options?.interactive) {
                     requiredParams.push('interval');
                 }
 
@@ -2750,11 +2730,11 @@ Weight: based on parameter LIMIT
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
-                if (!options?.['interval'] && !stdinObj?.['interval'] && !options?.interactive) {
+                if (!options?.['interval'] && !options?.interactive) {
                     requiredParams.push('interval');
                 }
 
@@ -2865,11 +2845,11 @@ Weight: 0`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
-                if (!options?.['period'] && !stdinObj?.['period'] && !options?.interactive) {
+                if (!options?.['period'] && !options?.interactive) {
                     requiredParams.push('period');
                 }
 
@@ -3030,11 +3010,11 @@ Weight: based on parameter LIMIT
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
-                if (!options?.['interval'] && !stdinObj?.['interval'] && !options?.interactive) {
+                if (!options?.['interval'] && !options?.interactive) {
                     requiredParams.push('interval');
                 }
 
@@ -3179,7 +3159,7 @@ Weight: 20`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -3256,7 +3236,7 @@ Weight: 1`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -3359,11 +3339,11 @@ Weight: 0`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
-                if (!options?.['period'] && !stdinObj?.['period'] && !options?.interactive) {
+                if (!options?.['period'] && !options?.interactive) {
                     requiredParams.push('period');
                 }
 
@@ -3461,7 +3441,7 @@ Weight: Adjusted based on the limit:
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -3568,11 +3548,11 @@ Weight: based on parameter LIMIT
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
-                if (!options?.['interval'] && !stdinObj?.['interval'] && !options?.interactive) {
+                if (!options?.['interval'] && !options?.interactive) {
                     requiredParams.push('interval');
                 }
 
@@ -3657,7 +3637,7 @@ Weight: 0`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['pair'] && !stdinObj?.['pair'] && !options?.interactive) {
+                if (!options?.['pair'] && !options?.interactive) {
                     requiredParams.push('pair');
                 }
 
@@ -3739,7 +3719,7 @@ Weight: 2`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -3870,7 +3850,7 @@ Weight: 5`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -3957,7 +3937,7 @@ Weight: Adjusted based on the limit:
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -4213,11 +4193,11 @@ Weight: 0`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
-                if (!options?.['period'] && !stdinObj?.['period'] && !options?.interactive) {
+                if (!options?.['period'] && !options?.interactive) {
                     requiredParams.push('period');
                 }
 
@@ -4398,11 +4378,11 @@ Weight: 0`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
-                if (!options?.['period'] && !stdinObj?.['period'] && !options?.interactive) {
+                if (!options?.['period'] && !options?.interactive) {
                     requiredParams.push('period');
                 }
 
@@ -4517,11 +4497,11 @@ Weight: 0`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
-                if (!options?.['period'] && !stdinObj?.['period'] && !options?.interactive) {
+                if (!options?.['period'] && !options?.interactive) {
                     requiredParams.push('period');
                 }
 
@@ -4634,7 +4614,7 @@ Weight: 5`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['asset'] && !stdinObj?.['asset'] && !options?.interactive) {
+                if (!options?.['asset'] && !options?.interactive) {
                     requiredParams.push('asset');
                 }
 
@@ -4755,7 +4735,7 @@ Weight: 5`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -4871,7 +4851,7 @@ Weight: 5`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -5141,7 +5121,7 @@ Weight: 1`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -5232,7 +5212,7 @@ Weight: 1`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -5337,7 +5317,7 @@ Weight: 1`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -5438,7 +5418,7 @@ Weight: 1`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -6138,7 +6118,7 @@ Weight: 1`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -6254,7 +6234,7 @@ Weight: 1`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -7530,7 +7510,7 @@ Weight: 5`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -7633,7 +7613,7 @@ Weight: 1`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
@@ -7741,7 +7721,7 @@ Weight: 1`),
                     options = { ...options, ...JSON.parse(options.json) };
                 }
 
-                if (!options?.['symbol'] && !stdinObj?.['symbol'] && !options?.interactive) {
+                if (!options?.['symbol'] && !options?.interactive) {
                     requiredParams.push('symbol');
                 }
 
