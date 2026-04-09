@@ -55,15 +55,31 @@ Weight: 3000(IP)`),
             'from-asset': {
                 describe: decodeSelectedEntities('User spends coin'),
                 type: 'string',
+                group: 'Command Options:',
             },
             'to-asset': {
                 describe: decodeSelectedEntities('User receives coin'),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
 
         if (questions.length > 0) {
             const answers = await inquirer.prompt(questions);
@@ -71,7 +87,7 @@ Weight: 3000(IP)`),
         }
 
         try {
-            const response = await client.restAPI.listAllConvertPairs({ ...stdinObj, ...options });
+            const response = await client.restAPI.listAllConvertPairs(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -83,7 +99,9 @@ Weight: 3000(IP)`),
 
 convertCommands.push({
     command: 'query-order-quantity-precision-per-asset',
-    describe: decodeSelectedEntities(`Query for supported asset’s precision information
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Query for supported asset’s precision information
 
 Weight: 100(IP)`),
     builder: (yargsCmd: any) => {
@@ -91,11 +109,27 @@ Weight: 100(IP)`),
             'recv-window': {
                 describe: decodeSelectedEntities('The value cannot be greater than 60000'),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log(
                 'query-order-quantity-precision-per-asset is signed. Please login using `binance-cli login`'
@@ -109,10 +143,7 @@ Weight: 100(IP)`),
         }
 
         try {
-            const response = await client.restAPI.queryOrderQuantityPrecisionPerAsset({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.queryOrderQuantityPrecisionPerAsset(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -124,22 +155,41 @@ Weight: 100(IP)`),
 
 convertCommands.push({
     command: 'accept-quote',
-    describe: decodeSelectedEntities(`Accept the offered quote by quote ID.
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Accept the offered quote by quote ID.
 
 Weight: 500(UID)`),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
-                json: {
-                    describe: 'acceptQuoteRequest: ',
+                'quote-id': {
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                'recv-window': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options.json && !stdinObj) {
-                    requiredParams.push('json');
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['quoteId'] && !options?.interactive) {
+                    requiredParams.push('quoteId');
                 }
 
                 if (requiredParams.length > 0) {
@@ -151,17 +201,27 @@ Weight: 500(UID)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log('accept-quote is signed. Please login using `binance-cli login`');
             return;
         }
 
-        if (options.interactive && !options.json) {
+        if (options.interactive && !options?.['quoteId']) {
             questions.push({
                 type: 'input',
-                name: 'json',
-                message: 'Input acceptQuoteRequest:',
-                validate: (input: string) => (input ? true : 'acceptQuoteRequest cannot be empty'),
+                name: 'quoteId',
+                message: 'Input quoteId:',
+                validate: (input: string) => (input ? true : 'quoteId cannot be empty'),
             });
         }
 
@@ -171,9 +231,7 @@ Weight: 500(UID)`),
         }
 
         try {
-            const response = await client.restAPI.acceptQuote(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
-            );
+            const response = await client.restAPI.acceptQuote(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -185,22 +243,41 @@ Weight: 500(UID)`),
 
 convertCommands.push({
     command: 'cancel-limit-order',
-    describe: decodeSelectedEntities(`Enable users to cancel a limit order
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Enable users to cancel a limit order
 
 Weight: 200(UID)`),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
-                json: {
-                    describe: 'cancelLimitOrderRequest: ',
+                'order-id': {
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                'recv-window': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options.json && !stdinObj) {
-                    requiredParams.push('json');
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['orderId'] && !options?.interactive) {
+                    requiredParams.push('orderId');
                 }
 
                 if (requiredParams.length > 0) {
@@ -212,18 +289,27 @@ Weight: 200(UID)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log('cancel-limit-order is signed. Please login using `binance-cli login`');
             return;
         }
 
-        if (options.interactive && !options.json) {
+        if (options.interactive && !options?.['orderId']) {
             questions.push({
                 type: 'input',
-                name: 'json',
-                message: 'Input cancelLimitOrderRequest:',
-                validate: (input: string) =>
-                    input ? true : 'cancelLimitOrderRequest cannot be empty',
+                name: 'orderId',
+                message: 'Input orderId:',
+                validate: (input: string) => (input ? true : 'orderId cannot be empty'),
             });
         }
 
@@ -233,9 +319,7 @@ Weight: 200(UID)`),
         }
 
         try {
-            const response = await client.restAPI.cancelLimitOrder(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
-            );
+            const response = await client.restAPI.cancelLimitOrder(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -247,7 +331,9 @@ Weight: 200(UID)`),
 
 convertCommands.push({
     command: 'get-convert-trade-history',
-    describe: decodeSelectedEntities(`Get Convert Trade History
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Get Convert Trade History
 
 * The max interval between startTime and endTime is 30 days.
 
@@ -258,28 +344,45 @@ Weight: 3000`),
                 'start-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'end-time': {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 limit: {
                     describe: decodeSelectedEntities('Default 100, Max 1000'),
                     type: 'string',
+                    group: 'Command Options:',
                 },
                 'recv-window': {
                     describe: decodeSelectedEntities('The value cannot be greater than 60000'),
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options?.startTime && !stdinObj?.startTime && !options?.interactive) {
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['startTime'] && !stdinObj?.['startTime'] && !options?.interactive) {
                     requiredParams.push('startTime');
                 }
 
-                if (!options?.endTime && !stdinObj?.endTime && !options?.interactive) {
+                if (!options?.['endTime'] && !stdinObj?.['endTime'] && !options?.interactive) {
                     requiredParams.push('endTime');
                 }
 
@@ -292,6 +395,16 @@ Weight: 3000`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log(
                 'get-convert-trade-history is signed. Please login using `binance-cli login`'
@@ -321,10 +434,7 @@ Weight: 3000`),
         }
 
         try {
-            const response = await client.restAPI.getConvertTradeHistory({
-                ...stdinObj,
-                ...options,
-            });
+            const response = await client.restAPI.getConvertTradeHistory(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -336,7 +446,9 @@ Weight: 3000`),
 
 convertCommands.push({
     command: 'order-status',
-    describe: decodeSelectedEntities(`Query order status by order ID.
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Query order status by order ID.
 
 Weight: 100(UID)`),
     builder: (yargsCmd: any) => {
@@ -344,15 +456,32 @@ Weight: 100(UID)`),
             'order-id': {
                 describe: decodeSelectedEntities('Either orderId or quoteId is required'),
                 type: 'string',
+                group: 'Command Options:',
             },
             'quote-id': {
                 describe: decodeSelectedEntities('Either orderId or quoteId is required'),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log('order-status is signed. Please login using `binance-cli login`');
             return;
@@ -364,7 +493,7 @@ Weight: 100(UID)`),
         }
 
         try {
-            const response = await client.restAPI.orderStatus({ ...stdinObj, ...options });
+            const response = await client.restAPI.orderStatus(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -376,7 +505,9 @@ Weight: 100(UID)`),
 
 convertCommands.push({
     command: 'place-limit-order',
-    describe: decodeSelectedEntities(`Enable users to place a limit order
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Enable users to place a limit order
 
 * &#x60;baseAsset&#x60; or &#x60;quoteAsset&#x60; can be determined via &#x60;exchangeInfo&#x60; endpoint.
 * Limit price is defined from &#x60;baseAsset&#x60; to &#x60;quoteAsset&#x60;.
@@ -386,16 +517,77 @@ Weight: 500(UID)`),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
-                json: {
-                    describe: 'placeLimitOrderRequest: ',
+                'base-asset': {
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                'quote-asset': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'limit-price': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'base-amount': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'quote-amount': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                side: {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'wallet-type': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'expired-type': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'recv-window': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options.json && !stdinObj) {
-                    requiredParams.push('json');
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['baseAsset'] && !options?.interactive) {
+                    requiredParams.push('baseAsset');
+                }
+
+                if (!options?.['quoteAsset'] && !options?.interactive) {
+                    requiredParams.push('quoteAsset');
+                }
+
+                if (!options?.['limitPrice'] && !options?.interactive) {
+                    requiredParams.push('limitPrice');
+                }
+
+                if (!options?.['side'] && !options?.interactive) {
+                    requiredParams.push('side');
+                }
+
+                if (!options?.['expiredType'] && !options?.interactive) {
+                    requiredParams.push('expiredType');
                 }
 
                 if (requiredParams.length > 0) {
@@ -407,18 +599,63 @@ Weight: 500(UID)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log('place-limit-order is signed. Please login using `binance-cli login`');
             return;
         }
 
-        if (options.interactive && !options.json) {
+        if (options.interactive && !options?.['baseAsset']) {
             questions.push({
                 type: 'input',
-                name: 'json',
-                message: 'Input placeLimitOrderRequest:',
-                validate: (input: string) =>
-                    input ? true : 'placeLimitOrderRequest cannot be empty',
+                name: 'baseAsset',
+                message: 'Input baseAsset:',
+                validate: (input: string) => (input ? true : 'baseAsset cannot be empty'),
+            });
+        }
+
+        if (options.interactive && !options?.['quoteAsset']) {
+            questions.push({
+                type: 'input',
+                name: 'quoteAsset',
+                message: 'Input quoteAsset:',
+                validate: (input: string) => (input ? true : 'quoteAsset cannot be empty'),
+            });
+        }
+
+        if (options.interactive && !options?.['limitPrice']) {
+            questions.push({
+                type: 'input',
+                name: 'limitPrice',
+                message: 'Input limitPrice:',
+                validate: (input: string) => (input ? true : 'limitPrice cannot be empty'),
+            });
+        }
+
+        if (options.interactive && !options?.['side']) {
+            questions.push({
+                type: 'input',
+                name: 'side',
+                message: 'Input side:',
+                validate: (input: string) => (input ? true : 'side cannot be empty'),
+            });
+        }
+
+        if (options.interactive && !options?.['expiredType']) {
+            questions.push({
+                type: 'input',
+                name: 'expiredType',
+                message: 'Input expiredType:',
+                validate: (input: string) => (input ? true : 'expiredType cannot be empty'),
             });
         }
 
@@ -428,9 +665,7 @@ Weight: 500(UID)`),
         }
 
         try {
-            const response = await client.restAPI.placeLimitOrder(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
-            );
+            const response = await client.restAPI.placeLimitOrder(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -442,7 +677,9 @@ Weight: 500(UID)`),
 
 convertCommands.push({
     command: 'query-limit-open-orders',
-    describe: decodeSelectedEntities(`Request a quote for the requested token pairs
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Request a quote for the requested token pairs
 
 Weight: 3000(UID)`),
     builder: (yargsCmd: any) => {
@@ -450,11 +687,27 @@ Weight: 3000(UID)`),
             'recv-window': {
                 describe: decodeSelectedEntities('The value cannot be greater than 60000'),
                 type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
             },
         });
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log(
                 'query-limit-open-orders is signed. Please login using `binance-cli login`'
@@ -468,7 +721,7 @@ Weight: 3000(UID)`),
         }
 
         try {
-            const response = await client.restAPI.queryLimitOpenOrders({ ...stdinObj, ...options });
+            const response = await client.restAPI.queryLimitOpenOrders(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {
@@ -480,7 +733,9 @@ Weight: 3000(UID)`),
 
 convertCommands.push({
     command: 'send-quote-request',
-    describe: decodeSelectedEntities(`Request a quote for the requested token pairs
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(`Request a quote for the requested token pairs
 
 * Either fromAmount or toAmount should be sent
 * &#x60;quoteId&#x60; will be returned only if you have enough funds to convert
@@ -489,16 +744,57 @@ Weight: 200(UID)`),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
-                json: {
-                    describe: 'sendQuoteRequestRequest: ',
+                'from-asset': {
                     type: 'string',
+                    group: 'Command Options:',
+                },
+                'to-asset': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'from-amount': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'to-amount': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'wallet-type': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'valid-time': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'recv-window': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
                 },
             })
             .check((options: any) => {
                 const requiredParams: any = [];
 
-                if (!options.json && !stdinObj) {
-                    requiredParams.push('json');
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['fromAsset'] && !options?.interactive) {
+                    requiredParams.push('fromAsset');
+                }
+
+                if (!options?.['toAsset'] && !options?.interactive) {
+                    requiredParams.push('toAsset');
                 }
 
                 if (requiredParams.length > 0) {
@@ -510,18 +806,36 @@ Weight: 200(UID)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
         if (isEmpty(configurationRestAPI)) {
             console.log('send-quote-request is signed. Please login using `binance-cli login`');
             return;
         }
 
-        if (options.interactive && !options.json) {
+        if (options.interactive && !options?.['fromAsset']) {
             questions.push({
                 type: 'input',
-                name: 'json',
-                message: 'Input sendQuoteRequestRequest:',
-                validate: (input: string) =>
-                    input ? true : 'sendQuoteRequestRequest cannot be empty',
+                name: 'fromAsset',
+                message: 'Input fromAsset:',
+                validate: (input: string) => (input ? true : 'fromAsset cannot be empty'),
+            });
+        }
+
+        if (options.interactive && !options?.['toAsset']) {
+            questions.push({
+                type: 'input',
+                name: 'toAsset',
+                message: 'Input toAsset:',
+                validate: (input: string) => (input ? true : 'toAsset cannot be empty'),
             });
         }
 
@@ -531,9 +845,7 @@ Weight: 200(UID)`),
         }
 
         try {
-            const response = await client.restAPI.sendQuoteRequest(
-                !isEmpty(stdinObj) ? stdinObj : options.json ? JSON.parse(options.json) : options
-            );
+            const response = await client.restAPI.sendQuoteRequest(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {

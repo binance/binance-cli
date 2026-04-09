@@ -39,10 +39,10 @@ binance-cli -h
 
 # Set the API key and secret as global variables
 export BINANCE_API_KEY=<the_api_key>
-export BINANCE_API_SECRET=<the_api_secret> # Can be secret key, path to private key or content of private key
+export BINANCE_SECRET_KEY=<the_api_secret> # Can be secret key, path to private key or content of private key
 
 # Set the environment (prod by default, valid options: prod, demo and testnet)
-export BINANCE_API_ENV=test
+export BINANCE_API_ENV=testnet
 
 # It is possible to have a custom base URL
 export BINANCE_SPOT_BASE_PATH=https://testnet.binance.vision
