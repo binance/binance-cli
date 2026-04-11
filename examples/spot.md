@@ -1,5 +1,3 @@
-# Spot
-
 ## Account
 
 ### [GET /api/v3/account/commission](https://developers.binance.com/docs/binance-spot-api-docs/rest-api/account-endpoints#query-commission-rates-user_data) - Query Commission Rates

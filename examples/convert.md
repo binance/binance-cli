@@ -1,5 +1,3 @@
-# Convert
-
 ## MarketData
 
 ### [GET /sapi/v1/convert/exchangeInfo](https://developers.binance.com/docs/convert/market-data/) - List All Convert Pairs

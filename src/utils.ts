@@ -9,6 +9,18 @@ let stdin: any = null;
 const homeDir = os.homedir();
 const BINANCE_LOGIN_DIR = path.join(homeDir, '.binance');
 
+export const validHTTPMethods = new Set([
+    'GET',
+    'POST',
+    'PUT',
+    'DELETE',
+    'PATCH',
+    'HEAD',
+    'OPTIONS',
+    'CONNECT',
+    'TRACE',
+]);
+
 export function isHmacSecretKey(key: string): boolean {
     const regex = /^[A-Za-z0-9]{64}$/;
     return regex.test(key);
@@ -197,7 +209,7 @@ export const isAIAgent = (): boolean => {
         return true;
     }
     return false;
-}
+};
 
 export const getUserAgent = (product: string = 'unkown'): string => {
     let clientType = 'cli';
@@ -205,5 +217,5 @@ export const getUserAgent = (product: string = 'unkown'): string => {
         clientType = 'skill';
     }
 
-    return `binance-${clientType}/${product}/1.0.4 (Node.js/${process.version}; ${platform()}; ${arch()})`;
+    return `binance-${clientType}/${product}/1.1.0 (Node.js/${process.version}; ${platform()}; ${arch()})`;
 };

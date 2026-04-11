@@ -132,8 +132,9 @@ Weight: 100(IP)`),
 
         if (isEmpty(configurationRestAPI)) {
             console.log(
-                'query-order-quantity-precision-per-asset is signed. Please login using `binance-cli login`'
+                'query-order-quantity-precision-per-asset is signed. Please create a profile using `binance-cli profile create`.'
             );
+            process.exitCode = 1;
             return;
         }
 
@@ -212,7 +213,10 @@ Weight: 500(UID)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log('accept-quote is signed. Please login using `binance-cli login`');
+            console.log(
+                'accept-quote is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
             return;
         }
 
@@ -300,7 +304,10 @@ Weight: 200(UID)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log('cancel-limit-order is signed. Please login using `binance-cli login`');
+            console.log(
+                'cancel-limit-order is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
             return;
         }
 
@@ -407,8 +414,9 @@ Weight: 3000`),
 
         if (isEmpty(configurationRestAPI)) {
             console.log(
-                'get-convert-trade-history is signed. Please login using `binance-cli login`'
+                'get-convert-trade-history is signed. Please create a profile using `binance-cli profile create`.'
             );
+            process.exitCode = 1;
             return;
         }
 
@@ -483,7 +491,10 @@ Weight: 100(UID)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log('order-status is signed. Please login using `binance-cli login`');
+            console.log(
+                'order-status is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
             return;
         }
 
@@ -610,7 +621,10 @@ Weight: 500(UID)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log('place-limit-order is signed. Please login using `binance-cli login`');
+            console.log(
+                'place-limit-order is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
             return;
         }
 
@@ -710,8 +724,9 @@ Weight: 3000(UID)`),
 
         if (isEmpty(configurationRestAPI)) {
             console.log(
-                'query-limit-open-orders is signed. Please login using `binance-cli login`'
+                'query-limit-open-orders is signed. Please create a profile using `binance-cli profile create`.'
             );
+            process.exitCode = 1;
             return;
         }
 
@@ -817,7 +832,10 @@ Weight: 200(UID)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log('send-quote-request is signed. Please login using `binance-cli login`');
+            console.log(
+                'send-quote-request is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
             return;
         }
 

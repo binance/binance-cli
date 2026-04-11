@@ -54,19 +54,33 @@ export BINANCE_FUTURES_USDS_BASE_PATH=https://testnet.binancefuture.com
 ##### Create a new profile
 
 ```bash
-binance-cli profile create --name new-name --api-key <the_api_key> --api-secret <the_api_secret> --env prod
+binance-cli profile create --name new-name --api-key <the_api_key> --api-secret <the_api_secret> --env <prod|demo|testnet>
 ```
 
-##### Change the active profile
+##### Select a profile
 
 ```bash
-binance-cli profile change --name new-name
+binance-cli profile select --name new-name
 ```
 
 #### View the current active profile
 
 ```bash
 binance-cli profile view
+```
+
+#### List all the existing profiles
+
+```bash
+binance-cli profile list
+```
+
+The active profile will be shown with an asterisk.
+
+#### Delete an existing profile
+
+```bash
+binance-cli profile delete --name profile-name
 ```
 
 #### Specify profile
@@ -85,10 +99,12 @@ binance-cli spot get-account --profile my_profile
 binance-cli profile create -i # binance-cli will prompt the questions to create a new profile
 ```
 
-##### Change the active profile
+It can also be used to update an existing profile.
+
+##### Select a profile
 
 ```bash
-binance-cli profile change -i # select the profile to activate
+binance-cli profile select -i # select the profile to activate
 ```
 
 ##### View the current active profile
@@ -101,11 +117,30 @@ binance-cli profile view
 
 #### Available commands
 
-- [Convert](./examples/convert.md) - Convert connector
-
-- [Spot](./examples/spot.md) - Spot Trading connector
-
-- [Derivatives Trading (USDS-M Futures)](./examples/derivatives-trading-usds-futures.md) - Derivatives Trading (USDS-M Futures) connector
+- [Algo Trading](./examples/algo.md)
+- [Alpha](./examples/alpha.md)
+- [C2C](./examples/c2c.md)
+- [Convert](./examples/convert.md)
+- [Copy Trading](./examples/copy-trading.md)
+- [Crypto Loan](./examples/crypto-loan.md)
+- [Derivatives Trading (COIN-M Futures)](./examples/derivatives-trading-coin-futures.md)
+- [Derivatives Trading (Options)](./examples/derivatives-trading-options.md)
+- [Derivatives Trading (Portfolio Margin)](./examples/derivatives-trading-portfolio-margin.md)
+- [Derivatives Trading (Portfolio Margin Pro)](./examples/derivatives-trading-portfolio-margin-pro.md)
+- [Derivatives Trading (USDS-M Futures)](./examples/derivatives-trading-usds-futures.md)
+- [Dual Investment](./examples/dual-investment.md)
+- [Fiat](./examples/fiat.md)
+- [Gift Card](./examples/gift-card.md)
+- [Margin Trading](./examples/margin-trading.md)
+- [Mining](./examples/mining.md)
+- [Pay](./examples/pay.md)
+- [Rebate](./examples/rebate.md)
+- [Simple Earn](./examples/simple-earn.md)
+- [Spot Trading](./examples/spot.md)
+- [Staking](./examples/staking.md)
+- [Sub Account](./examples/sub-account.md)
+- [VIP Loan](./examples/vip-loan.md)
+- [Wallet](./examples/wallet.md)
 
 #### Parameters
 
