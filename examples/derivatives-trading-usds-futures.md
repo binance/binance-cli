@@ -1,5 +1,3 @@
-# Derivatives Trading (USDS-M Futures)
-
 ## Account
 
 ### [GET /fapi/v2/account](https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Account-Information-V2) - Account Information V2
@@ -342,13 +340,13 @@ binance-cli futures-usds test-connectivity
 binance-cli futures-usds ticker24hr-price-change-statistics --symbol "symbol_example"
 ```
 
-### [GET /futures/data/topLongShortAccountRatio](https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/rest-api/Top-Long-Short-Account-Ratio) - Top Trader Long/Short Ratio
+### [GET /futures/data/topLongShortAccountRatio](https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/rest-api/Top-Long-Short-Account-Ratio) - Top Trader Long/Short Ratio (Accounts)
 
 ```bash
 binance-cli futures-usds top-trader-long-short-ratio-accounts --symbol "symbol_example" --period 5m --limit 100 --start-time 1623319461670 --end-time 1641782889000
 ```
 
-### [GET /futures/data/topLongShortPositionRatio](https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/rest-api/Top-Trader-Long-Short-Ratio) - Top Trader Long/Short Ratio
+### [GET /futures/data/topLongShortPositionRatio](https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/rest-api/Top-Trader-Long-Short-Ratio) - Top Trader Long/Short Ratio (Positions)
 
 ```bash
 binance-cli futures-usds top-trader-long-short-ratio-positions --symbol "symbol_example" --period 5m --limit 100 --start-time 1623319461670 --end-time 1641782889000

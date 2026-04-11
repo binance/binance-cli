@@ -1,5 +1,42 @@
 # Change log
 
+## 1.1.0 - 2026-04-19
+
+### Added
+
+- Added command to delete profile.
+
+- Exit with error code on failed command.
+
+- Added support for the following products:
+    - Algo Trading
+    - Alpha
+    - C2C
+    - Copy Trading
+    - Crypto Loan
+    - Derivatives Trading (COIN-M Futures)
+    - Derivatives Trading (Options)
+    - Derivatives Trading (Portfolio Margin)
+    - Derivatives Trading (Portfolio Margin Pro)
+    - Dual Investment
+    - Fiat
+    - Gift Card
+    - Margin Trading
+    - Mining
+    - Pay
+    - Rebate
+    - Simple Earn
+    - Staking
+    - Sub Account
+    - VIP Loan
+    - Wallet
+
+### Updated
+
+- Add alias `profile select` for `profile change`
+- Add option `--select` for `profile create` to select the profile after creation
+- Add option `--force` for `profile create` to overwrite profile if existing
+
 ## 1.0.4 - 2026-04-09
 
 ### Updated

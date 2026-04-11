@@ -110,7 +110,10 @@ Weight: 20`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log('account-commission is signed. Please login using `binance-cli login`');
+            console.log(
+                'account-commission is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
             return;
         }
 
@@ -199,7 +202,10 @@ Weight: 20`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log('all-order-list is signed. Please login using `binance-cli login`');
+            console.log(
+                'all-order-list is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
             return;
         }
 
@@ -305,7 +311,10 @@ Weight: 20`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log('all-orders is signed. Please login using `binance-cli login`');
+            console.log(
+                'all-orders is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
             return;
         }
 
@@ -375,7 +384,10 @@ Weight: 20`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log('get-account is signed. Please login using `binance-cli login`');
+            console.log(
+                'get-account is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
             return;
         }
 
@@ -435,7 +447,10 @@ Weight: 6 for a single symbol; **80** when the symbol parameter is omitted`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log('get-open-orders is signed. Please login using `binance-cli login`');
+            console.log(
+                'get-open-orders is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
             return;
         }
 
@@ -527,7 +542,10 @@ Weight: 4`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log('get-order is signed. Please login using `binance-cli login`');
+            console.log(
+                'get-order is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
             return;
         }
 
@@ -602,7 +620,10 @@ Weight: 4`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log('get-order-list is signed. Please login using `binance-cli login`');
+            console.log(
+                'get-order-list is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
             return;
         }
 
@@ -713,7 +734,10 @@ Weight: 20`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log('my-allocations is signed. Please login using `binance-cli login`');
+            console.log(
+                'my-allocations is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
             return;
         }
 
@@ -803,7 +827,10 @@ Weight: 40`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log('my-filters is signed. Please login using `binance-cli login`');
+            console.log(
+                'my-filters is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
             return;
         }
 
@@ -924,7 +951,10 @@ Querying by &#x60;orderId&#x60;           | 20`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log('my-prevented-matches is signed. Please login using `binance-cli login`');
+            console.log(
+                'my-prevented-matches is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
             return;
         }
 
@@ -1046,7 +1076,10 @@ Weight: Condition| Weight|
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log('my-trades is signed. Please login using `binance-cli login`');
+            console.log(
+                'my-trades is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
             return;
         }
 
@@ -1109,7 +1142,10 @@ Weight: 6`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log('open-order-list is signed. Please login using `binance-cli login`');
+            console.log(
+                'open-order-list is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
             return;
         }
 
@@ -1210,7 +1246,10 @@ Weight: 4`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log('order-amendments is signed. Please login using `binance-cli login`');
+            console.log(
+                'order-amendments is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
             return;
         }
 
@@ -1281,7 +1320,10 @@ Weight: 40`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log('rate-limit-order is signed. Please login using `binance-cli login`');
+            console.log(
+                'rate-limit-order is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
             return;
         }
 
@@ -2747,7 +2789,10 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log('delete-open-orders is signed. Please login using `binance-cli login`');
+            console.log(
+                'delete-open-orders is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
             return;
         }
 
@@ -2859,7 +2904,10 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log('delete-order is signed. Please login using `binance-cli login`');
+            console.log(
+                'delete-order is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
             return;
         }
 
@@ -2968,7 +3016,10 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log('delete-order-list is signed. Please login using `binance-cli login`');
+            console.log(
+                'delete-order-list is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
             return;
         }
 
@@ -3132,7 +3183,10 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log('new-order is signed. Please login using `binance-cli login`');
+            console.log(
+                'new-order is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
             return;
         }
 
@@ -3262,8 +3316,9 @@ Weight: 4`),
 
         if (isEmpty(configurationRestAPI)) {
             console.log(
-                'order-amend-keep-priority is signed. Please login using `binance-cli login`'
+                'order-amend-keep-priority is signed. Please create a profile using `binance-cli profile create`.'
             );
+            process.exitCode = 1;
             return;
         }
 
@@ -3466,7 +3521,10 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log('order-cancel-replace is signed. Please login using `binance-cli login`');
+            console.log(
+                'order-cancel-replace is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
             return;
         }
 
@@ -3725,7 +3783,10 @@ Unfilled Order Count: 2`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log('order-list-oco is signed. Please login using `binance-cli login`');
+            console.log(
+                'order-list-oco is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
             return;
         }
 
@@ -3988,7 +4049,10 @@ Unfilled Order Count: 2`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log('order-list-opo is signed. Please login using `binance-cli login`');
+            console.log(
+                'order-list-opo is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
             return;
         }
 
@@ -4315,7 +4379,10 @@ Unfilled Order Count: 3`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log('order-list-opoco is signed. Please login using `binance-cli login`');
+            console.log(
+                'order-list-opoco is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
             return;
         }
 
@@ -4609,7 +4676,10 @@ Unfilled Order Count: 2`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log('order-list-oto is signed. Please login using `binance-cli login`');
+            console.log(
+                'order-list-oto is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
             return;
         }
 
@@ -4960,7 +5030,10 @@ Unfilled Order Count: 3`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log('order-list-otoco is signed. Please login using `binance-cli login`');
+            console.log(
+                'order-list-otoco is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
             return;
         }
 
@@ -5208,7 +5281,10 @@ Unfilled Order Count: 2`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log('order-oco is signed. Please login using `binance-cli login`');
+            console.log(
+                'order-oco is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
             return;
         }
 
@@ -5415,7 +5491,10 @@ Weight: |Condition| Request Weight|
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log('order-test is signed. Please login using `binance-cli login`');
+            console.log(
+                'order-test is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
             return;
         }
 
@@ -5582,7 +5661,10 @@ Unfilled Order Count: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log('sor-order is signed. Please login using `binance-cli login`');
+            console.log(
+                'sor-order is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
             return;
         }
 
@@ -5760,7 +5842,10 @@ Weight: | Condition | Request Weight |
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log('sor-order-test is signed. Please login using `binance-cli login`');
+            console.log(
+                'sor-order-test is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
             return;
         }
 
