@@ -126,7 +126,7 @@ Weight: 45000`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'deposit is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -269,7 +269,7 @@ Weight: 45000`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'fiat-withdraw is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -411,7 +411,7 @@ Weight: 45000`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-fiat-deposit-withdraw-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -530,7 +530,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-fiat-payments-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -626,7 +626,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-order-detail is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;

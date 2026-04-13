@@ -119,7 +119,7 @@ Weight: 1500`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'bnb-transfer is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -219,7 +219,7 @@ Weight: 1500`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'change-auto-repay-futures-status is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -287,7 +287,7 @@ Weight: 1500`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'fund-auto-collection is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -371,7 +371,7 @@ Weight: 60`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'fund-collection-by-asset is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -437,7 +437,7 @@ Weight: 30`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-auto-repay-futures-status is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -494,7 +494,7 @@ Weight: 1500`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-delta-mode-status is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -556,7 +556,7 @@ Weight: 20`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-portfolio-margin-pro-account-balance is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -613,7 +613,7 @@ Weight: 5`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-portfolio-margin-pro-account-info is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -670,7 +670,7 @@ Weight: 5`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-portfolio-margin-pro-span-account-info is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -765,7 +765,7 @@ Weight: 1500`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-transferable-earn-asset-balance-for-portfolio-margin is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -844,7 +844,7 @@ Weight: 3000`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'portfolio-margin-pro-bankruptcy-loan-repay is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -903,7 +903,7 @@ Weight: 500`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-portfolio-margin-pro-bankruptcy-loan-amount is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -988,7 +988,7 @@ Weight: 500`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-portfolio-margin-pro-bankruptcy-loan-repay-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1066,7 +1066,7 @@ Weight: 50`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-portfolio-margin-pro-negative-balance-interest-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1127,7 +1127,7 @@ Weight: 1500`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'repay-futures-negative-balance is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1209,7 +1209,7 @@ Weight: 1500`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'switch-delta-mode is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1316,7 +1316,7 @@ Weight: 1500`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'transfer-ldusdt-rwusd-for-portfolio-margin is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1375,7 +1375,7 @@ derivativesTradingPortfolioMarginProCommands.push({
 Weight: 50`),
     handler: async () => {
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-portfolio-margin-asset-leverage is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1444,7 +1444,7 @@ Weight: 50`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'portfolio-margin-pro-tiered-collateral-rate is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;

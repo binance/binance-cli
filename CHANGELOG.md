@@ -1,5 +1,13 @@
 # Change log
 
+## 1.1.1 - 2026-04-13
+
+### Updated
+
+- Argument "--profile" takes precedence over env variables
+- Validate profile name
+- Use console.error for error messages
+
 ## 1.1.0 - 2026-04-11
 
 ### Added

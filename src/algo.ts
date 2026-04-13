@@ -105,7 +105,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'cancel-algo-order-future-algo is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -173,7 +173,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-current-algo-open-orders-future-algo is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -263,7 +263,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-historical-algo-orders-future-algo is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -360,7 +360,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-sub-orders-future-algo is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -501,7 +501,7 @@ Weight: 3000`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'time-weighted-average-price-future-algo is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -667,7 +667,7 @@ Weight: 300`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'volume-participation-future-algo is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -787,7 +787,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'cancel-algo-order-spot-algo is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -852,7 +852,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-current-algo-open-orders-spot-algo is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -939,7 +939,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-historical-algo-orders-spot-algo is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1033,7 +1033,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-sub-orders-spot-algo is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1153,7 +1153,7 @@ Weight: 3000`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'time-weighted-average-price-spot-algo is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;

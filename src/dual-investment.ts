@@ -134,7 +134,7 @@ Weight: 1(IP)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-dual-investment-product-list is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -244,7 +244,7 @@ Weight: 1(IP)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'change-auto-compound-status is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -310,7 +310,7 @@ Weight: 1(IP)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'check-dual-investment-accounts is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -384,7 +384,7 @@ Weight: 1(IP)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-dual-investment-positions is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -493,7 +493,7 @@ Weight: 1(IP)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'subscribe-dual-investment-products is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;

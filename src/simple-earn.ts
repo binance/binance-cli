@@ -75,7 +75,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-bfusd-account is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -132,7 +132,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-bfusd-quota-details is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -218,7 +218,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-bfusd-rate-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -304,7 +304,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-bfusd-redemption-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -390,7 +390,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-bfusd-rewards-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -481,7 +481,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-bfusd-subscription-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -573,7 +573,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'redeem-bfusd is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -683,7 +683,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'subscribe-bfusd is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -792,7 +792,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-collateral-record is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -876,7 +876,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-flexible-personal-left-quota is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -965,7 +965,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-flexible-product-position is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1066,7 +1066,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-flexible-redemption-record is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1191,7 +1191,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-flexible-rewards-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1292,7 +1292,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-flexible-subscription-preview is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1409,7 +1409,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-flexible-subscription-record is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1493,7 +1493,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-locked-personal-left-quota is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1587,7 +1587,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-locked-product-position is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1688,7 +1688,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-locked-redemption-record is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1784,7 +1784,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-locked-rewards-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1882,7 +1882,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-locked-subscription-preview is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1994,7 +1994,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-locked-subscription-record is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2114,7 +2114,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-rate-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2198,7 +2198,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-simple-earn-flexible-product-list is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2276,7 +2276,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-simple-earn-locked-product-list is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2372,7 +2372,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'redeem-flexible-product is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2465,7 +2465,7 @@ Weight: 1/3s per account`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'redeem-locked-product is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2564,7 +2564,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'set-flexible-auto-subscribe is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2672,7 +2672,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'set-locked-auto-subscribe is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2780,7 +2780,7 @@ Weight: 50`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'set-locked-product-redeem-option is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2855,7 +2855,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'simple-account is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2955,7 +2955,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'subscribe-flexible-product is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3077,7 +3077,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'subscribe-locked-product is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3152,7 +3152,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-rwusd-account is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3209,7 +3209,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-rwusd-quota-details is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3295,7 +3295,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-rwusd-rate-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3381,7 +3381,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-rwusd-redemption-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3467,7 +3467,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-rwusd-rewards-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3558,7 +3558,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-rwusd-subscription-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3650,7 +3650,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'redeem-rwusd is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3760,7 +3760,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'subscribe-rwusd is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;

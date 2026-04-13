@@ -95,7 +95,7 @@ Weight: 12000`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-spot-rebate-history-records is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;

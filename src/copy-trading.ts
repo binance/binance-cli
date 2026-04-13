@@ -75,7 +75,7 @@ Weight: 20`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-futures-lead-trader-status is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -132,7 +132,7 @@ Weight: 20`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-futures-lead-trading-symbol-whitelist is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;

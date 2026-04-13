@@ -8,7 +8,7 @@ import {
     getUserAgent,
     isEmpty,
     readStdinObj,
-    validHTTPMethods,
+    VALID_HTTP_METHODS,
 } from './utils';
 import profileCommands from './profile';
 
@@ -136,7 +136,7 @@ allCommands.command({
             .check((options: any) => {
                 if (
                     typeof options?.method !== 'string' ||
-                    !validHTTPMethods.has(options?.method.toUpperCase())
+                    !VALID_HTTP_METHODS.has(options?.method.toUpperCase())
                 ) {
                     return `${options?.method} is not a valid HTTP method.`;
                 }

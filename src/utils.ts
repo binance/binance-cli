@@ -9,7 +9,9 @@ let stdin: any = null;
 const homeDir = os.homedir();
 const BINANCE_LOGIN_DIR = path.join(homeDir, '.binance');
 
-export const validHTTPMethods = new Set([
+export const VALID_PROFILE_NAME = /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,62}$/;
+
+export const VALID_HTTP_METHODS = new Set([
     'GET',
     'POST',
     'PUT',
@@ -37,7 +39,9 @@ export const getCurrentProfile = (): string | null => {
         sessionData.split('\n').forEach((line) => {
             const trimmed = line.trim();
             if (trimmed && trimmed.includes('=')) {
-                const [key, value] = trimmed.split('=');
+                const eqIndex = trimmed.indexOf('=');
+                const key = trimmed.slice(0, eqIndex);
+                const value = trimmed.slice(eqIndex + 1);
                 if (key && value) {
                     session[key.trim()] = value.trim();
                 }
@@ -63,7 +67,9 @@ export const getProfileConfig = (profileName: string, packageName: string = '') 
     content.split('\n').forEach((line) => {
         const trimmed = line.trim();
         if (trimmed && trimmed.includes('=')) {
-            const [key, value] = trimmed.split('=');
+            const eqIndex = trimmed.indexOf('=');
+            const key = trimmed.slice(0, eqIndex);
+            const value = trimmed.slice(eqIndex + 1);
             if (key && value) {
                 creds[key.trim()] = value.trim();
             }
@@ -90,19 +96,16 @@ export const getSessionCreds = (
     profile: string,
     packageName: string = ''
 ): CliConfiguration | null => {
-    if (process.env.BINANCE_API_KEY && process.env.BINANCE_SECRET_KEY) {
+    if (profile !== undefined) {
+        return getProfileConfig(profile, packageName);
+    } else if (process.env.BINANCE_API_KEY && process.env.BINANCE_SECRET_KEY) {
         return {
             apiKey: process.env.BINANCE_API_KEY,
             apiSecret: process.env.BINANCE_SECRET_KEY,
             env: process.env.BINANCE_API_ENV ?? 'prod',
         };
     } else {
-        let profileName;
-        if (profile === undefined) {
-            profileName = getCurrentProfile();
-        } else {
-            profileName = profile;
-        }
+        const profileName = getCurrentProfile();
 
         if (!profileName) {
             return null;
@@ -121,7 +124,7 @@ function readStdinSync(): string | null {
         }
 
         // Read all data from stdin synchronously
-        const input = fs.readFileSync('/dev/stdin', 'utf-8');
+        const input = fs.readFileSync(0, 'utf-8');
         return input;
     } catch (err) {
         console.error('Error reading stdin:', err);
@@ -134,7 +137,17 @@ export const readStdinObj = (): any => {
         stdin = readStdinSync();
     }
     if (stdin !== null && stdin.length > 0) {
-        return JSON.parse(stdin);
+        try {
+            return JSON.parse(stdin);
+        } catch {
+            const preview = stdin.length > 80 ? stdin.slice(0, 80) + '...' : stdin;
+            console.error(
+                'Error: stdin input is not valid JSON.\n' +
+                    `Received: "${preview.trim()}"\n` +
+                    'Expected: a JSON object, e.g. {"symbol":"BTCUSDT"}'
+            );
+            process.exit(1);
+        }
     }
     return {};
 };
@@ -187,6 +200,9 @@ export const getConfigDir = (): string => {
 };
 
 export const getExistingProfiles = (): string[] => {
+    if (!fs.existsSync(getConfigDir())) {
+        return [];
+    }
     const files = fs.readdirSync(getConfigDir());
     const profiles = files.filter((a) => a != 'active_profile');
     return profiles;
@@ -211,11 +227,26 @@ export const isAIAgent = (): boolean => {
     return false;
 };
 
-export const getUserAgent = (product: string = 'unkown'): string => {
+export const getUserAgent = (product: string = 'unknown'): string => {
     let clientType = 'cli';
     if (isAIAgent()) {
         clientType = 'skill';
     }
 
-    return `binance-${clientType}/${product}/1.1.0 (Node.js/${process.version}; ${platform()}; ${arch()})`;
+    return `binance-${clientType}/${product}/1.1.1 (Node.js/${process.version}; ${platform()}; ${arch()})`;
+};
+
+export const validateProfileName = (name: string): boolean => {
+    if (!name || !VALID_PROFILE_NAME.test(name) || name.includes('..')) {
+        return false;
+    }
+    return true;
+};
+
+export const validateProfileNameMessage = (name: string): string => {
+    return (
+        `Invalid profile name "${name}". ` +
+        'Use only letters, numbers, hyphens, underscores, and dots. ' +
+        'Must start with a letter or number. Max 63 characters.'
+    );
 };

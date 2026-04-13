@@ -110,7 +110,7 @@ Weight: 6000`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'check-collateral-repay-rate is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -234,7 +234,7 @@ Weight: 6000`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'flexible-loan-adjust-ltv is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -372,7 +372,7 @@ Weight: 6000`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'flexible-loan-borrow is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -503,7 +503,7 @@ Weight: 6000`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'flexible-loan-repay is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -592,7 +592,7 @@ Weight: 400`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-flexible-loan-assets-data is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -684,7 +684,7 @@ Weight: 400`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-flexible-loan-borrow-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -746,7 +746,7 @@ Weight: 400`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-flexible-loan-collateral-assets-data is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -860,7 +860,7 @@ Weight: 400`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-flexible-loan-interest-rate-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -964,7 +964,7 @@ Weight: 400`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-flexible-loan-liquidation-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1056,7 +1056,7 @@ Weight: 400`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-flexible-loan-ltv-adjustment-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1135,7 +1135,7 @@ Weight: 300`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-flexible-loan-ongoing-orders is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1227,7 +1227,7 @@ Weight: 400`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-flexible-loan-repayment-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1329,7 +1329,7 @@ Weight: 6000`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'check-collateral-repay-rate-stable-rate is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1440,7 +1440,7 @@ Weight: 6000`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-crypto-loans-income-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1539,7 +1539,7 @@ Weight: 400`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-loan-borrow-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1638,7 +1638,7 @@ Weight: 400`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-loan-ltv-adjustment-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1737,7 +1737,7 @@ Weight: 400`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-loan-repayment-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;

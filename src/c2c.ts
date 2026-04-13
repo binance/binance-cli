@@ -104,7 +104,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-c2-c-trade-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
