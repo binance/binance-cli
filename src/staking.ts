@@ -75,7 +75,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'eth-staking-account is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -132,7 +132,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-current-eth-staking-quota is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -221,7 +221,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-eth-redemption-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -310,7 +310,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-eth-staking-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -394,7 +394,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-wbeth-rate-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -478,7 +478,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-wbeth-rewards-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -562,7 +562,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-wbeth-unwrap-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -646,7 +646,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-wbeth-wrap-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -734,7 +734,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'redeem-eth is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -827,7 +827,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'subscribe-eth-staking is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -920,7 +920,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'wrap-beth is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1013,7 +1013,7 @@ Weight: 50`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-on-chain-yields-locked-personal-left-quota is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1097,7 +1097,7 @@ Weight: 50`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-on-chain-yields-locked-product-list is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1181,7 +1181,7 @@ Weight: 50`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-on-chain-yields-locked-product-position is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1280,7 +1280,7 @@ Weight: 50`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-on-chain-yields-locked-redemption-record is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1374,7 +1374,7 @@ Weight: 50`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-on-chain-yields-locked-rewards-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1472,7 +1472,7 @@ Weight: 50`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-on-chain-yields-locked-subscription-preview is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1588,7 +1588,7 @@ Weight: 50`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-on-chain-yields-locked-subscription-record is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1645,7 +1645,7 @@ Weight: 50`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'on-chain-yields-account is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1733,7 +1733,7 @@ Weight: 1/3s per account`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'redeem-on-chain-yields-locked-product is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1832,7 +1832,7 @@ Weight: 50`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'set-on-chain-yields-locked-auto-subscribe is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1940,7 +1940,7 @@ Weight: 50`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'set-on-chain-yields-locked-product-redeem-option is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2071,7 +2071,7 @@ Weight: 200`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'subscribe-on-chain-yields-locked-product is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2163,7 +2163,7 @@ Weight: 50`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-soft-staking-product-list is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2250,7 +2250,7 @@ Weight: 50`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-soft-staking-rewards-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2334,7 +2334,7 @@ Weight: 50`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'set-soft-staking is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2400,7 +2400,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'claim-boost-rewards is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2484,7 +2484,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-bnsol-rate-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2568,7 +2568,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-bnsol-rewards-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2681,7 +2681,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-boost-rewards-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2778,7 +2778,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-sol-redemption-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2867,7 +2867,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-sol-staking-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2924,7 +2924,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-sol-staking-quota-details is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2986,7 +2986,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-unclaimed-rewards is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3070,7 +3070,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'redeem-sol is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3136,7 +3136,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'sol-staking-account is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3220,7 +3220,7 @@ Weight: 150`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'subscribe-sol-staking is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;

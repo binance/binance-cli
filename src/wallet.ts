@@ -75,7 +75,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'account-api-trading-status is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -132,7 +132,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'account-info is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -189,7 +189,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'account-status is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -292,7 +292,7 @@ Weight: 2400`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'daily-account-snapshot is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -355,7 +355,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'disable-fast-withdraw-switch is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -412,7 +412,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'enable-fast-withdraw-switch is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -467,7 +467,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-api-key-permission is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -532,7 +532,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'asset-detail is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -612,7 +612,7 @@ Weight: 10`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'asset-dividend-record is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -706,7 +706,7 @@ Weight: 10`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'dust-convert is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -797,7 +797,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'dust-convertible-assets is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -894,7 +894,7 @@ Weight: 10`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'dust-transfer is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -980,7 +980,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'dustlog is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1047,7 +1047,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'funding-wallet is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1107,7 +1107,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-assets-that-can-be-converted-into-bnb is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1223,7 +1223,7 @@ Weight: 600`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-cloud-mining-payment-and-refund-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1379,7 +1379,7 @@ Weight: 60`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-user-delegation-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1523,7 +1523,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-user-universal-transfer-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1595,7 +1595,7 @@ Weight: 60`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-user-wallet-balance is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1661,7 +1661,7 @@ Weight: 1(IP)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'toggle-bnb-burn-on-spot-trade-and-margin-interest is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1724,7 +1724,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'trade-fee is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1791,7 +1791,7 @@ Weight: 5`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'user-asset is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1932,7 +1932,7 @@ Weight: 900`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'user-universal-transfer is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2016,7 +2016,7 @@ Weight: 10`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'all-coins-information is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2116,7 +2116,7 @@ Weight: 10`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'deposit-address is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2229,7 +2229,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'deposit-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2319,7 +2319,7 @@ Weight: 10`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'fetch-deposit-address-list-with-network is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2359,7 +2359,7 @@ walletCommands.push({
 Weight: 10`),
     handler: async () => {
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'fetch-withdraw-address-list is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2386,7 +2386,7 @@ walletCommands.push({
 Weight: 10`),
     handler: async () => {
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'fetch-withdraw-quota is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2451,7 +2451,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'one-click-arrival-deposit-apply is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2578,7 +2578,7 @@ Weight: 900`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'withdraw is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2716,7 +2716,7 @@ Request limit: 10 requests per second`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'withdraw-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2931,7 +2931,7 @@ Weight: 600`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'broker-withdraw is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3051,7 +3051,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'check-questionnaire-requirements is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3166,7 +3166,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'deposit-history-travel-rule is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3269,7 +3269,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'deposit-history-v2 is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3326,7 +3326,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'fetch-address-verification-list is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3461,7 +3461,7 @@ Weight: 600`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'submit-deposit-questionnaire is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3597,7 +3597,7 @@ Weight: 600`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'submit-deposit-questionnaire-travel-rule is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3706,7 +3706,7 @@ Weight: 600`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'submit-deposit-questionnaire-v2 is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3781,7 +3781,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'vasp-list is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3896,7 +3896,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'withdraw-history-v1 is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -4017,7 +4017,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'withdraw-history-v2 is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -4152,7 +4152,7 @@ Weight: 600`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'withdraw-travel-rule is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;

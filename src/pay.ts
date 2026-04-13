@@ -131,7 +131,7 @@ Weight: 3000`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-pay-trade-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;

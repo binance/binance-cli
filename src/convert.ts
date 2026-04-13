@@ -131,7 +131,7 @@ Weight: 100(IP)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-order-quantity-precision-per-asset is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -213,7 +213,7 @@ Weight: 500(UID)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'accept-quote is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -304,7 +304,7 @@ Weight: 200(UID)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'cancel-limit-order is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -413,7 +413,7 @@ Weight: 3000`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-convert-trade-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -491,7 +491,7 @@ Weight: 100(UID)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'order-status is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -621,7 +621,7 @@ Weight: 500(UID)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'place-limit-order is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -723,7 +723,7 @@ Weight: 3000(UID)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-limit-open-orders is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -832,7 +832,7 @@ Weight: 200(UID)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'send-quote-request is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;

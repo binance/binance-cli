@@ -103,7 +103,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'create-a-virtual-sub-account is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -194,7 +194,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'enable-futures-for-sub-account is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -285,7 +285,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'enable-options-for-sub-account is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -378,7 +378,7 @@ Weight: 10`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-futures-position-risk-of-sub-account is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -481,7 +481,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-futures-position-risk-of-sub-account-v2 is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -561,7 +561,7 @@ Weight: 10`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-sub-accounts-status-on-margin-or-futures is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -638,7 +638,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-sub-account-list is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -700,7 +700,7 @@ Weight: 60`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-sub-account-transaction-statistics is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -804,7 +804,7 @@ Weight: 3000`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'add-ip-restriction-for-sub-account-api-key is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -937,7 +937,7 @@ Weight: 3000`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'delete-ip-list-for-a-sub-account-api-key is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1054,7 +1054,7 @@ Weight: 3000`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-ip-restriction-for-a-sub-account-api-key is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1178,7 +1178,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'futures-transfer-for-sub-account is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1298,7 +1298,7 @@ Weight: 10`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-detail-on-sub-accounts-futures-account is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1401,7 +1401,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-detail-on-sub-accounts-futures-account-v2 is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1501,7 +1501,7 @@ Weight: 10`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-detail-on-sub-accounts-margin-account is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1625,7 +1625,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-move-position-history-for-sub-account is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1756,7 +1756,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-sub-account-deposit-address is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1893,7 +1893,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-sub-account-deposit-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1994,7 +1994,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-summary-of-sub-accounts-futures-account is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2106,7 +2106,7 @@ Weight: 10`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-summary-of-sub-accounts-futures-account-v2 is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2171,7 +2171,7 @@ Weight: 10`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-summary-of-sub-accounts-margin-account is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2279,7 +2279,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'margin-transfer-for-sub-account is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2433,7 +2433,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'move-position-for-sub-account is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2553,7 +2553,7 @@ Weight: 60`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-sub-account-assets is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2645,7 +2645,7 @@ Weight: 60`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-sub-account-assets-asset-management is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2768,7 +2768,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-sub-account-futures-asset-transfer-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2875,7 +2875,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-sub-account-spot-asset-transfer-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2947,7 +2947,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-sub-account-spot-assets-summary is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3044,7 +3044,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-universal-transfer-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3162,7 +3162,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'sub-account-futures-asset-transfer is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3301,7 +3301,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'sub-account-transfer-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3393,7 +3393,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'transfer-to-master is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3511,7 +3511,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'transfer-to-sub-account-of-same-master is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3672,7 +3672,7 @@ Weight: 360`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'universal-transfer is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3808,7 +3808,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'deposit-assets-into-the-managed-sub-account is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3943,7 +3943,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-managed-sub-account-deposit-address is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -4043,7 +4043,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-managed-sub-account-asset-details is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -4137,7 +4137,7 @@ Weight: 60`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-managed-sub-account-futures-asset-details is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -4218,7 +4218,7 @@ Weight: 60`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-managed-sub-account-list is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -4304,7 +4304,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-managed-sub-account-margin-asset-details is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -4426,7 +4426,7 @@ Weight: 2400`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-managed-sub-account-snapshot is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -4572,7 +4572,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-managed-sub-account-transfer-log-master-account-investor is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -4745,7 +4745,7 @@ Weight: 60`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-managed-sub-account-transfer-log-master-account-trading is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -4911,7 +4911,7 @@ Weight: 60`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-managed-sub-account-transfer-log-sub-account-trading is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -5048,7 +5048,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'withdrawl-assets-from-the-managed-sub-account is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;

@@ -124,7 +124,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'create-a-dual-token-gift-card is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -248,7 +248,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'create-a-single-token-gift-card is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -326,7 +326,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'fetch-rsa-public-key is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -410,7 +410,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'fetch-token-limit is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -514,7 +514,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'redeem-a-binance-gift-card is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -609,7 +609,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'verify-binance-gift-card-by-gift-card-number is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;

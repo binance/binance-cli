@@ -104,7 +104,7 @@ Weight: 400`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-borrow-interest-rate is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -174,7 +174,7 @@ Weight: 400`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-collateral-asset-data is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -241,7 +241,7 @@ Weight: 400`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-loanable-assets-data is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -355,7 +355,7 @@ Weight: 400`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-vip-loan-interest-rate-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -502,7 +502,7 @@ Weight: 0`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'vip-loan-borrow is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -646,7 +646,7 @@ Weight: 6000`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'vip-loan-renew is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -754,7 +754,7 @@ Weight: 6000`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'vip-loan-repay is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -842,7 +842,7 @@ Weight: 6000`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'check-vip-loan-collateral-account is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -934,7 +934,7 @@ Weight: 400`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-vip-loan-accrued-interest is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1023,7 +1023,7 @@ Weight: 400`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-vip-loan-ongoing-orders is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1092,7 +1092,7 @@ Weight: 400`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-application-status is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;

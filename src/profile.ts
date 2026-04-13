@@ -1,6 +1,14 @@
-import { getConfigDir, getCurrentProfile, getExistingProfiles, getProfileConfig } from './utils';
+import {
+    getConfigDir,
+    getCurrentProfile,
+    getExistingProfiles,
+    getProfileConfig,
+    validateProfileName,
+    validateProfileNameMessage,
+} from './utils';
 import inquirer from 'inquirer';
 import fs from 'fs';
+
 const profileCommands: any[] = [];
 
 const configDir = getConfigDir();
@@ -60,7 +68,15 @@ profileCommands.push({
                 type: 'input',
                 name: 'name',
                 message: 'Please choose the profile name:',
-                validate: (input: string) => (input ? true : 'profile name cannot be empty'),
+                validate: (input: string) => {
+                    if (input) {
+                        if (!validateProfileName(input)) {
+                            return validateProfileNameMessage(input);
+                        }
+                        return true;
+                    }
+                    return 'profile name cannot be empty';
+                },
             });
         }
 
@@ -128,6 +144,12 @@ profileCommands.push({
             fs.mkdirSync(configDir);
         }
 
+        if (!validateProfileName(options.name)) {
+            console.error(validateProfileNameMessage(options.name));
+            process.exitCode = 1;
+            return;
+        }
+
         if (!fs.existsSync(`${configDir}/${options.name}`) || options?.force) {
             fs.writeFileSync(
                 `${configDir}/${options.name}`,
@@ -144,7 +166,7 @@ profileCommands.push({
                 console.log(`Profile ${options.name} was selected successfully ✅`);
             }
         } else {
-            console.log(`Profile ${options.name} already exists, use -f to overwrite it ⚠️`);
+            console.error(`Profile ${options.name} already exists, use -f to overwrite it ⚠️`);
             process.exitCode = 1;
         }
     },
@@ -175,6 +197,12 @@ profileCommands.push({
         const questions = [];
         const profiles = getExistingProfiles();
 
+        if (!profiles || profiles.length === 0) {
+            console.error('There is no profile found ❌');
+            process.exitCode = 1;
+            return;
+        }
+
         if (options.interactive && !options.name) {
             questions.push({
                 type: 'rawlist',
@@ -196,11 +224,17 @@ profileCommands.push({
             options = { ...options, ...answers };
         }
 
+        if (!validateProfileName(options.name)) {
+            console.error(validateProfileNameMessage(options.name));
+            process.exitCode = 1;
+            return;
+        }
+
         if (profiles.includes(options.name)) {
             fs.writeFileSync(`${configDir}/active_profile`, `name=${options.name}`);
             console.log(`Profile ${options.name} was selected successfully ✅`);
         } else {
-            console.log(`Profile ${options.name} was not found ❌`);
+            console.error(`Profile ${options.name} was not found ❌`);
             process.exitCode = 1;
         }
     },
@@ -229,15 +263,16 @@ profileCommands.push({
             });
     },
     handler: async (options: any) => {
-        if (!fs.existsSync(`${configDir}`)) {
-            console.log('There is no profile found ❌');
-            process.exitCode = 1;
-            return;
-        }
         const questions = [];
         const profiles = getExistingProfiles();
 
-        if (options.interactive && !options.name) {
+        if (!profiles || profiles.length === 0) {
+            console.error('There is no profile found ❌');
+            process.exitCode = 1;
+            return;
+        }
+
+        if (options.interactive && !options.names) {
             questions.push({
                 type: 'checkbox',
                 name: 'names',
@@ -262,6 +297,13 @@ profileCommands.push({
             const profile = getCurrentProfile();
             for (let i = 0; i < options.names.length; i++) {
                 const name = options.names[i];
+
+                if (!validateProfileName(name)) {
+                    console.error(validateProfileNameMessage(name));
+                    process.exitCode = 1;
+                    return;
+                }
+
                 if (profiles.includes(name)) {
                     fs.unlinkSync(`${configDir}/${name}`);
                     if (name === profile) {
@@ -271,7 +313,7 @@ profileCommands.push({
                         console.log(`Profile ${name} was deleted successfully ✅`);
                     }
                 } else {
-                    console.log(`Profile ${name} was not found ❌`);
+                    console.error(`Profile ${name} was not found ❌`);
                     process.exitCode = 1;
                 }
             }
@@ -283,20 +325,23 @@ profileCommands.push({
     command: 'list',
     describe: 'List all the profiles',
     handler: async () => {
-        if (fs.existsSync(`${configDir}`)) {
-            const profiles = getExistingProfiles();
-            let output = '';
-            const currentProfile = getCurrentProfile();
-            profiles.forEach((profile, index) => {
-                const profileConfig = getProfileConfig(profile);
-                const active = currentProfile === profile ? ' *' : '';
-                output = `${output}${profile} (${profileConfig && profileConfig['env'] ? profileConfig['env'] : 'prod'})${active}`;
-                if (index !== profiles.length - 1) {
-                    output = `${output}\n`;
-                }
-            });
-            console.log(output);
+        const profiles = getExistingProfiles();
+
+        if (!profiles || profiles.length === 0) {
+            return;
         }
+
+        let output = '';
+        const currentProfile = getCurrentProfile();
+        profiles.forEach((profile, index) => {
+            const profileConfig = getProfileConfig(profile);
+            const active = currentProfile === profile ? ' *' : '';
+            output = `${output}${profile} (${profileConfig && profileConfig['env'] ? profileConfig['env'] : 'prod'})${active}`;
+            if (index !== profiles.length - 1) {
+                output = `${output}\n`;
+            }
+        });
+        console.log(output);
     },
 });
 
@@ -306,7 +351,7 @@ profileCommands.push({
     handler: async () => {
         const profile = getCurrentProfile();
         if (!profile) {
-            console.log(
+            console.error(
                 'There is no active profile found, please create one using "binance-cli profile create"'
             );
             process.exitCode = 1;

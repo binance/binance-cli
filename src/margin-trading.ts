@@ -98,7 +98,7 @@ Weight: 3000`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'adjust-cross-margin-max-leverage is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -192,7 +192,7 @@ Weight: 300(UID)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'disable-isolated-margin-account is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -282,7 +282,7 @@ Weight: 300(UID)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'enable-isolated-margin-account is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -348,7 +348,7 @@ Weight: 1(IP)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-bnb-burn-status is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -405,7 +405,7 @@ Weight: 10(IP)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-summary-of-margin-account is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -503,7 +503,7 @@ Weight: 100(IP)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-cross-isolated-margin-capital-flow is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -560,7 +560,7 @@ Weight: 10(IP)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-cross-margin-account-details is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -629,7 +629,7 @@ Weight: 1 when coin is specified;(IP)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-cross-margin-fee-data is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -686,7 +686,7 @@ Weight: 1(IP)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-enabled-isolated-margin-account-limit is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -753,7 +753,7 @@ Weight: 10(IP)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-isolated-margin-account-info is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -822,7 +822,7 @@ Weight: 1 when a single is specified;(IP)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-isolated-margin-fee-data is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -914,7 +914,7 @@ Weight: 100`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-future-hourly-interest-rate is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1034,7 +1034,7 @@ Weight: 1(IP)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-interest-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1148,7 +1148,7 @@ Weight: 1500`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'margin-account-borrow-repay is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1323,7 +1323,7 @@ Weight: 10(IP)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-borrow-repay-records-in-margin-account is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1434,7 +1434,7 @@ Weight: 1(IP)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-margin-interest-rate-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1534,7 +1534,7 @@ Weight: 50(IP)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-max-borrow is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -1948,7 +1948,7 @@ Weight: 1(IP)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-isolated-margin-tier-data is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2053,7 +2053,7 @@ Weight: 50`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-margin-available-inventory is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2362,7 +2362,7 @@ Weight: 1(UID)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'create-special-key is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2442,7 +2442,7 @@ Weight: 1(UID)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'delete-special-key is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2528,7 +2528,7 @@ Weight: 1(UID)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'edit-ip-for-special-key is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2623,7 +2623,7 @@ Weight: 1(IP)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-force-liquidation-record is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2680,7 +2680,7 @@ Weight: 100`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-small-liability-exchange-coin-list is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2787,7 +2787,7 @@ Weight: 100(UID)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-small-liability-exchange-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -2895,7 +2895,7 @@ Weight: 1`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'margin-account-cancel-all-open-orders-on-a-symbol is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3018,7 +3018,7 @@ Weight: 1(UID)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'margin-account-cancel-oco is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3136,7 +3136,7 @@ Weight: 10(IP)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'margin-account-cancel-order is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3308,7 +3308,7 @@ Weight: 6(UID)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'margin-account-new-oco is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3501,7 +3501,7 @@ Weight: 6(UID)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'margin-account-new-order is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -3736,7 +3736,7 @@ Weight: 6(UID)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'margin-account-new-oto is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -4049,7 +4049,7 @@ Weight: 6(UID)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'margin-account-new-otoco is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -4210,7 +4210,7 @@ Weight: 3000`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'margin-manual-liquidation is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -4288,7 +4288,7 @@ Weight: 20(IP)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-current-margin-order-count-usage is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -4383,7 +4383,7 @@ Weight: 200(IP)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-margin-accounts-all-oco is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -4502,7 +4502,7 @@ Weight: 200(IP)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-margin-accounts-all-orders is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -4591,7 +4591,7 @@ Weight: 10(IP)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-margin-accounts-oco is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -4660,7 +4660,7 @@ Weight: 10(IP)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-margin-accounts-open-oco is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -4733,7 +4733,7 @@ Weight: 10(IP)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-margin-accounts-open-orders is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -4837,7 +4837,7 @@ Weight: 10(IP)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-margin-accounts-order is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -4970,7 +4970,7 @@ Weight: 10(IP)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-margin-accounts-trade-list is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -5083,7 +5083,7 @@ Weight: 10(IP)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-prevented-matches is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -5155,7 +5155,7 @@ Weight: 1(UID)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-special-key is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -5217,7 +5217,7 @@ Weight: 1(UID)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-special-key-list is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -5303,7 +5303,7 @@ Weight: 3000(UID)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'small-liability-exchange is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -5410,7 +5410,7 @@ Weight: 1(IP)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'get-cross-margin-transfer-history is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
@@ -5501,7 +5501,7 @@ Weight: 50(IP)`),
         }
 
         if (isEmpty(configurationRestAPI)) {
-            console.log(
+            console.error(
                 'query-max-transfer-out-amount is signed. Please create a profile using `binance-cli profile create`.'
             );
             process.exitCode = 1;
