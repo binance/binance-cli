@@ -4,6 +4,7 @@ import os, { platform, arch } from 'os';
 import { convert } from 'html-to-text';
 import { markdownToTxt } from 'markdown-to-txt';
 import type { ConfigurationRestAPI } from '@binance/common';
+import { HttpsProxyAgent } from 'https-proxy-agent';
 
 let stdin: any = null;
 const homeDir = os.homedir();
@@ -30,6 +31,30 @@ export function isHmacSecretKey(key: string): boolean {
 
 type CliConfiguration = ConfigurationRestAPI & {
     env: string | null;
+};
+
+const getProxyUrl = (): string | undefined => {
+    return (
+        process.env.HTTPS_PROXY ??
+        process.env.https_proxy ??
+        process.env.HTTP_PROXY ??
+        process.env.http_proxy
+    );
+};
+
+const withNetworkOptions = (configuration: CliConfiguration): CliConfiguration => {
+    const proxyUrl = getProxyUrl();
+
+    const networkOptions: Record<string, unknown> = {};
+    if (proxyUrl) {
+        networkOptions.proxy = false;
+        networkOptions.httpsAgent = new HttpsProxyAgent(proxyUrl);
+    }
+
+    return {
+        ...configuration,
+        ...networkOptions,
+    };
 };
 
 export const getCurrentProfile = (): string | null => {
@@ -162,14 +187,14 @@ export const getConfigurationRestAPI = (
     }
 
     if (creds.apiSecret && isHmacSecretKey(creds.apiSecret)) {
-        return {
+        return withNetworkOptions({
             ...creds,
-        };
+        });
     } else {
-        return {
+        return withNetworkOptions({
             privateKey: creds.apiSecret,
             ...creds,
-        };
+        });
     }
 };
 
@@ -181,7 +206,7 @@ export const decodeSelectedEntities = (str: string) => {
     };
     return convert(
         markdownToTxt(str)
-            .replace(/&#39;/g, "'")
+            .replace(/&#39;/g, '\'')
             .replace(/&#x3D;/g, '=')
             .replace(/&#x60;/g, '`')
             .replace(/&gt;/g, '>')
