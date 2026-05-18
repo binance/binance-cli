@@ -6,38 +6,46 @@ import {
     getUserAgent,
     isEmpty,
     readStdinObj,
+    getParsedArgs,
 } from './utils';
-import { Parser, hideBin } from 'yargs/helpers';
 
-const parsedArgs = Parser(hideBin(process.argv));
+const parsedArgs = getParsedArgs();
+const isFullDescription = parsedArgs?.['full-description'] ?? false;
 
-process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('copy-trading');
+const getClient = () => {
+    if (!process.env?.LOG_LEVEL) {
+        process.env.LOG_LEVEL = 'ERROR';
+    }
+    process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('copy-trading');
 
-const stdinObj: any = readStdinObj();
+    let basePath = COPY_TRADING_REST_API_PROD_URL;
 
-let basePath = COPY_TRADING_REST_API_PROD_URL;
+    const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'copy-trading');
 
-const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'copy-trading');
+    if (process.env.BINANCE_COPY_TRADING_BASE_PATH) {
+        basePath = process.env.BINANCE_COPY_TRADING_BASE_PATH;
+    } else if (configurationRestAPI && configurationRestAPI['basePath']) {
+        basePath = configurationRestAPI['basePath'];
+    }
 
-if (process.env.BINANCE_COPY_TRADING_BASE_PATH) {
-    basePath = process.env.BINANCE_COPY_TRADING_BASE_PATH;
-} else if (configurationRestAPI && configurationRestAPI['basePath']) {
-    basePath = configurationRestAPI['basePath'];
-}
+    let client;
+    let hasConfig = false;
+    if (configurationRestAPI !== null) {
+        hasConfig = true;
+        client = new CopyTrading({
+            configurationRestAPI: { ...configurationRestAPI, basePath },
+        });
+    } else {
+        client = new CopyTrading({
+            configurationRestAPI: {
+                apiKey: '',
+                basePath,
+            },
+        });
+    }
 
-let client;
-if (configurationRestAPI !== null) {
-    client = new CopyTrading({
-        configurationRestAPI: { ...configurationRestAPI, basePath },
-    });
-} else {
-    client = new CopyTrading({
-        configurationRestAPI: {
-            apiKey: '',
-            basePath,
-        },
-    });
-}
+    return { client, hasConfig };
+};
 
 const copyTradingCommands: any[] = [];
 
@@ -45,9 +53,12 @@ copyTradingCommands.push({
     command: 'get-futures-lead-trader-status',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Futures Lead Trader Status
+        decodeSelectedEntities(
+            `Get Futures Lead Trader Status
 
-Weight: 20`),
+Weight: 20`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -64,6 +75,7 @@ Weight: 20`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -74,7 +86,8 @@ Weight: 20`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-futures-lead-trader-status is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -102,9 +115,12 @@ copyTradingCommands.push({
     command: 'get-futures-lead-trading-symbol-whitelist',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Futures Lead Trading Symbol Whitelist
+        decodeSelectedEntities(
+            `Get Futures Lead Trading Symbol Whitelist
 
-Weight: 20`),
+Weight: 20`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -121,6 +137,7 @@ Weight: 20`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -131,7 +148,8 @@ Weight: 20`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-futures-lead-trading-symbol-whitelist is signed. Please create a profile using `binance-cli profile create`.'
             );

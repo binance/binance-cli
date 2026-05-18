@@ -10,44 +10,56 @@ import {
     getUserAgent,
     isEmpty,
     readStdinObj,
+    getParsedArgs,
 } from './utils';
-import { Parser, hideBin } from 'yargs/helpers';
 
-const parsedArgs = Parser(hideBin(process.argv));
+const parsedArgs = getParsedArgs();
+const isFullDescription = parsedArgs?.['full-description'] ?? false;
 
-process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('derivatives-trading-options');
-
-const stdinObj: any = readStdinObj();
-
-let basePath = DERIVATIVES_TRADING_OPTIONS_REST_API_PROD_URL;
-
-const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'derivatives-options');
-
-if (process.env.BINANCE_DERIVATIVES_OPTIONS_BASE_PATH) {
-    basePath = process.env.BINANCE_DERIVATIVES_OPTIONS_BASE_PATH;
-} else if (configurationRestAPI && configurationRestAPI['basePath']) {
-    basePath = configurationRestAPI['basePath'];
-} else if (configurationRestAPI && configurationRestAPI['env']) {
-    switch (configurationRestAPI['env']) {
-        case 'testnet':
-            basePath = DERIVATIVES_TRADING_OPTIONS_REST_API_TESTNET_URL;
-            break;
+const getClient = () => {
+    if (!process.env?.LOG_LEVEL) {
+        process.env.LOG_LEVEL = 'ERROR';
     }
-}
+    process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('derivatives-trading-options');
 
-let client;
-if (configurationRestAPI !== null) {
-    client = new DerivativesTradingOptions({
-        configurationRestAPI: { ...configurationRestAPI, basePath },
-    });
-} else {
-    client = new DerivativesTradingOptions({
-        configurationRestAPI: {
-            apiKey: '',
-            basePath,
-        },
-    });
-}
+    let basePath = DERIVATIVES_TRADING_OPTIONS_REST_API_PROD_URL;
+
+    const configurationRestAPI = getConfigurationRestAPI(
+        parsedArgs?.profile,
+        'derivatives-options'
+    );
+
+    if (process.env.BINANCE_DERIVATIVES_OPTIONS_BASE_PATH) {
+        basePath = process.env.BINANCE_DERIVATIVES_OPTIONS_BASE_PATH;
+    } else if (configurationRestAPI && configurationRestAPI['basePath']) {
+        basePath = configurationRestAPI['basePath'];
+    } else if (configurationRestAPI && configurationRestAPI['env']) {
+        switch (configurationRestAPI['env']) {
+            case 'demo':
+            case 'testnet':
+                basePath = DERIVATIVES_TRADING_OPTIONS_REST_API_TESTNET_URL;
+                break;
+        }
+    }
+
+    let client;
+    let hasConfig = false;
+    if (configurationRestAPI !== null) {
+        hasConfig = true;
+        client = new DerivativesTradingOptions({
+            configurationRestAPI: { ...configurationRestAPI, basePath },
+        });
+    } else {
+        client = new DerivativesTradingOptions({
+            configurationRestAPI: {
+                apiKey: '',
+                basePath,
+            },
+        });
+    }
+
+    return { client, hasConfig };
+};
 
 const derivativesTradingOptionsCommands: any[] = [];
 
@@ -55,12 +67,15 @@ derivativesTradingOptionsCommands.push({
     command: 'account-funding-flow',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query account funding flows.
+        decodeSelectedEntities(
+            `Query account funding flows.
 
 
 * Only support querying data in the past 3 months
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -106,6 +121,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -128,6 +144,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -138,7 +155,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'account-funding-flow is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -174,9 +192,12 @@ derivativesTradingOptionsCommands.push({
     command: 'option-margin-account-information',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get current account information.
+        decodeSelectedEntities(
+            `Get current account information.
 
-Weight: 3`),
+Weight: 3`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -193,6 +214,7 @@ Weight: 3`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -203,7 +225,8 @@ Weight: 3`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'option-margin-account-information is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -229,11 +252,15 @@ Weight: 3`),
 
 derivativesTradingOptionsCommands.push({
     command: 'check-server-time',
-    describe:
-        decodeSelectedEntities(`Test connectivity to the Rest API and get the current server time.
+    describe: decodeSelectedEntities(
+        `Test connectivity to the Rest API and get the current server time.
 
-Weight: 1`),
+Weight: 1`,
+        isFullDescription
+    ),
     handler: async () => {
+        const { client } = getClient();
+
         try {
             const response = await client.restAPI.checkServerTime();
             const responseData = await response.data();
@@ -247,10 +274,15 @@ Weight: 1`),
 
 derivativesTradingOptionsCommands.push({
     command: 'exchange-information',
-    describe: decodeSelectedEntities(`Current exchange trading rules and symbol information
+    describe: decodeSelectedEntities(
+        `Current exchange trading rules and symbol information
 
-Weight: 1`),
+Weight: 1`,
+        isFullDescription
+    ),
     handler: async () => {
+        const { client } = getClient();
+
         try {
             const response = await client.restAPI.exchangeInformation();
             const responseData = await response.data();
@@ -264,11 +296,14 @@ Weight: 1`),
 
 derivativesTradingOptionsCommands.push({
     command: 'historical-exercise-records',
-    describe: decodeSelectedEntities(`Get historical exercise records.
+    describe: decodeSelectedEntities(
+        `Get historical exercise records.
 * REALISTIC_VALUE_STRICKEN -&gt; Exercised
 * EXTRINSIC_VALUE_EXPIRED -&gt; Expired OTM
 
-Weight: 3`),
+Weight: 3`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             underlying: {
@@ -302,6 +337,7 @@ Weight: 3`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -311,6 +347,8 @@ Weight: 3`),
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (questions.length > 0) {
             const answers = await inquirer.prompt(questions);
@@ -330,9 +368,12 @@ Weight: 3`),
 
 derivativesTradingOptionsCommands.push({
     command: 'index-price',
-    describe: decodeSelectedEntities(`Get spot index price for option underlying.
+    describe: decodeSelectedEntities(
+        `Get spot index price for option underlying.
 
-Weight: 1`),
+Weight: 1`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -349,6 +390,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -371,6 +413,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -380,6 +423,8 @@ Weight: 1`),
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (options.interactive && !options.underlying) {
             questions.push({
@@ -407,12 +452,15 @@ Weight: 1`),
 
 derivativesTradingOptionsCommands.push({
     command: 'kline-candlestick-data',
-    describe: decodeSelectedEntities(`Kline/candlestick bars for an option symbol.
+    describe: decodeSelectedEntities(
+        `Kline/candlestick bars for an option symbol.
 Klines are uniquely identified by their open time.
 
 * If startTime and endTime are not sent, the most recent klines are returned.
 
-Weight: 1`),
+Weight: 1`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -451,6 +499,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -477,6 +526,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -486,6 +536,8 @@ Weight: 1`),
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (options.interactive && !options.symbol) {
             questions.push({
@@ -521,10 +573,12 @@ Weight: 1`),
 
 derivativesTradingOptionsCommands.push({
     command: 'open-interest',
-    describe:
-        decodeSelectedEntities(`Get open interest for specific underlying asset on specific expiration date.
+    describe: decodeSelectedEntities(
+        `Get open interest for specific underlying asset on specific expiration date.
 
-Weight: 0`),
+Weight: 0`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -546,6 +600,7 @@ Weight: 0`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -572,6 +627,7 @@ Weight: 0`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -581,6 +637,8 @@ Weight: 0`),
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (options.interactive && !options.underlyingAsset) {
             questions.push({
@@ -616,9 +674,12 @@ Weight: 0`),
 
 derivativesTradingOptionsCommands.push({
     command: 'option-mark-price',
-    describe: decodeSelectedEntities(`Option mark price and greek info.
+    describe: decodeSelectedEntities(
+        `Option mark price and greek info.
 
-Weight: 5`),
+Weight: 5`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             symbol: {
@@ -635,6 +696,7 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -644,6 +706,8 @@ Weight: 5`),
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (questions.length > 0) {
             const answers = await inquirer.prompt(questions);
@@ -663,14 +727,17 @@ Weight: 5`),
 
 derivativesTradingOptionsCommands.push({
     command: 'order-book',
-    describe: decodeSelectedEntities(`Check orderbook depth on specific symbol
+    describe: decodeSelectedEntities(
+        `Check orderbook depth on specific symbol
 
 Weight: limit         | weight
 ------------  | ------------
 5, 10, 20, 50 | 1
 100           | 5
 500           | 10
-1000          | 20`),
+1000          | 20`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -694,6 +761,7 @@ Weight: limit         | weight
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -716,6 +784,7 @@ Weight: limit         | weight
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -725,6 +794,8 @@ Weight: limit         | weight
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (options.interactive && !options.symbol) {
             questions.push({
@@ -752,9 +823,12 @@ Weight: limit         | weight
 
 derivativesTradingOptionsCommands.push({
     command: 'recent-block-trades-list',
-    describe: decodeSelectedEntities(`Get recent block trades
+    describe: decodeSelectedEntities(
+        `Get recent block trades
 
-Weight: 5`),
+Weight: 5`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             symbol: {
@@ -778,6 +852,7 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -787,6 +862,8 @@ Weight: 5`),
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (questions.length > 0) {
             const answers = await inquirer.prompt(questions);
@@ -806,9 +883,12 @@ Weight: 5`),
 
 derivativesTradingOptionsCommands.push({
     command: 'recent-trades-list',
-    describe: decodeSelectedEntities(`Get recent market trades
+    describe: decodeSelectedEntities(
+        `Get recent market trades
 
-Weight: 5`),
+Weight: 5`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -832,6 +912,7 @@ Weight: 5`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -854,6 +935,7 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -863,6 +945,8 @@ Weight: 5`),
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (options.interactive && !options.symbol) {
             questions.push({
@@ -890,10 +974,15 @@ Weight: 5`),
 
 derivativesTradingOptionsCommands.push({
     command: 'test-connectivity',
-    describe: decodeSelectedEntities(`Test connectivity to the Rest API.
+    describe: decodeSelectedEntities(
+        `Test connectivity to the Rest API.
 
-Weight: 1`),
+Weight: 1`,
+        isFullDescription
+    ),
     handler: async () => {
+        const { client } = getClient();
+
         try {
             await client.restAPI.testConnectivity();
         } catch (e: any) {
@@ -905,9 +994,12 @@ Weight: 1`),
 
 derivativesTradingOptionsCommands.push({
     command: 'ticker24hr-price-change-statistics',
-    describe: decodeSelectedEntities(`24 hour rolling window price change statistics.
+    describe: decodeSelectedEntities(
+        `24 hour rolling window price change statistics.
 
-Weight: 5`),
+Weight: 5`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             symbol: {
@@ -924,6 +1016,7 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -933,6 +1026,8 @@ Weight: 5`),
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (questions.length > 0) {
             const answers = await inquirer.prompt(questions);
@@ -954,9 +1049,12 @@ derivativesTradingOptionsCommands.push({
     command: 'accept-block-trade-order',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Accept a block trade order
+        decodeSelectedEntities(
+            `Accept a block trade order
 
-Weight: 5`),
+Weight: 5`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -976,6 +1074,7 @@ Weight: 5`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -998,6 +1097,7 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1008,7 +1108,8 @@ Weight: 5`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'accept-block-trade-order is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1046,9 +1147,12 @@ derivativesTradingOptionsCommands.push({
     command: 'account-block-trade-list',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Gets block trades for a specific account.
+        decodeSelectedEntities(
+            `Gets block trades for a specific account.
 
-Weight: 5`),
+Weight: 5`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'end-time': {
@@ -1080,6 +1184,7 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1090,7 +1195,8 @@ Weight: 5`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'account-block-trade-list is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1118,9 +1224,12 @@ derivativesTradingOptionsCommands.push({
     command: 'cancel-block-trade-order',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Cancel a block trade order.
+        decodeSelectedEntities(
+            `Cancel a block trade order.
 
-Weight: 5`),
+Weight: 5`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1142,6 +1251,7 @@ Weight: 5`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1164,6 +1274,7 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1174,7 +1285,8 @@ Weight: 5`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'cancel-block-trade-order is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1209,9 +1321,12 @@ derivativesTradingOptionsCommands.push({
     command: 'extend-block-trade-order',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Extends a block trade expire time by 30 mins from the current time.
+        decodeSelectedEntities(
+            `Extends a block trade expire time by 30 mins from the current time.
 
-Weight: 5`),
+Weight: 5`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1231,6 +1346,7 @@ Weight: 5`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1253,6 +1369,7 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1263,7 +1380,8 @@ Weight: 5`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'extend-block-trade-order is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1301,9 +1419,12 @@ derivativesTradingOptionsCommands.push({
     command: 'new-block-trade-order',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Send in a new block trade order.
+        decodeSelectedEntities(
+            `Send in a new block trade order.
 
-Weight: 5`),
+Weight: 5`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1327,6 +1448,7 @@ Weight: 5`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1353,6 +1475,7 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1363,7 +1486,8 @@ Weight: 5`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'new-block-trade-order is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1409,9 +1533,12 @@ derivativesTradingOptionsCommands.push({
     command: 'query-block-trade-details',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query block trade details; returns block trade details from counterparty&#39;s perspective.
+        decodeSelectedEntities(
+            `Query block trade details; returns block trade details from counterparty&#39;s perspective.
 
-Weight: 5`),
+Weight: 5`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1433,6 +1560,7 @@ Weight: 5`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1455,6 +1583,7 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1465,7 +1594,8 @@ Weight: 5`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-block-trade-details is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1502,9 +1632,12 @@ derivativesTradingOptionsCommands.push({
     command: 'query-block-trade-order',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Check block trade order status.
+        decodeSelectedEntities(
+            `Check block trade order status.
 
-Weight: 5`),
+Weight: 5`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'block-order-matching-key': {
@@ -1543,6 +1676,7 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1553,7 +1687,8 @@ Weight: 5`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-block-trade-order is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1581,11 +1716,14 @@ derivativesTradingOptionsCommands.push({
     command: 'auto-cancel-all-open-orders',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`This endpoint resets the time from which the countdown will begin to the time this messaged is received.  It should be called repeatedly as heartbeats.  Multiple heartbeats can be updated at once by specifying the underlying symbols as a list (ex. BTCUSDT,ETHUSDT) in the underlyings parameter.
+        decodeSelectedEntities(
+            `This endpoint resets the time from which the countdown will begin to the time this messaged is received.  It should be called repeatedly as heartbeats.  Multiple heartbeats can be updated at once by specifying the underlying symbols as a list (ex. BTCUSDT,ETHUSDT) in the underlyings parameter.
 
 * The response will only include underlying symbols where the heartbeat has been successfully updated.
 
-Weight: 10`),
+Weight: 10`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1605,6 +1743,7 @@ Weight: 10`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1627,6 +1766,7 @@ Weight: 10`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1637,7 +1777,8 @@ Weight: 10`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'auto-cancel-all-open-orders is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1674,11 +1815,14 @@ derivativesTradingOptionsCommands.push({
     command: 'get-auto-cancel-all-open-orders',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`This endpoint returns the auto-cancel parameters for each underlying symbol. Note only active auto-cancel parameters will be returned, if countdownTime is set to 0 (ie. countdownTime has been turned off), the underlying symbol and corresponding countdownTime parameter will not be returned in the response.
+        decodeSelectedEntities(
+            `This endpoint returns the auto-cancel parameters for each underlying symbol. Note only active auto-cancel parameters will be returned, if countdownTime is set to 0 (ie. countdownTime has been turned off), the underlying symbol and corresponding countdownTime parameter will not be returned in the response.
 
 * countdownTime &#x3D; 0 means the function is disabled.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             underlying: {
@@ -1700,6 +1844,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1710,7 +1855,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-auto-cancel-all-open-orders is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1738,9 +1884,12 @@ derivativesTradingOptionsCommands.push({
     command: 'get-market-maker-protection-config',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get config for MMP.
+        decodeSelectedEntities(
+            `Get config for MMP.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             underlying: {
@@ -1762,6 +1911,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1772,7 +1922,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-market-maker-protection-config is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1800,9 +1951,12 @@ derivativesTradingOptionsCommands.push({
     command: 'reset-market-maker-protection-config',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Reset MMP, start MMP order again.
+        decodeSelectedEntities(
+            `Reset MMP, start MMP order again.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             underlying: {
@@ -1822,6 +1976,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1832,7 +1987,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'reset-market-maker-protection-config is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1860,7 +2016,8 @@ derivativesTradingOptionsCommands.push({
     command: 'set-auto-cancel-all-open-orders',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`This endpoint sets the parameters of the auto-cancel feature which cancels all open orders (both market maker protection and non market maker protection order types) of the underlying symbol at the end of the specified countdown time period if no heartbeat message is sent.  After the countdown time period, all open orders will be cancelled and new orders will be rejected with error code -2010 until either a heartbeat message is sent or the auto-cancel feature is turned off by setting countdownTime to 0.
+        decodeSelectedEntities(
+            `This endpoint sets the parameters of the auto-cancel feature which cancels all open orders (both market maker protection and non market maker protection order types) of the underlying symbol at the end of the specified countdown time period if no heartbeat message is sent.  After the countdown time period, all open orders will be cancelled and new orders will be rejected with error code -2010 until either a heartbeat message is sent or the auto-cancel feature is turned off by setting countdownTime to 0.
 
 
 * This rest endpoint sets up the parameters to cancel your open orders in case of an outage or disconnection.
@@ -1868,7 +2025,9 @@ derivativesTradingOptionsCommands.push({
 Call this endpoint with a countdownTime value of 10000 (10 seconds) to turn on the auto-cancel feature. If the corresponding countdownCancelAllHeartBeat endpoint is not called within 10 seconds with the specified underlying symbol, all open orders of the specified symbol will be automatically canceled. If this endpoint is called with an countdownTime of 0, the countdown timer will be stopped.
 * The system will check all countdowns approximately every 100 milliseconds, **please note that sufficient redundancy should be considered when using this function**. We do not recommend setting the countdown time to be too precise or too small.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1892,6 +2051,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1918,6 +2078,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1928,7 +2089,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'set-auto-cancel-all-open-orders is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1974,10 +2136,13 @@ derivativesTradingOptionsCommands.push({
     command: 'set-market-maker-protection-config',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Set config for MMP.
+        decodeSelectedEntities(
+            `Set config for MMP.
 Market Maker Protection(MMP) is a set of protection mechanism for option market maker, this mechanism is able to prevent mass trading in short period time. Once market maker&#39;s account branches the threshold, the Market Maker Protection will be triggered. When Market Maker Protection triggers, all the current MMP orders will be canceled, new MMP orders will be rejected. Market maker can use this time to reevaluate market and modify order price.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             underlying: {
@@ -2013,6 +2178,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2023,7 +2189,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'set-market-maker-protection-config is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2051,11 +2218,14 @@ derivativesTradingOptionsCommands.push({
     command: 'account-trade-list',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get trades for a specific account and symbol.
+        decodeSelectedEntities(
+            `Get trades for a specific account and symbol.
 
 * Only support querying trades in the past 3 months
 
-Weight: 5`),
+Weight: 5`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             symbol: {
@@ -2101,6 +2271,7 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2111,7 +2282,8 @@ Weight: 5`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'account-trade-list is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2139,9 +2311,12 @@ derivativesTradingOptionsCommands.push({
     command: 'cancel-all-option-orders-by-underlying',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Cancel all active orders on specified underlying.
+        decodeSelectedEntities(
+            `Cancel all active orders on specified underlying.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2163,6 +2338,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -2185,6 +2361,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2195,7 +2372,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'cancel-all-option-orders-by-underlying is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2231,9 +2409,12 @@ derivativesTradingOptionsCommands.push({
     command: 'cancel-all-option-orders-on-specific-symbol',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Cancel all active order on a symbol.
+        decodeSelectedEntities(
+            `Cancel all active order on a symbol.
 
-Weight: 5`),
+Weight: 5`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2255,6 +2436,7 @@ Weight: 5`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -2277,6 +2459,7 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2287,7 +2470,8 @@ Weight: 5`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'cancel-all-option-orders-on-specific-symbol is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2323,11 +2507,14 @@ derivativesTradingOptionsCommands.push({
     command: 'cancel-multiple-option-orders',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Cancel multiple orders.
+        decodeSelectedEntities(
+            `Cancel multiple orders.
 
 * At least one instance of &#x60;orderId&#x60; and &#x60;clientOrderId&#x60; must be sent.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2363,6 +2550,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -2385,6 +2573,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2395,7 +2584,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'cancel-multiple-option-orders is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2431,11 +2621,14 @@ derivativesTradingOptionsCommands.push({
     command: 'cancel-option-order',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Cancel an active order.
+        decodeSelectedEntities(
+            `Cancel an active order.
 
 * At least one instance of &#x60;orderId&#x60; and &#x60;clientOrderId&#x60; must be sent.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2467,6 +2660,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -2489,6 +2683,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2499,7 +2694,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'cancel-option-order is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2535,9 +2731,12 @@ derivativesTradingOptionsCommands.push({
     command: 'new-order',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Send a new order.
+        decodeSelectedEntities(
+            `Send a new order.
 
-Weight: 0`),
+Weight: 0`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2601,6 +2800,7 @@ Weight: 0`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -2635,6 +2835,7 @@ Weight: 0`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2645,7 +2846,8 @@ Weight: 0`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'new-order is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2709,9 +2911,12 @@ derivativesTradingOptionsCommands.push({
     command: 'option-position-information',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get current position information.
+        decodeSelectedEntities(
+            `Get current position information.
 
-Weight: 5`),
+Weight: 5`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             symbol: {
@@ -2733,6 +2938,7 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2743,7 +2949,8 @@ Weight: 5`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'option-position-information is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2771,12 +2978,15 @@ derivativesTradingOptionsCommands.push({
     command: 'place-multiple-orders',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Send multiple option orders.
+        decodeSelectedEntities(
+            `Send multiple option orders.
 
 * Parameter rules are same with New Order
 * Batch orders are processed concurrently, and the order of matching is not guaranteed.
 
-Weight: 5`),
+Weight: 5`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2796,6 +3006,7 @@ Weight: 5`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -2818,6 +3029,7 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2828,7 +3040,8 @@ Weight: 5`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'place-multiple-orders is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2865,9 +3078,12 @@ derivativesTradingOptionsCommands.push({
     command: 'query-current-open-option-orders',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query current all open orders, status: ACCEPTED PARTIALLY_FILLED
+        decodeSelectedEntities(
+            `Query current all open orders, status: ACCEPTED PARTIALLY_FILLED
 
-Weight: 1 for a single symbol; 40 when the symbol parameter is omitted`),
+Weight: 1 for a single symbol; 40 when the symbol parameter is omitted`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             symbol: {
@@ -2904,6 +3120,7 @@ Weight: 1 for a single symbol; 40 when the symbol parameter is omitted`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2914,7 +3131,8 @@ Weight: 1 for a single symbol; 40 when the symbol parameter is omitted`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-current-open-option-orders is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2942,9 +3160,12 @@ derivativesTradingOptionsCommands.push({
     command: 'query-option-order-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query all finished orders within 5 days, finished status: CANCELLED FILLED REJECTED.
+        decodeSelectedEntities(
+            `Query all finished orders within 5 days, finished status: CANCELLED FILLED REJECTED.
 
-Weight: 3`),
+Weight: 3`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2988,6 +3209,7 @@ Weight: 3`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -3010,6 +3232,7 @@ Weight: 3`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3020,7 +3243,8 @@ Weight: 3`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-option-order-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3056,7 +3280,8 @@ derivativesTradingOptionsCommands.push({
     command: 'query-single-order',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Check an order status.
+        decodeSelectedEntities(
+            `Check an order status.
 
 * These orders will not be found:
 * order status is &#x60;CANCELED&#x60; or &#x60;REJECTED&#x60;, **AND**
@@ -3066,7 +3291,9 @@ derivativesTradingOptionsCommands.push({
 
 * Either &#x60;orderId&#x60; or &#x60;clientOrderId &#x60; must be sent.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -3098,6 +3325,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -3120,6 +3348,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3130,7 +3359,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-single-order is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3166,9 +3396,12 @@ derivativesTradingOptionsCommands.push({
     command: 'user-commission',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get account commission.
+        decodeSelectedEntities(
+            `Get account commission.
 
-Weight: 5`),
+Weight: 5`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -3185,6 +3418,7 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3195,7 +3429,8 @@ Weight: 5`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'user-commission is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3223,9 +3458,12 @@ derivativesTradingOptionsCommands.push({
     command: 'user-exercise-record',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get account exercise records.
+        decodeSelectedEntities(
+            `Get account exercise records.
 
-Weight: 5`),
+Weight: 5`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             symbol: {
@@ -3264,6 +3502,7 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3274,7 +3513,8 @@ Weight: 5`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'user-exercise-record is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3300,10 +3540,15 @@ Weight: 5`),
 
 derivativesTradingOptionsCommands.push({
     command: 'close-user-data-stream',
-    describe: decodeSelectedEntities(`Close out a user data stream.
+    describe: decodeSelectedEntities(
+        `Close out a user data stream.
 
-Weight: 1`),
+Weight: 1`,
+        isFullDescription
+    ),
     handler: async () => {
+        const { client } = getClient();
+
         try {
             await client.restAPI.closeUserDataStream();
         } catch (e: any) {
@@ -3315,11 +3560,15 @@ Weight: 1`),
 
 derivativesTradingOptionsCommands.push({
     command: 'keepalive-user-data-stream',
-    describe:
-        decodeSelectedEntities(`Keepalive a user data stream to prevent a time out. User data streams will close after 60 minutes. It&#39;s recommended to send a ping about every 60 minutes.
+    describe: decodeSelectedEntities(
+        `Keepalive a user data stream to prevent a time out. User data streams will close after 60 minutes. It&#39;s recommended to send a ping about every 60 minutes.
 
-Weight: 1`),
+Weight: 1`,
+        isFullDescription
+    ),
     handler: async () => {
+        const { client } = getClient();
+
         try {
             await client.restAPI.keepaliveUserDataStream();
         } catch (e: any) {
@@ -3331,11 +3580,15 @@ Weight: 1`),
 
 derivativesTradingOptionsCommands.push({
     command: 'start-user-data-stream',
-    describe:
-        decodeSelectedEntities(`Start a new user data stream. The stream will close after 60 minutes unless a keepalive is sent. If the account has an active &#x60;listenKey&#x60;, that &#x60;listenKey&#x60; will be returned and its validity will be extended for 60 minutes.
+    describe: decodeSelectedEntities(
+        `Start a new user data stream. The stream will close after 60 minutes unless a keepalive is sent. If the account has an active &#x60;listenKey&#x60;, that &#x60;listenKey&#x60; will be returned and its validity will be extended for 60 minutes.
 
-Weight: 1`),
+Weight: 1`,
+        isFullDescription
+    ),
     handler: async () => {
+        const { client } = getClient();
+
         try {
             const response = await client.restAPI.startUserDataStream();
             const responseData = await response.data();

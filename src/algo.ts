@@ -6,38 +6,46 @@ import {
     getUserAgent,
     isEmpty,
     readStdinObj,
+    getParsedArgs,
 } from './utils';
-import { Parser, hideBin } from 'yargs/helpers';
 
-const parsedArgs = Parser(hideBin(process.argv));
+const parsedArgs = getParsedArgs();
+const isFullDescription = parsedArgs?.['full-description'] ?? false;
 
-process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('algo');
+const getClient = () => {
+    if (!process.env?.LOG_LEVEL) {
+        process.env.LOG_LEVEL = 'ERROR';
+    }
+    process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('algo');
 
-const stdinObj: any = readStdinObj();
+    let basePath = ALGO_REST_API_PROD_URL;
 
-let basePath = ALGO_REST_API_PROD_URL;
+    const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'algo');
 
-const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'algo');
+    if (process.env.BINANCE_ALGO_BASE_PATH) {
+        basePath = process.env.BINANCE_ALGO_BASE_PATH;
+    } else if (configurationRestAPI && configurationRestAPI['basePath']) {
+        basePath = configurationRestAPI['basePath'];
+    }
 
-if (process.env.BINANCE_ALGO_BASE_PATH) {
-    basePath = process.env.BINANCE_ALGO_BASE_PATH;
-} else if (configurationRestAPI && configurationRestAPI['basePath']) {
-    basePath = configurationRestAPI['basePath'];
-}
+    let client;
+    let hasConfig = false;
+    if (configurationRestAPI !== null) {
+        hasConfig = true;
+        client = new Algo({
+            configurationRestAPI: { ...configurationRestAPI, basePath },
+        });
+    } else {
+        client = new Algo({
+            configurationRestAPI: {
+                apiKey: '',
+                basePath,
+            },
+        });
+    }
 
-let client;
-if (configurationRestAPI !== null) {
-    client = new Algo({
-        configurationRestAPI: { ...configurationRestAPI, basePath },
-    });
-} else {
-    client = new Algo({
-        configurationRestAPI: {
-            apiKey: '',
-            basePath,
-        },
-    });
-}
+    return { client, hasConfig };
+};
 
 const algoCommands: any[] = [];
 
@@ -45,12 +53,15 @@ algoCommands.push({
     command: 'cancel-algo-order-future-algo',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Cancel an active order.
+        decodeSelectedEntities(
+            `Cancel an active order.
 
 * You need to enable &#x60;Futures Trading Permission&#x60; for the api key which requests this endpoint.
 * Base URL: https://api.binance.com
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -72,6 +83,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -94,6 +106,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -104,7 +117,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'cancel-algo-order-future-algo is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -140,12 +154,15 @@ algoCommands.push({
     command: 'query-current-algo-open-orders-future-algo',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query Current Algo Open Orders
+        decodeSelectedEntities(
+            `Query Current Algo Open Orders
 
 * You need to enable &#x60;Futures Trading Permission&#x60; for the api key which requests this endpoint.
 * Base URL: https://api.binance.com
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -162,6 +179,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -172,7 +190,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-current-algo-open-orders-future-algo is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -200,12 +219,15 @@ algoCommands.push({
     command: 'query-historical-algo-orders-future-algo',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query Historical Algo Order
+        decodeSelectedEntities(
+            `Query Historical Algo Order
 
 * You need to enable &#x60;Futures Trading Permission&#x60; for the api key which requests this endpoint.
 * Base URL: https://api.binance.com
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             symbol: {
@@ -252,6 +274,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -262,7 +285,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-historical-algo-orders-future-algo is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -290,12 +314,15 @@ algoCommands.push({
     command: 'query-sub-orders-future-algo',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get respective sub orders for a specified algoId
+        decodeSelectedEntities(
+            `Get respective sub orders for a specified algoId
 
 * You need to enable &#x60;Futures Trading Permission&#x60; for the api key which requests this endpoint.
 * Base URL: https://api.binance.com
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -327,6 +354,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -349,6 +377,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -359,7 +388,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-sub-orders-future-algo is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -395,7 +425,8 @@ algoCommands.push({
     command: 'time-weighted-average-price-future-algo',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Send in a Twap new order.
+        decodeSelectedEntities(
+            `Send in a Twap new order.
 Only support on USDⓈ-M Contracts.
 
 * Total Algo open orders max allowed: &#x60;30&#x60; orders.
@@ -408,7 +439,9 @@ For example: Your futures balance is insufficient, or open position with reduce 
 * You need to enable &#x60;Futures Trading Permission&#x60; for the api key which requests this endpoint.
 * Base URL: https://api.binance.com
 
-Weight: 3000`),
+Weight: 3000`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -456,6 +489,7 @@ Weight: 3000`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -490,6 +524,7 @@ Weight: 3000`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -500,7 +535,8 @@ Weight: 3000`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'time-weighted-average-price-future-algo is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -564,7 +600,8 @@ algoCommands.push({
     command: 'volume-participation-future-algo',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Send in a VP new order.
+        decodeSelectedEntities(
+            `Send in a VP new order.
 Only support on USDⓈ-M Contracts.
 
 * Total Algo open orders max allowed: &#x60;10&#x60; orders.
@@ -574,7 +611,9 @@ For example: Your futures balance is insufficient, or open position with reduce 
 * You need to enable &#x60;Futures Trading Permission&#x60; for the api key which requests this endpoint.
 * Base URL: https://api.binance.com
 
-Weight: 300`),
+Weight: 300`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -622,6 +661,7 @@ Weight: 300`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -656,6 +696,7 @@ Weight: 300`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -666,7 +707,8 @@ Weight: 300`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'volume-participation-future-algo is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -730,9 +772,12 @@ algoCommands.push({
     command: 'cancel-algo-order-spot-algo',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Cancel an open TWAP order
+        decodeSelectedEntities(
+            `Cancel an open TWAP order
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -754,6 +799,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -776,6 +822,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -786,7 +833,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'cancel-algo-order-spot-algo is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -822,9 +870,12 @@ algoCommands.push({
     command: 'query-current-algo-open-orders-spot-algo',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get all open SPOT TWAP orders
+        decodeSelectedEntities(
+            `Get all open SPOT TWAP orders
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -841,6 +892,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -851,7 +903,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-current-algo-open-orders-spot-algo is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -879,9 +932,12 @@ algoCommands.push({
     command: 'query-historical-algo-orders-spot-algo',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get all historical SPOT TWAP orders
+        decodeSelectedEntities(
+            `Get all historical SPOT TWAP orders
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             symbol: {
@@ -928,6 +984,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -938,7 +995,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-historical-algo-orders-spot-algo is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -966,9 +1024,12 @@ algoCommands.push({
     command: 'query-sub-orders-spot-algo',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get respective sub orders for a specified algoId
+        decodeSelectedEntities(
+            `Get respective sub orders for a specified algoId
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1000,6 +1061,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1022,6 +1084,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1032,7 +1095,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-sub-orders-spot-algo is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1068,11 +1132,14 @@ algoCommands.push({
     command: 'time-weighted-average-price-spot-algo',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Place a new spot TWAP order with Algo service.
+        decodeSelectedEntities(
+            `Place a new spot TWAP order with Algo service.
 
 * Total Algo open orders max allowed: &#x60;20&#x60; orders.
 
-Weight: 3000`),
+Weight: 3000`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1108,6 +1175,7 @@ Weight: 3000`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1142,6 +1210,7 @@ Weight: 3000`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1152,7 +1221,8 @@ Weight: 3000`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'time-weighted-average-price-spot-algo is signed. Please create a profile using `binance-cli profile create`.'
             );

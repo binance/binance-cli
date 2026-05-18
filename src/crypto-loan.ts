@@ -6,38 +6,46 @@ import {
     getUserAgent,
     isEmpty,
     readStdinObj,
+    getParsedArgs,
 } from './utils';
-import { Parser, hideBin } from 'yargs/helpers';
 
-const parsedArgs = Parser(hideBin(process.argv));
+const parsedArgs = getParsedArgs();
+const isFullDescription = parsedArgs?.['full-description'] ?? false;
 
-process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('crypto-loan');
+const getClient = () => {
+    if (!process.env?.LOG_LEVEL) {
+        process.env.LOG_LEVEL = 'ERROR';
+    }
+    process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('crypto-loan');
 
-const stdinObj: any = readStdinObj();
+    let basePath = CRYPTO_LOAN_REST_API_PROD_URL;
 
-let basePath = CRYPTO_LOAN_REST_API_PROD_URL;
+    const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'crypto-loan');
 
-const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'crypto-loan');
+    if (process.env.BINANCE_CRYPTO_LOAN_BASE_PATH) {
+        basePath = process.env.BINANCE_CRYPTO_LOAN_BASE_PATH;
+    } else if (configurationRestAPI && configurationRestAPI['basePath']) {
+        basePath = configurationRestAPI['basePath'];
+    }
 
-if (process.env.BINANCE_CRYPTO_LOAN_BASE_PATH) {
-    basePath = process.env.BINANCE_CRYPTO_LOAN_BASE_PATH;
-} else if (configurationRestAPI && configurationRestAPI['basePath']) {
-    basePath = configurationRestAPI['basePath'];
-}
+    let client;
+    let hasConfig = false;
+    if (configurationRestAPI !== null) {
+        hasConfig = true;
+        client = new CryptoLoan({
+            configurationRestAPI: { ...configurationRestAPI, basePath },
+        });
+    } else {
+        client = new CryptoLoan({
+            configurationRestAPI: {
+                apiKey: '',
+                basePath,
+            },
+        });
+    }
 
-let client;
-if (configurationRestAPI !== null) {
-    client = new CryptoLoan({
-        configurationRestAPI: { ...configurationRestAPI, basePath },
-    });
-} else {
-    client = new CryptoLoan({
-        configurationRestAPI: {
-            apiKey: '',
-            basePath,
-        },
-    });
-}
+    return { client, hasConfig };
+};
 
 const cryptoLoanCommands: any[] = [];
 
@@ -45,8 +53,11 @@ cryptoLoanCommands.push({
     command: 'check-collateral-repay-rate',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`
-Weight: 6000`),
+        decodeSelectedEntities(
+            `
+Weight: 6000`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -73,6 +84,7 @@ Weight: 6000`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -99,6 +111,7 @@ Weight: 6000`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -109,7 +122,8 @@ Weight: 6000`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'check-collateral-repay-rate is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -153,11 +167,14 @@ cryptoLoanCommands.push({
     command: 'flexible-loan-adjust-ltv',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Flexible Loan Adjust LTV
+        decodeSelectedEntities(
+            `Flexible Loan Adjust LTV
 
 * API Key needs Spot &amp; Margin Trading permission for this endpoint
 
-Weight: 6000`),
+Weight: 6000`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -189,6 +206,7 @@ Weight: 6000`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -223,6 +241,7 @@ Weight: 6000`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -233,7 +252,8 @@ Weight: 6000`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'flexible-loan-adjust-ltv is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -297,13 +317,16 @@ cryptoLoanCommands.push({
     command: 'flexible-loan-borrow',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Borrow Flexible Loan
+        decodeSelectedEntities(
+            `Borrow Flexible Loan
 
 
 * This API endpoint is available for both the master account and the sub-account.
 * You can customize LTV by entering loanAmount and collateralAmount.
 
-Weight: 6000`),
+Weight: 6000`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -335,6 +358,7 @@ Weight: 6000`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -361,6 +385,7 @@ Weight: 6000`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -371,7 +396,8 @@ Weight: 6000`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'flexible-loan-borrow is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -417,12 +443,15 @@ cryptoLoanCommands.push({
     command: 'flexible-loan-repay',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Flexible Loan Repay
+        decodeSelectedEntities(
+            `Flexible Loan Repay
 
 
 * repayAmount is mandatory even fullRepayment &#x3D; FALSE
 
-Weight: 6000`),
+Weight: 6000`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -462,6 +491,7 @@ Weight: 6000`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -492,6 +522,7 @@ Weight: 6000`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -502,7 +533,8 @@ Weight: 6000`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'flexible-loan-repay is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -557,9 +589,12 @@ cryptoLoanCommands.push({
     command: 'get-flexible-loan-assets-data',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get interest rate and borrow limit of flexible loanable assets. The borrow limit is shown in USD value.
+        decodeSelectedEntities(
+            `Get interest rate and borrow limit of flexible loanable assets. The borrow limit is shown in USD value.
 
-Weight: 400`),
+Weight: 400`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'loan-coin': {
@@ -581,6 +616,7 @@ Weight: 400`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -591,7 +627,8 @@ Weight: 400`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-flexible-loan-assets-data is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -619,12 +656,15 @@ cryptoLoanCommands.push({
     command: 'get-flexible-loan-borrow-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Flexible Loan Borrow History
+        decodeSelectedEntities(
+            `Get Flexible Loan Borrow History
 
 * If startTime and endTime are not sent, the recent 90-day data will be returned.
 * The max interval between startTime and endTime is 180 days.
 
-Weight: 400`),
+Weight: 400`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'loan-coin': {
@@ -673,6 +713,7 @@ Weight: 400`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -683,7 +724,8 @@ Weight: 400`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-flexible-loan-borrow-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -711,9 +753,12 @@ cryptoLoanCommands.push({
     command: 'get-flexible-loan-collateral-assets-data',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get LTV information and collateral limit of flexible loan&#39;s collateral assets. The collateral limit is shown in USD value.
+        decodeSelectedEntities(
+            `Get LTV information and collateral limit of flexible loan&#39;s collateral assets. The collateral limit is shown in USD value.
 
-Weight: 400`),
+Weight: 400`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'collateral-coin': {
@@ -735,6 +780,7 @@ Weight: 400`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -745,7 +791,8 @@ Weight: 400`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-flexible-loan-collateral-assets-data is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -773,13 +820,16 @@ cryptoLoanCommands.push({
     command: 'get-flexible-loan-interest-rate-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Check Flexible Loan interest rate history
+        decodeSelectedEntities(
+            `Check Flexible Loan interest rate history
 
 * If startTime and endTime are not sent, the recent 90-day data will be returned
 * The max interval between startTime and endTime is 90 days.
 * Time based on UTC+0.
 
-Weight: 400`),
+Weight: 400`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -823,6 +873,7 @@ Weight: 400`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -849,6 +900,7 @@ Weight: 400`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -859,7 +911,8 @@ Weight: 400`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-flexible-loan-interest-rate-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -903,8 +956,11 @@ cryptoLoanCommands.push({
     command: 'get-flexible-loan-liquidation-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`
-Weight: 400`),
+        decodeSelectedEntities(
+            `
+Weight: 400`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'loan-coin': {
@@ -953,6 +1009,7 @@ Weight: 400`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -963,7 +1020,8 @@ Weight: 400`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-flexible-loan-liquidation-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -991,12 +1049,15 @@ cryptoLoanCommands.push({
     command: 'get-flexible-loan-ltv-adjustment-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Flexible Loan LTV Adjustment History
+        decodeSelectedEntities(
+            `Get Flexible Loan LTV Adjustment History
 
 * If startTime and endTime are not sent, the recent 90-day data will be returned.
 * The max interval between startTime and endTime is 180 days.
 
-Weight: 400`),
+Weight: 400`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'loan-coin': {
@@ -1045,6 +1106,7 @@ Weight: 400`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1055,7 +1117,8 @@ Weight: 400`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-flexible-loan-ltv-adjustment-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1083,9 +1146,12 @@ cryptoLoanCommands.push({
     command: 'get-flexible-loan-ongoing-orders',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Flexible Loan Ongoing Orders
+        decodeSelectedEntities(
+            `Get Flexible Loan Ongoing Orders
 
-Weight: 300`),
+Weight: 300`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'loan-coin': {
@@ -1124,6 +1190,7 @@ Weight: 300`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1134,7 +1201,8 @@ Weight: 300`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-flexible-loan-ongoing-orders is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1162,12 +1230,15 @@ cryptoLoanCommands.push({
     command: 'get-flexible-loan-repayment-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Flexible Loan Repayment History
+        decodeSelectedEntities(
+            `Get Flexible Loan Repayment History
 
 * If startTime and endTime are not sent, the recent 90-day data will be returned.
 * The max interval between startTime and endTime is 180 days.
 
-Weight: 400`),
+Weight: 400`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'loan-coin': {
@@ -1216,6 +1287,7 @@ Weight: 400`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1226,7 +1298,8 @@ Weight: 400`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-flexible-loan-repayment-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1254,9 +1327,12 @@ cryptoLoanCommands.push({
     command: 'check-collateral-repay-rate-stable-rate',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get the the rate of collateral coin / loan coin when using collateral repay, the rate will be valid within 8 second.
+        decodeSelectedEntities(
+            `Get the the rate of collateral coin / loan coin when using collateral repay, the rate will be valid within 8 second.
 
-Weight: 6000`),
+Weight: 6000`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1288,6 +1364,7 @@ Weight: 6000`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1318,6 +1395,7 @@ Weight: 6000`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1328,7 +1406,8 @@ Weight: 6000`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'check-collateral-repay-rate-stable-rate is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1380,12 +1459,15 @@ cryptoLoanCommands.push({
     command: 'get-crypto-loans-income-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Crypto Loans Income History
+        decodeSelectedEntities(
+            `Get Crypto Loans Income History
 
 * If startTime and endTime are not sent, the recent 7-day data will be returned.
 * The max interval between startTime and endTime is 30 days.
 
-Weight: 6000`),
+Weight: 6000`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             asset: {
@@ -1429,6 +1511,7 @@ Weight: 6000`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1439,7 +1522,8 @@ Weight: 6000`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-crypto-loans-income-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1467,12 +1551,15 @@ cryptoLoanCommands.push({
     command: 'get-loan-borrow-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Loan Borrow History
+        decodeSelectedEntities(
+            `Get Loan Borrow History
 
 * If startTime and endTime are not sent, the recent 90-day data will be returned.
 * The max interval between startTime and endTime is 180 days.
 
-Weight: 400`),
+Weight: 400`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'order-id': {
@@ -1528,6 +1615,7 @@ Weight: 400`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1538,7 +1626,8 @@ Weight: 400`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-loan-borrow-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1566,12 +1655,15 @@ cryptoLoanCommands.push({
     command: 'get-loan-ltv-adjustment-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Loan LTV Adjustment History
+        decodeSelectedEntities(
+            `Get Loan LTV Adjustment History
 
 * If startTime and endTime are not sent, the recent 90-day data will be returned.
 * The max interval between startTime and endTime is 180 days.
 
-Weight: 400`),
+Weight: 400`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'order-id': {
@@ -1627,6 +1719,7 @@ Weight: 400`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1637,7 +1730,8 @@ Weight: 400`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-loan-ltv-adjustment-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1665,12 +1759,15 @@ cryptoLoanCommands.push({
     command: 'get-loan-repayment-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Loan Repayment History
+        decodeSelectedEntities(
+            `Get Loan Repayment History
 
 * If startTime and endTime are not sent, the recent 90-day data will be returned.
 * The max interval between startTime and endTime is 180 days.
 
-Weight: 400`),
+Weight: 400`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'order-id': {
@@ -1726,6 +1823,7 @@ Weight: 400`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1736,7 +1834,8 @@ Weight: 400`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-loan-repayment-history is signed. Please create a profile using `binance-cli profile create`.'
             );

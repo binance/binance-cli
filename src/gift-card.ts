@@ -6,38 +6,46 @@ import {
     getUserAgent,
     isEmpty,
     readStdinObj,
+    getParsedArgs,
 } from './utils';
-import { Parser, hideBin } from 'yargs/helpers';
 
-const parsedArgs = Parser(hideBin(process.argv));
+const parsedArgs = getParsedArgs();
+const isFullDescription = parsedArgs?.['full-description'] ?? false;
 
-process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('gift-card');
+const getClient = () => {
+    if (!process.env?.LOG_LEVEL) {
+        process.env.LOG_LEVEL = 'ERROR';
+    }
+    process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('gift-card');
 
-const stdinObj: any = readStdinObj();
+    let basePath = GIFT_CARD_REST_API_PROD_URL;
 
-let basePath = GIFT_CARD_REST_API_PROD_URL;
+    const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'gift-card');
 
-const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'gift-card');
+    if (process.env.BINANCE_GIFT_CARD_BASE_PATH) {
+        basePath = process.env.BINANCE_GIFT_CARD_BASE_PATH;
+    } else if (configurationRestAPI && configurationRestAPI['basePath']) {
+        basePath = configurationRestAPI['basePath'];
+    }
 
-if (process.env.BINANCE_GIFT_CARD_BASE_PATH) {
-    basePath = process.env.BINANCE_GIFT_CARD_BASE_PATH;
-} else if (configurationRestAPI && configurationRestAPI['basePath']) {
-    basePath = configurationRestAPI['basePath'];
-}
+    let client;
+    let hasConfig = false;
+    if (configurationRestAPI !== null) {
+        hasConfig = true;
+        client = new GiftCard({
+            configurationRestAPI: { ...configurationRestAPI, basePath },
+        });
+    } else {
+        client = new GiftCard({
+            configurationRestAPI: {
+                apiKey: '',
+                basePath,
+            },
+        });
+    }
 
-let client;
-if (configurationRestAPI !== null) {
-    client = new GiftCard({
-        configurationRestAPI: { ...configurationRestAPI, basePath },
-    });
-} else {
-    client = new GiftCard({
-        configurationRestAPI: {
-            apiKey: '',
-            basePath,
-        },
-    });
-}
+    return { client, hasConfig };
+};
 
 const giftCardCommands: any[] = [];
 
@@ -45,7 +53,8 @@ giftCardCommands.push({
     command: 'create-a-dual-token-gift-card',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`* This API is for creating a dual-token ( stablecoin-denominated) Binance Gift Card. You may create a gift card using USDT as baseToken, that is redeemable to another designated token (faceToken). For example, you can create a fixed-value BTC gift card and pay with 100 USDT plus minting fee. This gift card can keep the value fixed at 100 USDT before redemption, and will be redeemable to BTC equivalent to 100 USDT upon redemption.
+        decodeSelectedEntities(
+            `* This API is for creating a dual-token ( stablecoin-denominated) Binance Gift Card. You may create a gift card using USDT as baseToken, that is redeemable to another designated token (faceToken). For example, you can create a fixed-value BTC gift card and pay with 100 USDT plus minting fee. This gift card can keep the value fixed at 100 USDT before redemption, and will be redeemable to BTC equivalent to 100 USDT upon redemption.
 * Once successfully created, the amount of baseToken (e.g. USDT) in the fixed-value gift card along with the fee would be deducted from your funding wallet.
 
 
@@ -55,7 +64,9 @@ giftCardCommands.push({
 * You have a sufﬁcient balance(Gift Card amount and fee amount) in your Binance funding wallet
 * You need Enable Withdrawals for the API Key which requests this endpoint.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -83,6 +94,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -113,6 +125,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -123,7 +136,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'create-a-dual-token-gift-card is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -178,7 +192,8 @@ giftCardCommands.push({
     command: 'create-a-single-token-gift-card',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`This API is for creating a Binance Gift Card.
+        decodeSelectedEntities(
+            `This API is for creating a Binance Gift Card.
 
 To get started with, please make sure:
 
@@ -187,7 +202,9 @@ To get started with, please make sure:
 * You have a sufﬁcient balance(Gift Card amount and fee amount) in your Binance funding wallet
 * You need &#x60;Enable Withdrawals&#x60; for the API Key which requests this endpoint.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -211,6 +228,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -237,6 +255,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -247,7 +266,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'create-a-single-token-gift-card is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -293,12 +313,15 @@ giftCardCommands.push({
     command: 'fetch-rsa-public-key',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`This API is for fetching the RSA Public Key.
+        decodeSelectedEntities(
+            `This API is for fetching the RSA Public Key.
 This RSA Public key will be used to encrypt the card code.
 
 **Please note that the RSA Public key fetched is valid only for the current day.**
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -315,6 +338,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -325,7 +349,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'fetch-rsa-public-key is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -353,9 +378,12 @@ giftCardCommands.push({
     command: 'fetch-token-limit',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`This API is to help you verify which tokens are available for you to create Stablecoin-Denominated gift cards as mentioned in section 2 and its’ limitation.
+        decodeSelectedEntities(
+            `This API is to help you verify which tokens are available for you to create Stablecoin-Denominated gift cards as mentioned in section 2 and its’ limitation.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -377,6 +405,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -399,6 +428,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -409,7 +439,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'fetch-token-limit is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -445,7 +476,8 @@ giftCardCommands.push({
     command: 'redeem-a-binance-gift-card',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`This API is for redeeming a Binance Gift Card
+        decodeSelectedEntities(
+            `This API is for redeeming a Binance Gift Card
 Once redeemed, the coins will be deposited in your funding wallet.
 
 * Parameter code can be sent in two formats:
@@ -457,7 +489,9 @@ Once redeemed, the coins will be deposited in your funding wallet.
 * Use the below algorithm to encrypt the card code using the RSA public key fetched above: &#x60;RSA/ECB/OAEPWithSHA-256AndMGF1Padding&#x60;
 **A sample code snippet (JAVA) is stated below for reference, the same approach can be used for different languages like C#, PERL, PYTHON, SHELL etc.:**
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -481,6 +515,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -503,6 +538,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -513,7 +549,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'redeem-a-binance-gift-card is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -550,11 +587,14 @@ giftCardCommands.push({
     command: 'verify-binance-gift-card-by-gift-card-number',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`This API is for verifying whether the Binance Gift Card is valid or not by entering Gift Card Number.
+        decodeSelectedEntities(
+            `This API is for verifying whether the Binance Gift Card is valid or not by entering Gift Card Number.
 
 **Please note that if you enter the wrong Gift Card Number 5 times within an hour, you will no longer be able to verify any Gift Card Number for that hour.**
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -576,6 +616,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -598,6 +639,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -608,7 +650,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'verify-binance-gift-card-by-gift-card-number is signed. Please create a profile using `binance-cli profile create`.'
             );
