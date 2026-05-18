@@ -19,19 +19,26 @@ import convertCommands from './convert';
 import copyTradingCommands from './copy-trading';
 import cryptoLoanCommands from './crypto-loan';
 import futuresCoinCommands from './derivatives-trading-coin-futures';
-import derivativesTradingOptionsCommands from './derivatives-trading-options';
-import derivativesTradingPortfolioMarginCommands from './derivatives-trading-portfolio-margin';
-import derivativesTradingPortfolioMarginProCommands from './derivatives-trading-portfolio-margin-pro';
+import futuresCoinStreamsCommands from './derivatives-trading-coin-futures-ws-streams';
 import futuresUsdsCommands from './derivatives-trading-usds-futures';
+import futuresUsdsStreamCommands from './derivatives-trading-usds-futures-ws-streams';
+import derivativesTradingOptionsCommands from './derivatives-trading-options';
+import derivativesTradingOptionsStreamsCommands from './derivatives-trading-options-ws-streams';
+import derivativesTradingPortfolioMarginCommands from './derivatives-trading-portfolio-margin';
+import derivativesTradingPortfolioMarginStreamCommands from './derivatives-trading-portfolio-margin-ws-streams';
+import derivativesTradingPortfolioMarginProCommands from './derivatives-trading-portfolio-margin-pro';
+import derivativesTradingPortfolioMarginProStreamCommands from './derivatives-trading-portfolio-margin-pro-ws-streams';
 import dualInvestmentCommands from './dual-investment';
 import fiatCommands from './fiat';
 import giftCardCommands from './gift-card';
 import marginTradingCommands from './margin-trading';
+import marginTradingStreamsCommands from './margin-trading-ws-streams';
 import miningCommands from './mining';
 import payCommands from './pay';
 import rebateCommands from './rebate';
 import simpleEarnCommands from './simple-earn';
 import spotCommands from './spot';
+import spotStreamsCommands from './spot-ws-streams';
 import stakingCommands from './staking';
 import subAccountCommands from './sub-account';
 import vipLoanCommands from './vip-loan';
@@ -81,19 +88,26 @@ const commandModules = [
     copyTradingCommands,
     cryptoLoanCommands,
     derivativesTradingOptionsCommands,
+    derivativesTradingOptionsStreamsCommands,
     derivativesTradingPortfolioMarginCommands,
+    derivativesTradingPortfolioMarginStreamCommands,
     derivativesTradingPortfolioMarginProCommands,
+    derivativesTradingPortfolioMarginProStreamCommands,
     dualInvestmentCommands,
     fiatCommands,
     futuresCoinCommands,
+    futuresCoinStreamsCommands,
     futuresUsdsCommands,
+    futuresUsdsStreamCommands,
     giftCardCommands,
     marginTradingCommands,
+    marginTradingStreamsCommands,
     miningCommands,
     payCommands,
     rebateCommands,
     simpleEarnCommands,
     spotCommands,
+    spotStreamsCommands,
     stakingCommands,
     subAccountCommands,
     vipLoanCommands,
@@ -216,6 +230,11 @@ if (hideBin(process.argv).length == 0) {
             group: 'Global Options:',
             type: 'string',
             description: 'Choose the API profile',
+        })
+        .option('full-description', {
+            group: 'Global Options:',
+            type: 'string',
+            description: 'Show the full description in help command',
         })
         .completion('completion', 'Generate completion script')
         .parse();

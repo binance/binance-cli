@@ -6,50 +6,60 @@ import {
     getUserAgent,
     isEmpty,
     readStdinObj,
+    getParsedArgs,
 } from './utils';
-import { Parser, hideBin } from 'yargs/helpers';
 
-const parsedArgs = Parser(hideBin(process.argv));
+const parsedArgs = getParsedArgs();
+const isFullDescription = parsedArgs?.['full-description'] ?? false;
 
-process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('convert');
+const getClient = () => {
+    if (!process.env?.LOG_LEVEL) {
+        process.env.LOG_LEVEL = 'ERROR';
+    }
+    process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('convert');
 
-const stdinObj: any = readStdinObj();
+    let basePath = CONVERT_REST_API_PROD_URL;
 
-let basePath = CONVERT_REST_API_PROD_URL;
+    const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'convert');
 
-const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'convert');
+    if (process.env.BINANCE_CONVERT_BASE_PATH) {
+        basePath = process.env.BINANCE_CONVERT_BASE_PATH;
+    } else if (configurationRestAPI && configurationRestAPI['basePath']) {
+        basePath = configurationRestAPI['basePath'];
+    }
 
-if (process.env.BINANCE_CONVERT_BASE_PATH) {
-    basePath = process.env.BINANCE_CONVERT_BASE_PATH;
-} else if (configurationRestAPI && configurationRestAPI['basePath']) {
-    basePath = configurationRestAPI['basePath'];
-}
+    let client;
+    let hasConfig = false;
+    if (configurationRestAPI !== null) {
+        hasConfig = true;
+        client = new Convert({
+            configurationRestAPI: { ...configurationRestAPI, basePath },
+        });
+    } else {
+        client = new Convert({
+            configurationRestAPI: {
+                apiKey: '',
+                basePath,
+            },
+        });
+    }
 
-let client;
-if (configurationRestAPI !== null) {
-    client = new Convert({
-        configurationRestAPI: { ...configurationRestAPI, basePath },
-    });
-} else {
-    client = new Convert({
-        configurationRestAPI: {
-            apiKey: '',
-            basePath,
-        },
-    });
-}
+    return { client, hasConfig };
+};
 
 const convertCommands: any[] = [];
 
 convertCommands.push({
     command: 'list-all-convert-pairs',
-    describe:
-        decodeSelectedEntities(`Query for all convertible token pairs and the tokens’ respective upper/lower limits
+    describe: decodeSelectedEntities(
+        `Query for all convertible token pairs and the tokens’ respective upper/lower limits
 
 * User needs to supply either or both of the input parameter
 * If not defined for both fromAsset and toAsset, only partial token pairs will be returned
 
-Weight: 3000(IP)`),
+Weight: 3000(IP)`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'from-asset': {
@@ -71,6 +81,7 @@ Weight: 3000(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -80,6 +91,8 @@ Weight: 3000(IP)`),
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (questions.length > 0) {
             const answers = await inquirer.prompt(questions);
@@ -101,9 +114,12 @@ convertCommands.push({
     command: 'query-order-quantity-precision-per-asset',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query for supported asset’s precision information
+        decodeSelectedEntities(
+            `Query for supported asset’s precision information
 
-Weight: 100(IP)`),
+Weight: 100(IP)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -120,6 +136,7 @@ Weight: 100(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -130,7 +147,8 @@ Weight: 100(IP)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-order-quantity-precision-per-asset is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -158,9 +176,12 @@ convertCommands.push({
     command: 'accept-quote',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Accept the offered quote by quote ID.
+        decodeSelectedEntities(
+            `Accept the offered quote by quote ID.
 
-Weight: 500(UID)`),
+Weight: 500(UID)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -180,6 +201,7 @@ Weight: 500(UID)`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -202,6 +224,7 @@ Weight: 500(UID)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -212,7 +235,8 @@ Weight: 500(UID)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'accept-quote is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -249,9 +273,12 @@ convertCommands.push({
     command: 'cancel-limit-order',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Enable users to cancel a limit order
+        decodeSelectedEntities(
+            `Enable users to cancel a limit order
 
-Weight: 200(UID)`),
+Weight: 200(UID)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -271,6 +298,7 @@ Weight: 200(UID)`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -293,6 +321,7 @@ Weight: 200(UID)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -303,7 +332,8 @@ Weight: 200(UID)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'cancel-limit-order is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -340,11 +370,14 @@ convertCommands.push({
     command: 'get-convert-trade-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Convert Trade History
+        decodeSelectedEntities(
+            `Get Convert Trade History
 
 * The max interval between startTime and endTime is 30 days.
 
-Weight: 3000`),
+Weight: 3000`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -376,6 +409,7 @@ Weight: 3000`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -402,6 +436,7 @@ Weight: 3000`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -412,7 +447,8 @@ Weight: 3000`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-convert-trade-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -456,9 +492,12 @@ convertCommands.push({
     command: 'order-status',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query order status by order ID.
+        decodeSelectedEntities(
+            `Query order status by order ID.
 
-Weight: 100(UID)`),
+Weight: 100(UID)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'order-id': {
@@ -480,6 +519,7 @@ Weight: 100(UID)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -490,7 +530,8 @@ Weight: 100(UID)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'order-status is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -518,13 +559,16 @@ convertCommands.push({
     command: 'place-limit-order',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Enable users to place a limit order
+        decodeSelectedEntities(
+            `Enable users to place a limit order
 
 * &#x60;baseAsset&#x60; or &#x60;quoteAsset&#x60; can be determined via &#x60;exchangeInfo&#x60; endpoint.
 * Limit price is defined from &#x60;baseAsset&#x60; to &#x60;quoteAsset&#x60;.
 * Either &#x60;baseAmount&#x60; or &#x60;quoteAmount&#x60; is used.
 
-Weight: 500(UID)`),
+Weight: 500(UID)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -572,6 +616,7 @@ Weight: 500(UID)`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -610,6 +655,7 @@ Weight: 500(UID)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -620,7 +666,8 @@ Weight: 500(UID)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'place-limit-order is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -693,9 +740,12 @@ convertCommands.push({
     command: 'query-limit-open-orders',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Request a quote for the requested token pairs
+        decodeSelectedEntities(
+            `Request a quote for the requested token pairs
 
-Weight: 3000(UID)`),
+Weight: 3000(UID)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -712,6 +762,7 @@ Weight: 3000(UID)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -722,7 +773,8 @@ Weight: 3000(UID)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-limit-open-orders is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -750,12 +802,15 @@ convertCommands.push({
     command: 'send-quote-request',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Request a quote for the requested token pairs
+        decodeSelectedEntities(
+            `Request a quote for the requested token pairs
 
 * Either fromAmount or toAmount should be sent
 * &#x60;quoteId&#x60; will be returned only if you have enough funds to convert
 
-Weight: 200(UID)`),
+Weight: 200(UID)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -795,6 +850,7 @@ Weight: 200(UID)`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -821,6 +877,7 @@ Weight: 200(UID)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -831,7 +888,8 @@ Weight: 200(UID)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'send-quote-request is signed. Please create a profile using `binance-cli profile create`.'
             );

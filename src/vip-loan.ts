@@ -6,38 +6,46 @@ import {
     getUserAgent,
     isEmpty,
     readStdinObj,
+    getParsedArgs,
 } from './utils';
-import { Parser, hideBin } from 'yargs/helpers';
 
-const parsedArgs = Parser(hideBin(process.argv));
+const parsedArgs = getParsedArgs();
+const isFullDescription = parsedArgs?.['full-description'] ?? false;
 
-process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('vip-loan');
+const getClient = () => {
+    if (!process.env?.LOG_LEVEL) {
+        process.env.LOG_LEVEL = 'ERROR';
+    }
+    process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('vip-loan');
 
-const stdinObj: any = readStdinObj();
+    let basePath = VIP_LOAN_REST_API_PROD_URL;
 
-let basePath = VIP_LOAN_REST_API_PROD_URL;
+    const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'vip-loan');
 
-const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'vip-loan');
+    if (process.env.BINANCE_VIP_LOAN_BASE_PATH) {
+        basePath = process.env.BINANCE_VIP_LOAN_BASE_PATH;
+    } else if (configurationRestAPI && configurationRestAPI['basePath']) {
+        basePath = configurationRestAPI['basePath'];
+    }
 
-if (process.env.BINANCE_VIP_LOAN_BASE_PATH) {
-    basePath = process.env.BINANCE_VIP_LOAN_BASE_PATH;
-} else if (configurationRestAPI && configurationRestAPI['basePath']) {
-    basePath = configurationRestAPI['basePath'];
-}
+    let client;
+    let hasConfig = false;
+    if (configurationRestAPI !== null) {
+        hasConfig = true;
+        client = new VIPLoan({
+            configurationRestAPI: { ...configurationRestAPI, basePath },
+        });
+    } else {
+        client = new VIPLoan({
+            configurationRestAPI: {
+                apiKey: '',
+                basePath,
+            },
+        });
+    }
 
-let client;
-if (configurationRestAPI !== null) {
-    client = new VIPLoan({
-        configurationRestAPI: { ...configurationRestAPI, basePath },
-    });
-} else {
-    client = new VIPLoan({
-        configurationRestAPI: {
-            apiKey: '',
-            basePath,
-        },
-    });
-}
+    return { client, hasConfig };
+};
 
 const vipLoanCommands: any[] = [];
 
@@ -45,9 +53,12 @@ vipLoanCommands.push({
     command: 'get-borrow-interest-rate',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Borrow Interest Rate
+        decodeSelectedEntities(
+            `Get Borrow Interest Rate
 
-Weight: 400`),
+Weight: 400`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -71,6 +82,7 @@ Weight: 400`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -93,6 +105,7 @@ Weight: 400`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -103,7 +116,8 @@ Weight: 400`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-borrow-interest-rate is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -139,9 +153,12 @@ vipLoanCommands.push({
     command: 'get-collateral-asset-data',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Collateral Asset Data
+        decodeSelectedEntities(
+            `Get Collateral Asset Data
 
-Weight: 400`),
+Weight: 400`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'collateral-coin': {
@@ -163,6 +180,7 @@ Weight: 400`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -173,7 +191,8 @@ Weight: 400`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-collateral-asset-data is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -201,9 +220,12 @@ vipLoanCommands.push({
     command: 'get-loanable-assets-data',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get interest rate and borrow limit of loanable assets. The borrow limit is shown in USD value.
+        decodeSelectedEntities(
+            `Get interest rate and borrow limit of loanable assets. The borrow limit is shown in USD value.
 
-Weight: 400`),
+Weight: 400`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'loan-coin': {
@@ -230,6 +252,7 @@ Weight: 400`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -240,7 +263,8 @@ Weight: 400`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-loanable-assets-data is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -268,13 +292,16 @@ vipLoanCommands.push({
     command: 'get-vip-loan-interest-rate-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Check VIP Loan flexible interest rate history
+        decodeSelectedEntities(
+            `Check VIP Loan flexible interest rate history
 
 * If startTime and endTime are not sent, the recent 90-day data will be returned
 * The max interval between startTime and end Time is 180 days.
 * Time based on UTC+0.
 
-Weight: 400`),
+Weight: 400`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -318,6 +345,7 @@ Weight: 400`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -344,6 +372,7 @@ Weight: 400`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -354,7 +383,8 @@ Weight: 400`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-vip-loan-interest-rate-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -398,14 +428,17 @@ vipLoanCommands.push({
     command: 'vip-loan-borrow',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`VIP loan is available for VIP users only.
+        decodeSelectedEntities(
+            `VIP loan is available for VIP users only.
 
 * loanAccountId refer to loan receiving account
 * Only master account applications are supported
 * loanAccountId and collateralAccountId under same master account
 * loanTerm is mandatory if user choose stable rate
 
-Weight: 0`),
+Weight: 0`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -449,6 +482,7 @@ Weight: 0`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -491,6 +525,7 @@ Weight: 0`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -501,7 +536,8 @@ Weight: 0`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'vip-loan-borrow is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -583,9 +619,12 @@ vipLoanCommands.push({
     command: 'vip-loan-renew',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`VIP loan is available for VIP users only.
+        decodeSelectedEntities(
+            `VIP loan is available for VIP users only.
 
-Weight: 6000`),
+Weight: 6000`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -609,6 +648,7 @@ Weight: 6000`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -635,6 +675,7 @@ Weight: 6000`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -645,7 +686,8 @@ Weight: 6000`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'vip-loan-renew is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -691,9 +733,12 @@ vipLoanCommands.push({
     command: 'vip-loan-repay',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`VIP loan is available for VIP users only.
+        decodeSelectedEntities(
+            `VIP loan is available for VIP users only.
 
-Weight: 6000`),
+Weight: 6000`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -717,6 +762,7 @@ Weight: 6000`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -743,6 +789,7 @@ Weight: 6000`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -753,7 +800,8 @@ Weight: 6000`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'vip-loan-repay is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -799,12 +847,15 @@ vipLoanCommands.push({
     command: 'check-vip-loan-collateral-account',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`VIP loan is available for VIP users only
+        decodeSelectedEntities(
+            `VIP loan is available for VIP users only
 
 * If the login account is loan account, all collateral accounts under the loan account can be queried.
 * If the login account is collateral account, only the current collateral account can be queried.
 
-Weight: 6000`),
+Weight: 6000`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'order-id': {
@@ -831,6 +882,7 @@ Weight: 6000`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -841,7 +893,8 @@ Weight: 6000`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'check-vip-loan-collateral-account is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -869,12 +922,15 @@ vipLoanCommands.push({
     command: 'get-vip-loan-accrued-interest',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Check VIP Loan interest record
+        decodeSelectedEntities(
+            `Check VIP Loan interest record
 
 * If startTime and endTime are not sent, the recent 90-day data will be returned.
 * The max interval between startTime and endTime is 90 days.
 
-Weight: 400`),
+Weight: 400`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'order-id': {
@@ -923,6 +979,7 @@ Weight: 400`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -933,7 +990,8 @@ Weight: 400`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-vip-loan-accrued-interest is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -961,9 +1019,12 @@ vipLoanCommands.push({
     command: 'get-vip-loan-ongoing-orders',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`VIP loan is available for VIP users only.
+        decodeSelectedEntities(
+            `VIP loan is available for VIP users only.
 
-Weight: 400`),
+Weight: 400`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'order-id': {
@@ -1012,6 +1073,7 @@ Weight: 400`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1022,7 +1084,8 @@ Weight: 400`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-vip-loan-ongoing-orders is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1050,9 +1113,12 @@ vipLoanCommands.push({
     command: 'query-application-status',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query Application Status
+        decodeSelectedEntities(
+            `Query Application Status
 
-Weight: 400`),
+Weight: 400`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             current: {
@@ -1081,6 +1147,7 @@ Weight: 400`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1091,7 +1158,8 @@ Weight: 400`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-application-status is signed. Please create a profile using `binance-cli profile create`.'
             );

@@ -6,38 +6,46 @@ import {
     getUserAgent,
     isEmpty,
     readStdinObj,
+    getParsedArgs,
 } from './utils';
-import { Parser, hideBin } from 'yargs/helpers';
 
-const parsedArgs = Parser(hideBin(process.argv));
+const parsedArgs = getParsedArgs();
+const isFullDescription = parsedArgs?.['full-description'] ?? false;
 
-process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('c2c');
+const getClient = () => {
+    if (!process.env?.LOG_LEVEL) {
+        process.env.LOG_LEVEL = 'ERROR';
+    }
+    process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('c2c');
 
-const stdinObj: any = readStdinObj();
+    let basePath = C2C_REST_API_PROD_URL;
 
-let basePath = C2C_REST_API_PROD_URL;
+    const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'c2c');
 
-const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'c2c');
+    if (process.env.BINANCE_C2C_BASE_PATH) {
+        basePath = process.env.BINANCE_C2C_BASE_PATH;
+    } else if (configurationRestAPI && configurationRestAPI['basePath']) {
+        basePath = configurationRestAPI['basePath'];
+    }
 
-if (process.env.BINANCE_C2C_BASE_PATH) {
-    basePath = process.env.BINANCE_C2C_BASE_PATH;
-} else if (configurationRestAPI && configurationRestAPI['basePath']) {
-    basePath = configurationRestAPI['basePath'];
-}
+    let client;
+    let hasConfig = false;
+    if (configurationRestAPI !== null) {
+        hasConfig = true;
+        client = new C2C({
+            configurationRestAPI: { ...configurationRestAPI, basePath },
+        });
+    } else {
+        client = new C2C({
+            configurationRestAPI: {
+                apiKey: '',
+                basePath,
+            },
+        });
+    }
 
-let client;
-if (configurationRestAPI !== null) {
-    client = new C2C({
-        configurationRestAPI: { ...configurationRestAPI, basePath },
-    });
-} else {
-    client = new C2C({
-        configurationRestAPI: {
-            apiKey: '',
-            basePath,
-        },
-    });
-}
+    return { client, hasConfig };
+};
 
 const c2cCommands: any[] = [];
 
@@ -45,13 +53,16 @@ c2cCommands.push({
     command: 'get-c2-c-trade-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get C2C Trade History
+        decodeSelectedEntities(
+            `Get C2C Trade History
 
 * The max interval between startTimestamp and endTimestamp is 30 days.
 * If startTimestamp and endTimestamp are not sent, the recent 30 days&#39; data will be returned.
 * You can only view data from the past 6 months. To see all C2C orders, please check https://c2c.binance.com/en/fiatOrder
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'trade-type': {
@@ -93,6 +104,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -103,7 +115,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-c2-c-trade-history is signed. Please create a profile using `binance-cli profile create`.'
             );

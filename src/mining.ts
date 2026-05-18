@@ -6,38 +6,46 @@ import {
     getUserAgent,
     isEmpty,
     readStdinObj,
+    getParsedArgs,
 } from './utils';
-import { Parser, hideBin } from 'yargs/helpers';
 
-const parsedArgs = Parser(hideBin(process.argv));
+const parsedArgs = getParsedArgs();
+const isFullDescription = parsedArgs?.['full-description'] ?? false;
 
-process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('mining');
+const getClient = () => {
+    if (!process.env?.LOG_LEVEL) {
+        process.env.LOG_LEVEL = 'ERROR';
+    }
+    process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('mining');
 
-const stdinObj: any = readStdinObj();
+    let basePath = MINING_REST_API_PROD_URL;
 
-let basePath = MINING_REST_API_PROD_URL;
+    const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'mining');
 
-const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'mining');
+    if (process.env.BINANCE_MINING_BASE_PATH) {
+        basePath = process.env.BINANCE_MINING_BASE_PATH;
+    } else if (configurationRestAPI && configurationRestAPI['basePath']) {
+        basePath = configurationRestAPI['basePath'];
+    }
 
-if (process.env.BINANCE_MINING_BASE_PATH) {
-    basePath = process.env.BINANCE_MINING_BASE_PATH;
-} else if (configurationRestAPI && configurationRestAPI['basePath']) {
-    basePath = configurationRestAPI['basePath'];
-}
+    let client;
+    let hasConfig = false;
+    if (configurationRestAPI !== null) {
+        hasConfig = true;
+        client = new Mining({
+            configurationRestAPI: { ...configurationRestAPI, basePath },
+        });
+    } else {
+        client = new Mining({
+            configurationRestAPI: {
+                apiKey: '',
+                basePath,
+            },
+        });
+    }
 
-let client;
-if (configurationRestAPI !== null) {
-    client = new Mining({
-        configurationRestAPI: { ...configurationRestAPI, basePath },
-    });
-} else {
-    client = new Mining({
-        configurationRestAPI: {
-            apiKey: '',
-            basePath,
-        },
-    });
-}
+    return { client, hasConfig };
+};
 
 const miningCommands: any[] = [];
 
@@ -45,9 +53,12 @@ miningCommands.push({
     command: 'account-list',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query Account List
+        decodeSelectedEntities(
+            `Query Account List
 
-Weight: 5`),
+Weight: 5`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -74,6 +85,7 @@ Weight: 5`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -100,6 +112,7 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -110,7 +123,8 @@ Weight: 5`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'account-list is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -152,10 +166,15 @@ Weight: 5`),
 
 miningCommands.push({
     command: 'acquiring-algorithm',
-    describe: decodeSelectedEntities(`Acquiring Algorithm
+    describe: decodeSelectedEntities(
+        `Acquiring Algorithm
 
-Weight: 1`),
+Weight: 1`,
+        isFullDescription
+    ),
     handler: async () => {
+        const { client } = getClient();
+
         try {
             const response = await client.restAPI.acquiringAlgorithm();
             const responseData = await response.data();
@@ -169,10 +188,15 @@ Weight: 1`),
 
 miningCommands.push({
     command: 'acquiring-coinname',
-    describe: decodeSelectedEntities(`Acquiring CoinName
+    describe: decodeSelectedEntities(
+        `Acquiring CoinName
 
-Weight: 1`),
+Weight: 1`,
+        isFullDescription
+    ),
     handler: async () => {
+        const { client } = getClient();
+
         try {
             const response = await client.restAPI.acquiringCoinname();
             const responseData = await response.data();
@@ -188,8 +212,11 @@ miningCommands.push({
     command: 'cancel-hashrate-resale-configuration',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`
-Weight: 5`),
+        decodeSelectedEntities(
+            `
+Weight: 5`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -213,6 +240,7 @@ Weight: 5`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -239,6 +267,7 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -249,7 +278,8 @@ Weight: 5`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'cancel-hashrate-resale-configuration is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -295,9 +325,12 @@ miningCommands.push({
     command: 'earnings-list',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query Earnings List
+        decodeSelectedEntities(
+            `Query Earnings List
 
-Weight: 5`),
+Weight: 5`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -351,6 +384,7 @@ Weight: 5`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -377,6 +411,7 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -387,7 +422,8 @@ Weight: 5`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'earnings-list is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -431,9 +467,12 @@ miningCommands.push({
     command: 'extra-bonus-list',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Extra Bonus List
+        decodeSelectedEntities(
+            `Extra Bonus List
 
-Weight: 5`),
+Weight: 5`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -487,6 +526,7 @@ Weight: 5`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -513,6 +553,7 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -523,7 +564,8 @@ Weight: 5`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'extra-bonus-list is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -567,9 +609,12 @@ miningCommands.push({
     command: 'hashrate-resale-detail',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Hashrate Resale Detail(USER_DATA)
+        decodeSelectedEntities(
+            `Hashrate Resale Detail(USER_DATA)
 
-Weight: 5`),
+Weight: 5`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -603,6 +648,7 @@ Weight: 5`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -625,6 +671,7 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -635,7 +682,8 @@ Weight: 5`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'hashrate-resale-detail is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -671,9 +719,12 @@ miningCommands.push({
     command: 'hashrate-resale-list',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Hashrate Resale List
+        decodeSelectedEntities(
+            `Hashrate Resale List
 
-Weight: 5`),
+Weight: 5`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'page-index': {
@@ -702,6 +753,7 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -712,7 +764,8 @@ Weight: 5`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'hashrate-resale-list is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -740,9 +793,12 @@ miningCommands.push({
     command: 'hashrate-resale-request',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Hashrate Resale Request
+        decodeSelectedEntities(
+            `Hashrate Resale Request
 
-Weight: 5`),
+Weight: 5`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -782,6 +838,7 @@ Weight: 5`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -824,6 +881,7 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -834,7 +892,8 @@ Weight: 5`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'hashrate-resale-request is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -916,9 +975,12 @@ miningCommands.push({
     command: 'mining-account-earning',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Mining Account Earning
+        decodeSelectedEntities(
+            `Mining Account Earning
 
-Weight: 5`),
+Weight: 5`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -962,6 +1024,7 @@ Weight: 5`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -984,6 +1047,7 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -994,7 +1058,8 @@ Weight: 5`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'mining-account-earning is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1030,9 +1095,12 @@ miningCommands.push({
     command: 'request-for-detail-miner-list',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Request for Detail Miner List
+        decodeSelectedEntities(
+            `Request for Detail Miner List
 
-Weight: 5`),
+Weight: 5`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1064,6 +1132,7 @@ Weight: 5`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1094,6 +1163,7 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1104,7 +1174,8 @@ Weight: 5`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'request-for-detail-miner-list is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1156,9 +1227,12 @@ miningCommands.push({
     command: 'request-for-miner-list',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Request for Miner List
+        decodeSelectedEntities(
+            `Request for Miner List
 
-Weight: 5`),
+Weight: 5`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1213,6 +1287,7 @@ Weight: 5`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1239,6 +1314,7 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1249,7 +1325,8 @@ Weight: 5`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'request-for-miner-list is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1293,9 +1370,12 @@ miningCommands.push({
     command: 'statistic-list',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Statistic List
+        decodeSelectedEntities(
+            `Statistic List
 
-Weight: 5`),
+Weight: 5`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1322,6 +1402,7 @@ Weight: 5`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1348,6 +1429,7 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1358,7 +1440,8 @@ Weight: 5`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'statistic-list is signed. Please create a profile using `binance-cli profile create`.'
             );

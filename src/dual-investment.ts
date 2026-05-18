@@ -6,38 +6,46 @@ import {
     getUserAgent,
     isEmpty,
     readStdinObj,
+    getParsedArgs,
 } from './utils';
-import { Parser, hideBin } from 'yargs/helpers';
 
-const parsedArgs = Parser(hideBin(process.argv));
+const parsedArgs = getParsedArgs();
+const isFullDescription = parsedArgs?.['full-description'] ?? false;
 
-process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('dual-investment');
+const getClient = () => {
+    if (!process.env?.LOG_LEVEL) {
+        process.env.LOG_LEVEL = 'ERROR';
+    }
+    process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('dual-investment');
 
-const stdinObj: any = readStdinObj();
+    let basePath = DUAL_INVESTMENT_REST_API_PROD_URL;
 
-let basePath = DUAL_INVESTMENT_REST_API_PROD_URL;
+    const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'dual-investment');
 
-const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'dual-investment');
+    if (process.env.BINANCE_DUAL_INVESTMENT_BASE_PATH) {
+        basePath = process.env.BINANCE_DUAL_INVESTMENT_BASE_PATH;
+    } else if (configurationRestAPI && configurationRestAPI['basePath']) {
+        basePath = configurationRestAPI['basePath'];
+    }
 
-if (process.env.BINANCE_DUAL_INVESTMENT_BASE_PATH) {
-    basePath = process.env.BINANCE_DUAL_INVESTMENT_BASE_PATH;
-} else if (configurationRestAPI && configurationRestAPI['basePath']) {
-    basePath = configurationRestAPI['basePath'];
-}
+    let client;
+    let hasConfig = false;
+    if (configurationRestAPI !== null) {
+        hasConfig = true;
+        client = new DualInvestment({
+            configurationRestAPI: { ...configurationRestAPI, basePath },
+        });
+    } else {
+        client = new DualInvestment({
+            configurationRestAPI: {
+                apiKey: '',
+                basePath,
+            },
+        });
+    }
 
-let client;
-if (configurationRestAPI !== null) {
-    client = new DualInvestment({
-        configurationRestAPI: { ...configurationRestAPI, basePath },
-    });
-} else {
-    client = new DualInvestment({
-        configurationRestAPI: {
-            apiKey: '',
-            basePath,
-        },
-    });
-}
+    return { client, hasConfig };
+};
 
 const dualInvestmentCommands: any[] = [];
 
@@ -45,9 +53,12 @@ dualInvestmentCommands.push({
     command: 'get-dual-investment-product-list',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Dual Investment product list
+        decodeSelectedEntities(
+            `Get Dual Investment product list
 
-Weight: 1(IP)`),
+Weight: 1(IP)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -93,6 +104,7 @@ Weight: 1(IP)`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -123,6 +135,7 @@ Weight: 1(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -133,7 +146,8 @@ Weight: 1(IP)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-dual-investment-product-list is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -185,9 +199,12 @@ dualInvestmentCommands.push({
     command: 'change-auto-compound-status',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Change Auto-Compound status
+        decodeSelectedEntities(
+            `Change Auto-Compound status
 
-Weight: 1(IP)`),
+Weight: 1(IP)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -211,6 +228,7 @@ Weight: 1(IP)`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -233,6 +251,7 @@ Weight: 1(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -243,7 +262,8 @@ Weight: 1(IP)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'change-auto-compound-status is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -280,9 +300,12 @@ dualInvestmentCommands.push({
     command: 'check-dual-investment-accounts',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Check Dual Investment accounts
+        decodeSelectedEntities(
+            `Check Dual Investment accounts
 
-Weight: 1(IP)`),
+Weight: 1(IP)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -299,6 +322,7 @@ Weight: 1(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -309,7 +333,8 @@ Weight: 1(IP)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'check-dual-investment-accounts is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -337,9 +362,12 @@ dualInvestmentCommands.push({
     command: 'get-dual-investment-positions',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Dual Investment positions (batch)
+        decodeSelectedEntities(
+            `Get Dual Investment positions (batch)
 
-Weight: 1(IP)`),
+Weight: 1(IP)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             status: {
@@ -373,6 +401,7 @@ Weight: 1(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -383,7 +412,8 @@ Weight: 1(IP)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-dual-investment-positions is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -411,12 +441,15 @@ dualInvestmentCommands.push({
     command: 'subscribe-dual-investment-products',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Subscribe Dual Investment products
+        decodeSelectedEntities(
+            `Subscribe Dual Investment products
 
 * Products are not available. // this means APR changes to lower value, or orders are not unavailable.
 * Failed. This means System or network errors.
 
-Weight: 1(IP)`),
+Weight: 1(IP)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -448,6 +481,7 @@ Weight: 1(IP)`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -482,6 +516,7 @@ Weight: 1(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -492,7 +527,8 @@ Weight: 1(IP)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'subscribe-dual-investment-products is signed. Please create a profile using `binance-cli profile create`.'
             );

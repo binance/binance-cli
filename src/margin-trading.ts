@@ -6,38 +6,46 @@ import {
     getUserAgent,
     isEmpty,
     readStdinObj,
+    getParsedArgs,
 } from './utils';
-import { Parser, hideBin } from 'yargs/helpers';
 
-const parsedArgs = Parser(hideBin(process.argv));
+const parsedArgs = getParsedArgs();
+const isFullDescription = parsedArgs?.['full-description'] ?? false;
 
-process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('margin-trading');
+const getClient = () => {
+    if (!process.env?.LOG_LEVEL) {
+        process.env.LOG_LEVEL = 'ERROR';
+    }
+    process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('margin-trading');
 
-const stdinObj: any = readStdinObj();
+    let basePath = MARGIN_TRADING_REST_API_PROD_URL;
 
-let basePath = MARGIN_TRADING_REST_API_PROD_URL;
+    const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'margin-trading');
 
-const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'margin-trading');
+    if (process.env.BINANCE_MARGIN_TRADING_BASE_PATH) {
+        basePath = process.env.BINANCE_MARGIN_TRADING_BASE_PATH;
+    } else if (configurationRestAPI && configurationRestAPI['basePath']) {
+        basePath = configurationRestAPI['basePath'];
+    }
 
-if (process.env.BINANCE_MARGIN_TRADING_BASE_PATH) {
-    basePath = process.env.BINANCE_MARGIN_TRADING_BASE_PATH;
-} else if (configurationRestAPI && configurationRestAPI['basePath']) {
-    basePath = configurationRestAPI['basePath'];
-}
+    let client;
+    let hasConfig = false;
+    if (configurationRestAPI !== null) {
+        hasConfig = true;
+        client = new MarginTrading({
+            configurationRestAPI: { ...configurationRestAPI, basePath },
+        });
+    } else {
+        client = new MarginTrading({
+            configurationRestAPI: {
+                apiKey: '',
+                basePath,
+            },
+        });
+    }
 
-let client;
-if (configurationRestAPI !== null) {
-    client = new MarginTrading({
-        configurationRestAPI: { ...configurationRestAPI, basePath },
-    });
-} else {
-    client = new MarginTrading({
-        configurationRestAPI: {
-            apiKey: '',
-            basePath,
-        },
-    });
-}
+    return { client, hasConfig };
+};
 
 const marginTradingCommands: any[] = [];
 
@@ -45,11 +53,14 @@ marginTradingCommands.push({
     command: 'adjust-cross-margin-max-leverage',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Adjust cross margin max leverage
+        decodeSelectedEntities(
+            `Adjust cross margin max leverage
 
 * The margin level need higher than the initial risk ratio of adjusted leverage, the initial risk ratio of 3x is 1.5 , the initial risk ratio of 5x is 1.25;  The detail conditions on how to switch between Cross Margin Classic and Cross Margin Pro can refer to [the FAQ](https://www.binance.com/en/support/faq/how-to-activate-the-cross-margin-pro-mode-on-binance-e27786da05e743a694b8c625b3bc475d).
 
-Weight: 3000`),
+Weight: 3000`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -65,6 +76,7 @@ Weight: 3000`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -87,6 +99,7 @@ Weight: 3000`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -97,7 +110,8 @@ Weight: 3000`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'adjust-cross-margin-max-leverage is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -134,10 +148,13 @@ marginTradingCommands.push({
     command: 'disable-isolated-margin-account',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Disable isolated margin account for a specific symbol. Each trading pair can only be deactivated once every 24
+        decodeSelectedEntities(
+            `Disable isolated margin account for a specific symbol. Each trading pair can only be deactivated once every 24
 hours.
 
-Weight: 300(UID)`),
+Weight: 300(UID)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -159,6 +176,7 @@ Weight: 300(UID)`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -181,6 +199,7 @@ Weight: 300(UID)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -191,7 +210,8 @@ Weight: 300(UID)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'disable-isolated-margin-account is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -227,9 +247,12 @@ marginTradingCommands.push({
     command: 'enable-isolated-margin-account',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Enable isolated margin account for a specific symbol(Only supports activation of previously disabled accounts).
+        decodeSelectedEntities(
+            `Enable isolated margin account for a specific symbol(Only supports activation of previously disabled accounts).
 
-Weight: 300(UID)`),
+Weight: 300(UID)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -249,6 +272,7 @@ Weight: 300(UID)`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -271,6 +295,7 @@ Weight: 300(UID)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -281,7 +306,8 @@ Weight: 300(UID)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'enable-isolated-margin-account is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -318,9 +344,12 @@ marginTradingCommands.push({
     command: 'get-bnb-burn-status',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get BNB Burn Status
+        decodeSelectedEntities(
+            `Get BNB Burn Status
 
-Weight: 1(IP)`),
+Weight: 1(IP)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -337,6 +366,7 @@ Weight: 1(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -347,7 +377,8 @@ Weight: 1(IP)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-bnb-burn-status is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -375,9 +406,12 @@ marginTradingCommands.push({
     command: 'get-summary-of-margin-account',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get personal margin level information
+        decodeSelectedEntities(
+            `Get personal margin level information
 
-Weight: 10(IP)`),
+Weight: 10(IP)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -394,6 +428,7 @@ Weight: 10(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -404,7 +439,8 @@ Weight: 10(IP)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-summary-of-margin-account is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -432,9 +468,12 @@ marginTradingCommands.push({
     command: 'query-cross-isolated-margin-capital-flow',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query Cross Isolated Margin Capital Flow
+        decodeSelectedEntities(
+            `Query Cross Isolated Margin Capital Flow
 
-Weight: 100(IP)`),
+Weight: 100(IP)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             asset: {
@@ -492,6 +531,7 @@ Weight: 100(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -502,7 +542,8 @@ Weight: 100(IP)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-cross-isolated-margin-capital-flow is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -530,9 +571,12 @@ marginTradingCommands.push({
     command: 'query-cross-margin-account-details',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query Cross Margin Account Details
+        decodeSelectedEntities(
+            `Query Cross Margin Account Details
 
-Weight: 10(IP)`),
+Weight: 10(IP)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -549,6 +593,7 @@ Weight: 10(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -559,7 +604,8 @@ Weight: 10(IP)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-cross-margin-account-details is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -587,9 +633,12 @@ marginTradingCommands.push({
     command: 'query-cross-margin-fee-data',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get cross margin fee data collection with any vip level or user&#39;s current specific data as https://www.binance.com/en/margin-fee
+        decodeSelectedEntities(
+            `Get cross margin fee data collection with any vip level or user&#39;s current specific data as https://www.binance.com/en/margin-fee
 
-Weight: 1 when coin is specified;(IP)`),
+Weight: 1 when coin is specified;(IP)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'vip-level': {
@@ -618,6 +667,7 @@ Weight: 1 when coin is specified;(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -628,7 +678,8 @@ Weight: 1 when coin is specified;(IP)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-cross-margin-fee-data is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -656,9 +707,12 @@ marginTradingCommands.push({
     command: 'query-enabled-isolated-margin-account-limit',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query enabled isolated margin account limit.
+        decodeSelectedEntities(
+            `Query enabled isolated margin account limit.
 
-Weight: 1(IP)`),
+Weight: 1(IP)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -675,6 +729,7 @@ Weight: 1(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -685,7 +740,8 @@ Weight: 1(IP)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-enabled-isolated-margin-account-limit is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -713,12 +769,15 @@ marginTradingCommands.push({
     command: 'query-isolated-margin-account-info',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query Isolated Margin Account Info
+        decodeSelectedEntities(
+            `Query Isolated Margin Account Info
 
 * If &quot;symbols&quot; is not sent, all isolated assets will be returned.
 * If &quot;symbols&quot; is sent, only the isolated assets of the sent symbols will be returned.
 
-Weight: 10(IP)`),
+Weight: 10(IP)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             symbols: {
@@ -742,6 +801,7 @@ Weight: 10(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -752,7 +812,8 @@ Weight: 10(IP)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-isolated-margin-account-info is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -780,9 +841,12 @@ marginTradingCommands.push({
     command: 'query-isolated-margin-fee-data',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get isolated margin fee data collection with any vip level or user&#39;s current specific data as https://www.binance.com/en/margin-fee
+        decodeSelectedEntities(
+            `Get isolated margin fee data collection with any vip level or user&#39;s current specific data as https://www.binance.com/en/margin-fee
 
-Weight: 1 when a single is specified;(IP)`),
+Weight: 1 when a single is specified;(IP)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'vip-level': {
@@ -811,6 +875,7 @@ Weight: 1 when a single is specified;(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -821,7 +886,8 @@ Weight: 1 when a single is specified;(IP)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-isolated-margin-fee-data is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -849,9 +915,12 @@ marginTradingCommands.push({
     command: 'get-future-hourly-interest-rate',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get future hourly interest rate
+        decodeSelectedEntities(
+            `Get future hourly interest rate
 
-Weight: 100`),
+Weight: 100`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -877,6 +946,7 @@ Weight: 100`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -903,6 +973,7 @@ Weight: 100`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -913,7 +984,8 @@ Weight: 100`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-future-hourly-interest-rate is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -957,7 +1029,8 @@ marginTradingCommands.push({
     command: 'get-interest-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Interest History
+        decodeSelectedEntities(
+            `Get Interest History
 
 * Response in descending order
 * If isolatedSymbol is not sent, crossed margin data will be returned
@@ -972,7 +1045,9 @@ marginTradingCommands.push({
 * &#x60;ON_BORROW_CONVERTED&#x60; first interest charged on borrow converted into BNB
 * &#x60;PORTFOLIO&#x60; interest charged daily on the portfolio margin negative balance
 
-Weight: 1(IP)`),
+Weight: 1(IP)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             asset: {
@@ -1023,6 +1098,7 @@ Weight: 1(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1033,7 +1109,8 @@ Weight: 1(IP)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-interest-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1061,9 +1138,12 @@ marginTradingCommands.push({
     command: 'margin-account-borrow-repay',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Margin account borrow/repay(MARGIN)
+        decodeSelectedEntities(
+            `Margin account borrow/repay(MARGIN)
 
-Weight: 1500`),
+Weight: 1500`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1099,6 +1179,7 @@ Weight: 1500`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1137,6 +1218,7 @@ Weight: 1500`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1147,7 +1229,8 @@ Weight: 1500`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'margin-account-borrow-repay is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1220,14 +1303,17 @@ marginTradingCommands.push({
     command: 'query-borrow-repay-records-in-margin-account',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query borrow/repay records in Margin account
+        decodeSelectedEntities(
+            `Query borrow/repay records in Margin account
 
 * &#x60;txId&#x60; or &#x60;startTime&#x60; must be sent. &#x60;txId&#x60; takes precedence.
 * If an asset is sent, data within 30 days before &#x60;endTime&#x60;; If an asset is not sent, data within 7 days before &#x60;endTime&#x60;
 * If neither &#x60;startTime&#x60; nor &#x60;endTime&#x60; is sent, the recent 7-day data will be returned.
 * &#x60;startTime&#x60; set as &#x60;endTime&#x60; - 7days by default, &#x60;endTime&#x60; set as current time by default
 
-Weight: 10(IP)`),
+Weight: 10(IP)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1290,6 +1376,7 @@ Weight: 10(IP)`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1312,6 +1399,7 @@ Weight: 10(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1322,7 +1410,8 @@ Weight: 10(IP)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-borrow-repay-records-in-margin-account is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1358,9 +1447,12 @@ marginTradingCommands.push({
     command: 'query-margin-interest-rate-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query Margin Interest Rate History
+        decodeSelectedEntities(
+            `Query Margin Interest Rate History
 
-Weight: 1(IP)`),
+Weight: 1(IP)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1401,6 +1493,7 @@ Weight: 1(IP)`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1423,6 +1516,7 @@ Weight: 1(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1433,7 +1527,8 @@ Weight: 1(IP)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-margin-interest-rate-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1469,12 +1564,15 @@ marginTradingCommands.push({
     command: 'query-max-borrow',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query Max Borrow
+        decodeSelectedEntities(
+            `Query Max Borrow
 
 * If isolatedSymbol is not sent, crossed margin data will be sent.
 * &#x60;borrowLimit&#x60; is also available from [https://www.binance.com/en/margin-fee](https://www.binance.com/en/margin-fee)
 
-Weight: 50(IP)`),
+Weight: 50(IP)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1501,6 +1599,7 @@ Weight: 50(IP)`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1523,6 +1622,7 @@ Weight: 50(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1533,7 +1633,8 @@ Weight: 50(IP)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-max-borrow is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1567,10 +1668,15 @@ Weight: 50(IP)`),
 
 marginTradingCommands.push({
     command: 'cross-margin-collateral-ratio',
-    describe: decodeSelectedEntities(`Cross margin collateral ratio
+    describe: decodeSelectedEntities(
+        `Cross margin collateral ratio
 
-Weight: 100(IP)`),
+Weight: 100(IP)`,
+        isFullDescription
+    ),
     handler: async () => {
+        const { client } = getClient();
+
         try {
             const response = await client.restAPI.crossMarginCollateralRatio();
             const responseData = await response.data();
@@ -1584,9 +1690,12 @@ Weight: 100(IP)`),
 
 marginTradingCommands.push({
     command: 'get-all-cross-margin-pairs',
-    describe: decodeSelectedEntities(`Get All Cross Margin Pairs
+    describe: decodeSelectedEntities(
+        `Get All Cross Margin Pairs
 
-Weight: 1(IP)`),
+Weight: 1(IP)`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             symbol: {
@@ -1603,6 +1712,7 @@ Weight: 1(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1612,6 +1722,8 @@ Weight: 1(IP)`),
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (questions.length > 0) {
             const answers = await inquirer.prompt(questions);
@@ -1631,9 +1743,12 @@ Weight: 1(IP)`),
 
 marginTradingCommands.push({
     command: 'get-all-isolated-margin-symbol',
-    describe: decodeSelectedEntities(`Get All Isolated Margin Symbol
+    describe: decodeSelectedEntities(
+        `Get All Isolated Margin Symbol
 
-Weight: 10(IP)`),
+Weight: 10(IP)`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             symbol: {
@@ -1655,6 +1770,7 @@ Weight: 10(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1664,6 +1780,8 @@ Weight: 10(IP)`),
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (questions.length > 0) {
             const answers = await inquirer.prompt(questions);
@@ -1683,9 +1801,12 @@ Weight: 10(IP)`),
 
 marginTradingCommands.push({
     command: 'get-all-margin-assets',
-    describe: decodeSelectedEntities(`Get All Margin Assets.
+    describe: decodeSelectedEntities(
+        `Get All Margin Assets.
 
-Weight: 1(IP)`),
+Weight: 1(IP)`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             asset: {
@@ -1702,6 +1823,7 @@ Weight: 1(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1711,6 +1833,8 @@ Weight: 1(IP)`),
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (questions.length > 0) {
             const answers = await inquirer.prompt(questions);
@@ -1730,10 +1854,12 @@ Weight: 1(IP)`),
 
 marginTradingCommands.push({
     command: 'get-delist-schedule',
-    describe:
-        decodeSelectedEntities(`Get tokens or symbols delist schedule for cross margin and isolated margin
+    describe: decodeSelectedEntities(
+        `Get tokens or symbols delist schedule for cross margin and isolated margin
 
-Weight: 100`),
+Weight: 100`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -1750,6 +1876,7 @@ Weight: 100`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1759,6 +1886,8 @@ Weight: 100`),
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (questions.length > 0) {
             const answers = await inquirer.prompt(questions);
@@ -1778,15 +1907,20 @@ Weight: 100`),
 
 marginTradingCommands.push({
     command: 'get-limit-price-pairs',
-    describe: decodeSelectedEntities(`Query trading pairs with restriction on limit price range.
+    describe: decodeSelectedEntities(
+        `Query trading pairs with restriction on limit price range.
 In margin trading, you can place orders with limit price. Limit price should be within (-15%, 15%) of current index price for a list of margin trading pairs. This rule only impacts limit sell orders with limit price that is lower than current index price and limit buy orders with limit price that is higher than current index price.
 
 - Buy order: Your order will be rejected with an error message notification if the limit price is 15% above the index price.
 - Sell order: Your order will be rejected with an error message notification if the limit price is 15% below the index price.
 Please review the limit price order placing strategy, backtest and calibrate the planned order size with the trading volume and order book depth to prevent trading loss.
 
-Weight: 1`),
+Weight: 1`,
+        isFullDescription
+    ),
     handler: async () => {
+        const { client } = getClient();
+
         try {
             const response = await client.restAPI.getLimitPricePairs();
             const responseData = await response.data();
@@ -1800,10 +1934,12 @@ Weight: 1`),
 
 marginTradingCommands.push({
     command: 'get-list-schedule',
-    describe:
-        decodeSelectedEntities(`Get the upcoming tokens or symbols listing schedule for Cross Margin and Isolated Margin.
+    describe: decodeSelectedEntities(
+        `Get the upcoming tokens or symbols listing schedule for Cross Margin and Isolated Margin.
 
-Weight: 100`),
+Weight: 100`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -1820,6 +1956,7 @@ Weight: 100`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1829,6 +1966,8 @@ Weight: 100`),
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (questions.length > 0) {
             const answers = await inquirer.prompt(questions);
@@ -1848,10 +1987,15 @@ Weight: 100`),
 
 marginTradingCommands.push({
     command: 'get-margin-asset-risk-based-liquidation-ratio',
-    describe: decodeSelectedEntities(`Get Margin Asset Risk-Based Liquidation Ratio
+    describe: decodeSelectedEntities(
+        `Get Margin Asset Risk-Based Liquidation Ratio
 
-Weight: 1`),
+Weight: 1`,
+        isFullDescription
+    ),
     handler: async () => {
+        const { client } = getClient();
+
         try {
             const response = await client.restAPI.getMarginAssetRiskBasedLiquidationRatio();
             const responseData = await response.data();
@@ -1865,10 +2009,15 @@ Weight: 1`),
 
 marginTradingCommands.push({
     command: 'get-margin-restricted-assets',
-    describe: decodeSelectedEntities(`Get Margin Restricted Assets
+    describe: decodeSelectedEntities(
+        `Get Margin Restricted Assets
 
-Weight: 1`),
+Weight: 1`,
+        isFullDescription
+    ),
     handler: async () => {
+        const { client } = getClient();
+
         try {
             const response = await client.restAPI.getMarginRestrictedAssets();
             const responseData = await response.data();
@@ -1884,9 +2033,12 @@ marginTradingCommands.push({
     command: 'query-isolated-margin-tier-data',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get isolated margin tier data collection with any tier as https://www.binance.com/en/margin-data
+        decodeSelectedEntities(
+            `Get isolated margin tier data collection with any tier as https://www.binance.com/en/margin-data
 
-Weight: 1(IP)`),
+Weight: 1(IP)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1915,6 +2067,7 @@ Weight: 1(IP)`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1937,6 +2090,7 @@ Weight: 1(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1947,7 +2101,8 @@ Weight: 1(IP)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-isolated-margin-tier-data is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1981,10 +2136,15 @@ Weight: 1(IP)`),
 
 marginTradingCommands.push({
     command: 'query-liability-coin-leverage-bracket-in-cross-margin-pro-mode',
-    describe: decodeSelectedEntities(`Liability Coin Leverage Bracket in Cross Margin Pro Mode
+    describe: decodeSelectedEntities(
+        `Liability Coin Leverage Bracket in Cross Margin Pro Mode
 
-Weight: 1`),
+Weight: 1`,
+        isFullDescription
+    ),
     handler: async () => {
+        const { client } = getClient();
+
         try {
             const response =
                 await client.restAPI.queryLiabilityCoinLeverageBracketInCrossMarginProMode();
@@ -2001,9 +2161,12 @@ marginTradingCommands.push({
     command: 'query-margin-available-inventory',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Margin available Inventory query
+        decodeSelectedEntities(
+            `Margin available Inventory query
 
-Weight: 50`),
+Weight: 50`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2020,6 +2183,7 @@ Weight: 50`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -2042,6 +2206,7 @@ Weight: 50`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2052,7 +2217,8 @@ Weight: 50`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-margin-available-inventory is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2086,9 +2252,12 @@ Weight: 50`),
 
 marginTradingCommands.push({
     command: 'query-margin-priceindex',
-    describe: decodeSelectedEntities(`Query Margin PriceIndex
+    describe: decodeSelectedEntities(
+        `Query Margin PriceIndex
 
-Weight: 10(IP)`),
+Weight: 10(IP)`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2105,6 +2274,7 @@ Weight: 10(IP)`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -2127,6 +2297,7 @@ Weight: 10(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2136,6 +2307,8 @@ Weight: 10(IP)`),
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (options.interactive && !options.symbol) {
             questions.push({
@@ -2163,10 +2336,15 @@ Weight: 10(IP)`),
 
 marginTradingCommands.push({
     command: 'close-user-data-stream',
-    describe: decodeSelectedEntities(`Close out a user data stream.
+    describe: decodeSelectedEntities(
+        `Close out a user data stream.
 
-Weight: 3000`),
+Weight: 3000`,
+        isFullDescription
+    ),
     handler: async () => {
+        const { client } = getClient();
+
         try {
             await client.restAPI.closeUserDataStream();
         } catch (e: any) {
@@ -2178,9 +2356,12 @@ Weight: 3000`),
 
 marginTradingCommands.push({
     command: 'keepalive-user-data-stream',
-    describe: decodeSelectedEntities(`Keepalive a user data stream to prevent a time out.
+    describe: decodeSelectedEntities(
+        `Keepalive a user data stream to prevent a time out.
 
-Weight: 1`),
+Weight: 1`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2196,6 +2377,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -2218,6 +2400,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2227,6 +2410,8 @@ Weight: 1`),
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (options.interactive && !options?.['listenKey']) {
             questions.push({
@@ -2253,10 +2438,15 @@ Weight: 1`),
 
 marginTradingCommands.push({
     command: 'start-user-data-stream',
-    describe: decodeSelectedEntities(`Start a new user data stream.
+    describe: decodeSelectedEntities(
+        `Start a new user data stream.
 
-Weight: 1`),
+Weight: 1`,
+        isFullDescription
+    ),
     handler: async () => {
+        const { client } = getClient();
+
         try {
             const response = await client.restAPI.startUserDataStream();
             const responseData = await response.data();
@@ -2272,7 +2462,8 @@ marginTradingCommands.push({
     command: 'create-special-key',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`- Binance Margin offers low-latency trading through a [special key](https://www.binance.com/en/support/faq/frequently-asked-questions-on-margin-special-api-key-3208663e900d4d2e9fec4140e1832f4e), available exclusively to users with VIP level 7 or higher.
+        decodeSelectedEntities(
+            `- Binance Margin offers low-latency trading through a [special key](https://www.binance.com/en/support/faq/frequently-asked-questions-on-margin-special-api-key-3208663e900d4d2e9fec4140e1832f4e), available exclusively to users with VIP level 7 or higher.
 - If you are VIP level 6 or below, please contact your VIP manager for eligibility criterias.
 
 **Supported Products:**
@@ -2293,7 +2484,9 @@ We support several types of API keys:
 
 We recommend to **use Ed25519 API keys** as it should provide the best performance and security out of all supported key types. We accept PKCS#8 (BEGIN PUBLIC KEY). For how to generate an RSA key pair to send API requests on Binance. Please refer to the document below [FAQ](https://www.binance.com/en/support/faq/how-to-generate-an-rsa-key-pair-to-send-api-requests-on-binance-2b79728f331e43079b27440d9d15c5db) .
 
-Weight: 1(UID)`),
+Weight: 1(UID)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2329,6 +2522,7 @@ Weight: 1(UID)`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -2351,6 +2545,7 @@ Weight: 1(UID)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2361,7 +2556,8 @@ Weight: 1(UID)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'create-special-key is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2398,13 +2594,16 @@ marginTradingCommands.push({
     command: 'delete-special-key',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`This only applies to Special Key for Low Latency Trading.
+        decodeSelectedEntities(
+            `This only applies to Special Key for Low Latency Trading.
 
 If apiKey is given, apiName will be ignored. If apiName is given with no apiKey, all apikeys with given apiName will be deleted.
 
 You need to enable Permits “Enable Spot &amp; Margin Trading” option for the API Key which requests this endpoint.
 
-Weight: 1(UID)`),
+Weight: 1(UID)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'api-name': {
@@ -2431,6 +2630,7 @@ Weight: 1(UID)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2441,7 +2641,8 @@ Weight: 1(UID)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'delete-special-key is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2467,11 +2668,14 @@ marginTradingCommands.push({
     command: 'edit-ip-for-special-key',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Edit ip restriction. This only applies to Special Key for Low Latency Trading.
+        decodeSelectedEntities(
+            `Edit ip restriction. This only applies to Special Key for Low Latency Trading.
 
 You need to enable Permits “Enable Spot &amp; Margin Trading” option for the API Key which requests this endpoint.
 
-Weight: 1(UID)`),
+Weight: 1(UID)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2495,6 +2699,7 @@ Weight: 1(UID)`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -2517,6 +2722,7 @@ Weight: 1(UID)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2527,7 +2733,8 @@ Weight: 1(UID)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'edit-ip-for-special-key is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2562,11 +2769,14 @@ marginTradingCommands.push({
     command: 'get-force-liquidation-record',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Force Liquidation Record
+        decodeSelectedEntities(
+            `Get Force Liquidation Record
 
 * Response in descending order
 
-Weight: 1(IP)`),
+Weight: 1(IP)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'start-time': {
@@ -2612,6 +2822,7 @@ Weight: 1(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2622,7 +2833,8 @@ Weight: 1(IP)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-force-liquidation-record is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2650,9 +2862,12 @@ marginTradingCommands.push({
     command: 'get-small-liability-exchange-coin-list',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query the coins which can be small liability exchange
+        decodeSelectedEntities(
+            `Query the coins which can be small liability exchange
 
-Weight: 100`),
+Weight: 100`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -2669,6 +2884,7 @@ Weight: 100`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2679,7 +2895,8 @@ Weight: 100`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-small-liability-exchange-coin-list is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2707,9 +2924,12 @@ marginTradingCommands.push({
     command: 'get-small-liability-exchange-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Small liability Exchange History
+        decodeSelectedEntities(
+            `Get Small liability Exchange History
 
-Weight: 100(UID)`),
+Weight: 100(UID)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2750,6 +2970,7 @@ Weight: 100(UID)`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -2776,6 +2997,7 @@ Weight: 100(UID)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2786,7 +3008,8 @@ Weight: 100(UID)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-small-liability-exchange-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2830,10 +3053,13 @@ marginTradingCommands.push({
     command: 'margin-account-cancel-all-open-orders-on-a-symbol',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Cancels all active orders on a symbol for margin account.&lt;br&gt;&lt;/br&gt;
+        decodeSelectedEntities(
+            `Cancels all active orders on a symbol for margin account.&lt;br&gt;&lt;/br&gt;
 This includes OCO orders.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2862,6 +3088,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -2884,6 +3111,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2894,7 +3122,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'margin-account-cancel-all-open-orders-on-a-symbol is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2931,11 +3160,14 @@ marginTradingCommands.push({
     command: 'margin-account-cancel-oco',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Cancel an entire Order List for a margin account.
+        decodeSelectedEntities(
+            `Cancel an entire Order List for a margin account.
 
 * Canceling an individual leg will cancel the entire OCO
 
-Weight: 1(UID)`),
+Weight: 1(UID)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2985,6 +3217,7 @@ Weight: 1(UID)`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -3007,6 +3240,7 @@ Weight: 1(UID)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3017,7 +3251,8 @@ Weight: 1(UID)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'margin-account-cancel-oco is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3053,11 +3288,14 @@ marginTradingCommands.push({
     command: 'margin-account-cancel-order',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Cancel an active order for margin account.
+        decodeSelectedEntities(
+            `Cancel an active order for margin account.
 
 * Either orderId or origClientOrderId must be sent.
 
-Weight: 10(IP)`),
+Weight: 10(IP)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -3103,6 +3341,7 @@ Weight: 10(IP)`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -3125,6 +3364,7 @@ Weight: 10(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3135,7 +3375,8 @@ Weight: 10(IP)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'margin-account-cancel-order is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3171,11 +3412,14 @@ marginTradingCommands.push({
     command: 'margin-account-new-oco',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Send in a new OCO for a margin account
+        decodeSelectedEntities(
+            `Send in a new OCO for a margin account
 
 * autoRepayAtCancel is suggested to set as “FALSE” to keep liability unrepaid under high frequent new order/cancel order execution
 
-Weight: 6(UID)`),
+Weight: 6(UID)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -3259,6 +3503,7 @@ Weight: 6(UID)`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -3297,6 +3542,7 @@ Weight: 6(UID)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3307,7 +3553,8 @@ Weight: 6(UID)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'margin-account-new-oco is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3380,11 +3627,14 @@ marginTradingCommands.push({
     command: 'margin-account-new-order',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Post a new order for margin account.
+        decodeSelectedEntities(
+            `Post a new order for margin account.
 
 * autoRepayAtCancel is suggested to set as “FALSE” to keep liability unrepaid under high frequent new order/cancel order execution
 
-Weight: 6(UID)`),
+Weight: 6(UID)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -3460,6 +3710,7 @@ Weight: 6(UID)`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -3490,6 +3741,7 @@ Weight: 6(UID)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3500,7 +3752,8 @@ Weight: 6(UID)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'margin-account-new-order is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3555,7 +3808,8 @@ marginTradingCommands.push({
     command: 'margin-account-new-oto',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Post a new OTO order for margin account:
+        decodeSelectedEntities(
+            `Post a new OTO order for margin account:
 
 - An OTO (One-Triggers-the-Other) is an order list comprised of 2 orders.
 - The first order is called the **working order** and must be &#x60;LIMIT&#x60; or &#x60;LIMIT_MAKER&#x60;. Initially, only the working order goes on the order book.
@@ -3567,7 +3821,9 @@ marginTradingCommands.push({
 * autoRepayAtCancel is suggested to set as “FALSE” to keep liability unrepaid under high frequent new order/cancel order execution
 * Depending on the &#x60;pendingType&#x60; or &#x60;workingType&#x60;, some optional parameters will become mandatory:
 
-Weight: 6(UID)`),
+Weight: 6(UID)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -3671,6 +3927,7 @@ Weight: 6(UID)`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -3725,6 +3982,7 @@ Weight: 6(UID)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3735,7 +3993,8 @@ Weight: 6(UID)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'margin-account-new-oto is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3844,7 +4103,8 @@ marginTradingCommands.push({
     command: 'margin-account-new-otoco',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Post a new OTOCO order for margin account：
+        decodeSelectedEntities(
+            `Post a new OTOCO order for margin account：
 
 - An OTOCO (One-Triggers-One-Cancels-the-Other) is an order list comprised of 3 orders.
 - The first order is called the **working order** and must be &#x60;LIMIT&#x60; or &#x60;LIMIT_MAKER&#x60;. Initially, only the working order goes on the order book.
@@ -3856,7 +4116,9 @@ marginTradingCommands.push({
 * autoRepayAtCancel is suggested to set as “FALSE” to keep liability unrepaid under high frequent new order/cancel order execution
 * Depending on the &#x60;pendingAboveType&#x60;/&#x60;pendingBelowType&#x60; or &#x60;workingType&#x60;, some optional parameters will become mandatory:
 
-Weight: 6(UID)`),
+Weight: 6(UID)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -3988,6 +4250,7 @@ Weight: 6(UID)`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -4038,6 +4301,7 @@ Weight: 6(UID)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -4048,7 +4312,8 @@ Weight: 6(UID)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'margin-account-new-otoco is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -4148,12 +4413,15 @@ marginTradingCommands.push({
     command: 'margin-manual-liquidation',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Margin Manual Liquidation
+        decodeSelectedEntities(
+            `Margin Manual Liquidation
 
 * This endpoint can support Cross Margin Classic Mode and Pro Mode.
 * And only support Isolated Margin for restricted region.
 
-Weight: 3000`),
+Weight: 3000`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -4177,6 +4445,7 @@ Weight: 3000`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -4199,6 +4468,7 @@ Weight: 3000`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -4209,7 +4479,8 @@ Weight: 3000`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'margin-manual-liquidation is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -4246,9 +4517,12 @@ marginTradingCommands.push({
     command: 'query-current-margin-order-count-usage',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Displays the user&#39;s current margin order count usage for all intervals.
+        decodeSelectedEntities(
+            `Displays the user&#39;s current margin order count usage for all intervals.
 
-Weight: 20(IP)`),
+Weight: 20(IP)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'is-isolated': {
@@ -4277,6 +4551,7 @@ Weight: 20(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -4287,7 +4562,8 @@ Weight: 20(IP)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-current-margin-order-count-usage is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -4315,9 +4591,12 @@ marginTradingCommands.push({
     command: 'query-margin-accounts-all-oco',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Retrieves all OCO for a specific margin account based on provided optional parameters
+        decodeSelectedEntities(
+            `Retrieves all OCO for a specific margin account based on provided optional parameters
 
-Weight: 200(IP)`),
+Weight: 200(IP)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'is-isolated': {
@@ -4372,6 +4651,7 @@ Weight: 200(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -4382,7 +4662,8 @@ Weight: 200(IP)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-margin-accounts-all-oco is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -4410,13 +4691,16 @@ marginTradingCommands.push({
     command: 'query-margin-accounts-all-orders',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query Margin Account&#39;s All Orders
+        decodeSelectedEntities(
+            `Query Margin Account&#39;s All Orders
 
 * If orderId is set, it will get orders &gt;&#x3D; that orderId. Otherwise the orders within 24 hours are returned.
 * For some historical orders cummulativeQuoteQty will be &lt; 0, meaning the data is not available at this time.
 * Less than 24 hours between startTime and endTime.
 
-Weight: 200(IP)`),
+Weight: 200(IP)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -4469,6 +4753,7 @@ Weight: 200(IP)`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -4491,6 +4776,7 @@ Weight: 200(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -4501,7 +4787,8 @@ Weight: 200(IP)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-margin-accounts-all-orders is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -4537,9 +4824,12 @@ marginTradingCommands.push({
     command: 'query-margin-accounts-oco',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Retrieves a specific OCO based on provided optional parameters
+        decodeSelectedEntities(
+            `Retrieves a specific OCO based on provided optional parameters
 
-Weight: 10(IP)`),
+Weight: 10(IP)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'is-isolated': {
@@ -4580,6 +4870,7 @@ Weight: 10(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -4590,7 +4881,8 @@ Weight: 10(IP)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-margin-accounts-oco is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -4618,9 +4910,12 @@ marginTradingCommands.push({
     command: 'query-margin-accounts-open-oco',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query Margin Account&#39;s Open OCO
+        decodeSelectedEntities(
+            `Query Margin Account&#39;s Open OCO
 
-Weight: 10(IP)`),
+Weight: 10(IP)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'is-isolated': {
@@ -4649,6 +4944,7 @@ Weight: 10(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -4659,7 +4955,8 @@ Weight: 10(IP)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-margin-accounts-open-oco is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -4687,13 +4984,16 @@ marginTradingCommands.push({
     command: 'query-margin-accounts-open-orders',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query Margin Account&#39;s Open Orders
+        decodeSelectedEntities(
+            `Query Margin Account&#39;s Open Orders
 
 * If the symbol is not sent, orders for all symbols will be returned in an array.
 * When all symbols are returned, the number of requests counted against the rate limiter is equal to the number of symbols currently trading on the exchange.
 * If isIsolated &#x3D;&quot;TRUE&quot;, symbol must be sent.
 
-Weight: 10(IP)`),
+Weight: 10(IP)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             symbol: {
@@ -4722,6 +5022,7 @@ Weight: 10(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -4732,7 +5033,8 @@ Weight: 10(IP)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-margin-accounts-open-orders is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -4760,12 +5062,15 @@ marginTradingCommands.push({
     command: 'query-margin-accounts-order',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query Margin Account&#39;s Order
+        decodeSelectedEntities(
+            `Query Margin Account&#39;s Order
 
 * Either orderId or origClientOrderId must be sent.
 * For some historical orders cummulativeQuoteQty will be &lt; 0, meaning the data is not available at this time.
 
-Weight: 10(IP)`),
+Weight: 10(IP)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -4804,6 +5109,7 @@ Weight: 10(IP)`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -4826,6 +5132,7 @@ Weight: 10(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -4836,7 +5143,8 @@ Weight: 10(IP)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-margin-accounts-order is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -4872,12 +5180,15 @@ marginTradingCommands.push({
     command: 'query-margin-accounts-trade-list',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query Margin Account&#39;s Trade List
+        decodeSelectedEntities(
+            `Query Margin Account&#39;s Trade List
 
 * If fromId is set, it will get trades &gt;&#x3D; that fromId. Otherwise the trades within 24 hours are returned.
 * Less than 24 hours between startTime and endTime.
 
-Weight: 10(IP)`),
+Weight: 10(IP)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -4937,6 +5248,7 @@ Weight: 10(IP)`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -4959,6 +5271,7 @@ Weight: 10(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -4969,7 +5282,8 @@ Weight: 10(IP)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-margin-accounts-trade-list is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -5005,8 +5319,11 @@ marginTradingCommands.push({
     command: 'query-prevented-matches',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`
-Weight: 10(IP)`),
+        decodeSelectedEntities(
+            `
+Weight: 10(IP)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -5050,6 +5367,7 @@ Weight: 10(IP)`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -5072,6 +5390,7 @@ Weight: 10(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -5082,7 +5401,8 @@ Weight: 10(IP)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-prevented-matches is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -5118,11 +5438,14 @@ marginTradingCommands.push({
     command: 'query-special-key',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query Special Key Information.
+        decodeSelectedEntities(
+            `Query Special Key Information.
 
 This only applies to Special Key for Low Latency Trading.
 
-Weight: 1(UID)`),
+Weight: 1(UID)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             symbol: {
@@ -5144,6 +5467,7 @@ Weight: 1(UID)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -5154,7 +5478,8 @@ Weight: 1(UID)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-special-key is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -5182,9 +5507,12 @@ marginTradingCommands.push({
     command: 'query-special-key-list',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`This only applies to Special Key for Low Latency Trading.
+        decodeSelectedEntities(
+            `This only applies to Special Key for Low Latency Trading.
 
-Weight: 1(UID)`),
+Weight: 1(UID)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             symbol: {
@@ -5206,6 +5534,7 @@ Weight: 1(UID)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -5216,7 +5545,8 @@ Weight: 1(UID)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-special-key-list is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -5244,13 +5574,16 @@ marginTradingCommands.push({
     command: 'small-liability-exchange',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Small Liability Exchange
+        decodeSelectedEntities(
+            `Small Liability Exchange
 
 * Only convert once within 6 hours
 * Only liability valuation less than 10 USDT are supported
 * The maximum number of coin is 10
 
-Weight: 3000(UID)`),
+Weight: 3000(UID)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -5270,6 +5603,7 @@ Weight: 3000(UID)`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -5292,6 +5626,7 @@ Weight: 3000(UID)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -5302,7 +5637,8 @@ Weight: 3000(UID)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'small-liability-exchange is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -5337,13 +5673,16 @@ marginTradingCommands.push({
     command: 'get-cross-margin-transfer-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Cross Margin Transfer History
+        decodeSelectedEntities(
+            `Get Cross Margin Transfer History
 
 * Response in descending order
 * The max interval between &#x60;startTime&#x60; and &#x60;endTime&#x60; is 30 days.
 * Returns data for last 7 days by default
 
-Weight: 1(IP)`),
+Weight: 1(IP)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             asset: {
@@ -5399,6 +5738,7 @@ Weight: 1(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -5409,7 +5749,8 @@ Weight: 1(IP)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-cross-margin-transfer-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -5437,11 +5778,14 @@ marginTradingCommands.push({
     command: 'query-max-transfer-out-amount',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query Max Transfer-Out Amount
+        decodeSelectedEntities(
+            `Query Max Transfer-Out Amount
 
 * If isolatedSymbol is not sent, crossed margin data will be sent.
 
-Weight: 50(IP)`),
+Weight: 50(IP)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -5468,6 +5812,7 @@ Weight: 50(IP)`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -5490,6 +5835,7 @@ Weight: 50(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -5500,7 +5846,8 @@ Weight: 50(IP)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-max-transfer-out-amount is signed. Please create a profile using `binance-cli profile create`.'
             );

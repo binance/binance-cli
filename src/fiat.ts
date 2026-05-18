@@ -6,38 +6,46 @@ import {
     getUserAgent,
     isEmpty,
     readStdinObj,
+    getParsedArgs,
 } from './utils';
-import { Parser, hideBin } from 'yargs/helpers';
 
-const parsedArgs = Parser(hideBin(process.argv));
+const parsedArgs = getParsedArgs();
+const isFullDescription = parsedArgs?.['full-description'] ?? false;
 
-process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('fiat');
+const getClient = () => {
+    if (!process.env?.LOG_LEVEL) {
+        process.env.LOG_LEVEL = 'ERROR';
+    }
+    process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('fiat');
 
-const stdinObj: any = readStdinObj();
+    let basePath = FIAT_REST_API_PROD_URL;
 
-let basePath = FIAT_REST_API_PROD_URL;
+    const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'fiat');
 
-const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'fiat');
+    if (process.env.BINANCE_FIAT_BASE_PATH) {
+        basePath = process.env.BINANCE_FIAT_BASE_PATH;
+    } else if (configurationRestAPI && configurationRestAPI['basePath']) {
+        basePath = configurationRestAPI['basePath'];
+    }
 
-if (process.env.BINANCE_FIAT_BASE_PATH) {
-    basePath = process.env.BINANCE_FIAT_BASE_PATH;
-} else if (configurationRestAPI && configurationRestAPI['basePath']) {
-    basePath = configurationRestAPI['basePath'];
-}
+    let client;
+    let hasConfig = false;
+    if (configurationRestAPI !== null) {
+        hasConfig = true;
+        client = new Fiat({
+            configurationRestAPI: { ...configurationRestAPI, basePath },
+        });
+    } else {
+        client = new Fiat({
+            configurationRestAPI: {
+                apiKey: '',
+                basePath,
+            },
+        });
+    }
 
-let client;
-if (configurationRestAPI !== null) {
-    client = new Fiat({
-        configurationRestAPI: { ...configurationRestAPI, basePath },
-    });
-} else {
-    client = new Fiat({
-        configurationRestAPI: {
-            apiKey: '',
-            basePath,
-        },
-    });
-}
+    return { client, hasConfig };
+};
 
 const fiatCommands: any[] = [];
 
@@ -45,7 +53,8 @@ fiatCommands.push({
     command: 'deposit',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Submit deposit request, in this version, we only support BRL deposit via pix.
+        decodeSelectedEntities(
+            `Submit deposit request, in this version, we only support BRL deposit via pix.
 
 
 
@@ -53,7 +62,9 @@ For BRL deposit via pix, you need to place an order before making a transfer fro
 
 Before calling this api, please make sure you have already completed your KYC or KYB, and already activated your fiat service on our website.
 
-Weight: 45000`),
+Weight: 45000`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -85,6 +96,7 @@ Weight: 45000`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -115,6 +127,7 @@ Weight: 45000`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -125,7 +138,8 @@ Weight: 45000`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'deposit is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -180,7 +194,8 @@ fiatCommands.push({
     command: 'fiat-withdraw',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Submit withdraw request, in this version, we support BRL,ARS,MXN withdrawal via bank_transfer.
+        decodeSelectedEntities(
+            `Submit withdraw request, in this version, we support BRL,ARS,MXN withdrawal via bank_transfer.
 
 You need to call this api first, and call query order detail api in a loop to get the status of the order until this order is successful.
 
@@ -188,7 +203,9 @@ Before calling this API, please ensure you have completed your KYC or KYB, activ
 
 you need to bind your bank account on web/app before using the corresponding account number
 
-Weight: 45000`),
+Weight: 45000`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -224,6 +241,7 @@ Weight: 45000`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -258,6 +276,7 @@ Weight: 45000`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -268,7 +287,8 @@ Weight: 45000`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'fiat-withdraw is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -332,11 +352,14 @@ fiatCommands.push({
     command: 'get-fiat-deposit-withdraw-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Fiat Deposit/Withdraw History
+        decodeSelectedEntities(
+            `Get Fiat Deposit/Withdraw History
 
 * If beginTime and endTime are not sent, the recent 30-day data will be returned.
 
-Weight: 45000`),
+Weight: 45000`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -378,6 +401,7 @@ Weight: 45000`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -400,6 +424,7 @@ Weight: 45000`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -410,7 +435,8 @@ Weight: 45000`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-fiat-deposit-withdraw-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -446,7 +472,8 @@ fiatCommands.push({
     command: 'get-fiat-payments-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Fiat Deposit/Withdraw History
+        decodeSelectedEntities(
+            `Get Fiat Deposit/Withdraw History
 
 * If beginTime and endTime are not sent, the recent 30-day data will be returned.
 * paymentMethod: Only when requesting payments history for buy (transactionType&#x3D;0), response contains paymentMethod representing the way of purchase. Now we have:
@@ -455,7 +482,9 @@ fiatCommands.push({
 * Online Banking
 * Bank Transfer
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -497,6 +526,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -519,6 +549,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -529,7 +560,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-fiat-payments-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -565,11 +597,14 @@ fiatCommands.push({
     command: 'get-order-detail',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Order Detail
+        decodeSelectedEntities(
+            `Get Order Detail
 
 Before calling this api, please make sure you have already completed your KYC or KYB, and already activated your fiat service on our website.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -593,6 +628,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -615,6 +651,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -625,7 +662,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-order-detail is signed. Please create a profile using `binance-cli profile create`.'
             );

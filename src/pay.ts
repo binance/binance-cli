@@ -6,38 +6,46 @@ import {
     getUserAgent,
     isEmpty,
     readStdinObj,
+    getParsedArgs,
 } from './utils';
-import { Parser, hideBin } from 'yargs/helpers';
 
-const parsedArgs = Parser(hideBin(process.argv));
+const parsedArgs = getParsedArgs();
+const isFullDescription = parsedArgs?.['full-description'] ?? false;
 
-process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('pay');
+const getClient = () => {
+    if (!process.env?.LOG_LEVEL) {
+        process.env.LOG_LEVEL = 'ERROR';
+    }
+    process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('pay');
 
-const stdinObj: any = readStdinObj();
+    let basePath = PAY_REST_API_PROD_URL;
 
-let basePath = PAY_REST_API_PROD_URL;
+    const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'pay');
 
-const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'pay');
+    if (process.env.BINANCE_PAY_BASE_PATH) {
+        basePath = process.env.BINANCE_PAY_BASE_PATH;
+    } else if (configurationRestAPI && configurationRestAPI['basePath']) {
+        basePath = configurationRestAPI['basePath'];
+    }
 
-if (process.env.BINANCE_PAY_BASE_PATH) {
-    basePath = process.env.BINANCE_PAY_BASE_PATH;
-} else if (configurationRestAPI && configurationRestAPI['basePath']) {
-    basePath = configurationRestAPI['basePath'];
-}
+    let client;
+    let hasConfig = false;
+    if (configurationRestAPI !== null) {
+        hasConfig = true;
+        client = new Pay({
+            configurationRestAPI: { ...configurationRestAPI, basePath },
+        });
+    } else {
+        client = new Pay({
+            configurationRestAPI: {
+                apiKey: '',
+                basePath,
+            },
+        });
+    }
 
-let client;
-if (configurationRestAPI !== null) {
-    client = new Pay({
-        configurationRestAPI: { ...configurationRestAPI, basePath },
-    });
-} else {
-    client = new Pay({
-        configurationRestAPI: {
-            apiKey: '',
-            basePath,
-        },
-    });
-}
+    return { client, hasConfig };
+};
 
 const payCommands: any[] = [];
 
@@ -45,7 +53,8 @@ payCommands.push({
     command: 'get-pay-trade-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Pay Trade History
+        decodeSelectedEntities(
+            `Get Pay Trade History
 
 * If startTime and endTime are not sent, the recent 90 days&#39; data will be returned.
 * The max interval between startTime and endTime is 90 days.
@@ -88,7 +97,9 @@ payCommands.push({
 * payerInfo : binanceId
 * receiverInfo : name, institutionName, cardNumber, digitalWalletId
 
-Weight: 3000`),
+Weight: 3000`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'start-time': {
@@ -120,6 +131,7 @@ Weight: 3000`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -130,7 +142,8 @@ Weight: 3000`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-pay-trade-history is signed. Please create a profile using `binance-cli profile create`.'
             );

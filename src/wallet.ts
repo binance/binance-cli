@@ -6,38 +6,46 @@ import {
     getUserAgent,
     isEmpty,
     readStdinObj,
+    getParsedArgs,
 } from './utils';
-import { Parser, hideBin } from 'yargs/helpers';
 
-const parsedArgs = Parser(hideBin(process.argv));
+const parsedArgs = getParsedArgs();
+const isFullDescription = parsedArgs?.['full-description'] ?? false;
 
-process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('wallet');
+const getClient = () => {
+    if (!process.env?.LOG_LEVEL) {
+        process.env.LOG_LEVEL = 'ERROR';
+    }
+    process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('wallet');
 
-const stdinObj: any = readStdinObj();
+    let basePath = WALLET_REST_API_PROD_URL;
 
-let basePath = WALLET_REST_API_PROD_URL;
+    const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'wallet');
 
-const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'wallet');
+    if (process.env.BINANCE_WALLET_BASE_PATH) {
+        basePath = process.env.BINANCE_WALLET_BASE_PATH;
+    } else if (configurationRestAPI && configurationRestAPI['basePath']) {
+        basePath = configurationRestAPI['basePath'];
+    }
 
-if (process.env.BINANCE_WALLET_BASE_PATH) {
-    basePath = process.env.BINANCE_WALLET_BASE_PATH;
-} else if (configurationRestAPI && configurationRestAPI['basePath']) {
-    basePath = configurationRestAPI['basePath'];
-}
+    let client;
+    let hasConfig = false;
+    if (configurationRestAPI !== null) {
+        hasConfig = true;
+        client = new Wallet({
+            configurationRestAPI: { ...configurationRestAPI, basePath },
+        });
+    } else {
+        client = new Wallet({
+            configurationRestAPI: {
+                apiKey: '',
+                basePath,
+            },
+        });
+    }
 
-let client;
-if (configurationRestAPI !== null) {
-    client = new Wallet({
-        configurationRestAPI: { ...configurationRestAPI, basePath },
-    });
-} else {
-    client = new Wallet({
-        configurationRestAPI: {
-            apiKey: '',
-            basePath,
-        },
-    });
-}
+    return { client, hasConfig };
+};
 
 const walletCommands: any[] = [];
 
@@ -45,9 +53,12 @@ walletCommands.push({
     command: 'account-api-trading-status',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Fetch account api trading status detail.
+        decodeSelectedEntities(
+            `Fetch account api trading status detail.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -64,6 +75,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -74,7 +86,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'account-api-trading-status is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -102,9 +115,12 @@ walletCommands.push({
     command: 'account-info',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Fetch account info detail.
+        decodeSelectedEntities(
+            `Fetch account info detail.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -121,6 +137,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -131,7 +148,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'account-info is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -159,9 +177,12 @@ walletCommands.push({
     command: 'account-status',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Fetch account status detail.
+        decodeSelectedEntities(
+            `Fetch account status detail.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -178,6 +199,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -188,7 +210,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'account-status is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -216,13 +239,16 @@ walletCommands.push({
     command: 'daily-account-snapshot',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Daily account snapshot
+        decodeSelectedEntities(
+            `Daily account snapshot
 
 * The query time period must be less then 30 days
 * Support query within the last one month only
 * If startTimeand endTime not sent, return records of the last 7 days by default
 
-Weight: 2400`),
+Weight: 2400`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -259,6 +285,7 @@ Weight: 2400`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -281,6 +308,7 @@ Weight: 2400`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -291,7 +319,8 @@ Weight: 2400`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'daily-account-snapshot is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -327,8 +356,11 @@ walletCommands.push({
     command: 'disable-fast-withdraw-switch',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`
-Weight: 1`),
+        decodeSelectedEntities(
+            `
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -344,6 +376,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -354,7 +387,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'disable-fast-withdraw-switch is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -380,12 +414,15 @@ walletCommands.push({
     command: 'enable-fast-withdraw-switch',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Enable Fast Withdraw Switch (USER_DATA)
+        decodeSelectedEntities(
+            `Enable Fast Withdraw Switch (USER_DATA)
 
 * This request will enable fastwithdraw switch under your  account. &lt;br&gt;&lt;/br&gt;
 * When Fast Withdraw Switch is on, transferring funds to a Binance account will be done instantly. There is no on-chain transaction, no transaction ID and no withdrawal fee.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -401,6 +438,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -411,7 +449,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'enable-fast-withdraw-switch is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -437,9 +476,12 @@ walletCommands.push({
     command: 'get-api-key-permission',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get API Key Permission
+        decodeSelectedEntities(
+            `Get API Key Permission
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -456,6 +498,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -466,7 +509,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-api-key-permission is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -494,12 +538,15 @@ walletCommands.push({
     command: 'asset-detail',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Fetch details of assets supported on Binance.
+        decodeSelectedEntities(
+            `Fetch details of assets supported on Binance.
 
 
 * Please get network and other deposit or withdraw details from &#x60;&#x60;GET /sapi/v1/capital/config/getall&#x60;&#x60;.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             asset: {
@@ -521,6 +568,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -531,7 +579,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'asset-detail is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -559,12 +608,15 @@ walletCommands.push({
     command: 'asset-dividend-record',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query asset dividend record.
+        decodeSelectedEntities(
+            `Query asset dividend record.
 
 
 * There cannot be more than 180 days between parameter &#x60;startTime&#x60; and &#x60;endTime&#x60;.
 
-Weight: 10`),
+Weight: 10`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             asset: {
@@ -601,6 +653,7 @@ Weight: 10`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -611,7 +664,8 @@ Weight: 10`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'asset-dividend-record is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -639,9 +693,12 @@ walletCommands.push({
     command: 'dust-convert',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Convert dust assets
+        decodeSelectedEntities(
+            `Convert dust assets
 
-Weight: 10`),
+Weight: 10`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -673,6 +730,7 @@ Weight: 10`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -695,6 +753,7 @@ Weight: 10`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -705,7 +764,8 @@ Weight: 10`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'dust-convert is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -742,9 +802,12 @@ walletCommands.push({
     command: 'dust-convertible-assets',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query dust convertible assets
+        decodeSelectedEntities(
+            `Query dust convertible assets
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -764,6 +827,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -786,6 +850,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -796,7 +861,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'dust-convertible-assets is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -833,11 +899,14 @@ walletCommands.push({
     command: 'dust-transfer',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Convert dust assets to BNB.
+        decodeSelectedEntities(
+            `Convert dust assets to BNB.
 
 * You need to open&#x60;Enable Spot &amp; Margin Trading&#x60; permission for the API Key which requests this endpoint.
 
-Weight: 10`),
+Weight: 10`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -861,6 +930,7 @@ Weight: 10`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -883,6 +953,7 @@ Weight: 10`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -893,7 +964,8 @@ Weight: 10`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'dust-transfer is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -930,12 +1002,15 @@ walletCommands.push({
     command: 'dustlog',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Dustlog
+        decodeSelectedEntities(
+            `Dustlog
 
 * Only return last 100 records
 * Only return records after 2020/12/01
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'account-type': {
@@ -969,6 +1044,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -979,7 +1055,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'dustlog is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1007,12 +1084,15 @@ walletCommands.push({
     command: 'funding-wallet',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query Funding Wallet
+        decodeSelectedEntities(
+            `Query Funding Wallet
 
 
 * Currently supports querying the following business assets：Binance Pay, Binance Card, Binance Gift Card, Stock Token
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             asset: {
@@ -1036,6 +1116,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1046,7 +1127,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'funding-wallet is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1074,9 +1156,12 @@ walletCommands.push({
     command: 'get-assets-that-can-be-converted-into-bnb',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Assets That Can Be Converted Into BNB
+        decodeSelectedEntities(
+            `Get Assets That Can Be Converted Into BNB
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'account-type': {
@@ -1096,6 +1181,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1106,7 +1192,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-assets-that-can-be-converted-into-bnb is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1134,12 +1221,15 @@ walletCommands.push({
     command: 'get-cloud-mining-payment-and-refund-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`The query of Cloud-Mining payment and refund history
+        decodeSelectedEntities(
+            `The query of Cloud-Mining payment and refund history
 
 * Just return the SUCCESS records of payment and refund.
 * For response, type &#x3D; 248 means payment, type &#x3D; 249 means refund, status &#x3D;S means SUCCESS.
 
-Weight: 600`),
+Weight: 600`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1186,6 +1276,7 @@ Weight: 600`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1212,6 +1303,7 @@ Weight: 600`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1222,7 +1314,8 @@ Weight: 600`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-cloud-mining-payment-and-refund-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1264,11 +1357,15 @@ Weight: 600`),
 
 walletCommands.push({
     command: 'get-open-symbol-list',
-    describe:
-        decodeSelectedEntities(`Get the list of symbols that are scheduled to be opened for trading in the market.
+    describe: decodeSelectedEntities(
+        `Get the list of symbols that are scheduled to be opened for trading in the market.
 
-Weight: 100`),
+Weight: 100`,
+        isFullDescription
+    ),
     handler: async () => {
+        const { client } = getClient();
+
         try {
             const response = await client.restAPI.getOpenSymbolList();
             const responseData = await response.data();
@@ -1284,9 +1381,12 @@ walletCommands.push({
     command: 'query-user-delegation-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query User Delegation History
+        decodeSelectedEntities(
+            `Query User Delegation History
 
-Weight: 60`),
+Weight: 60`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1338,6 +1438,7 @@ Weight: 60`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1368,6 +1469,7 @@ Weight: 60`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1378,7 +1480,8 @@ Weight: 60`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-user-delegation-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1430,7 +1533,8 @@ walletCommands.push({
     command: 'query-user-universal-transfer-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query User Universal Transfer History
+        decodeSelectedEntities(
+            `Query User Universal Transfer History
 
 
 *  &#x60;fromSymbol&#x60; must be sent when type are ISOLATEDMARGIN_MARGIN and ISOLATEDMARGIN_ISOLATEDMARGIN
@@ -1438,7 +1542,9 @@ walletCommands.push({
 * Support query within the last 6 months only
 * If &#x60;startTime&#x60;and &#x60;endTime&#x60; not sent, return records of the last 7 days by default
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1490,6 +1596,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1512,6 +1619,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1522,7 +1630,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-user-universal-transfer-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1558,9 +1667,12 @@ walletCommands.push({
     command: 'query-user-wallet-balance',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query User Wallet Balance
+        decodeSelectedEntities(
+            `Query User Wallet Balance
 
-Weight: 60`),
+Weight: 60`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'quote-asset': {
@@ -1584,6 +1696,7 @@ Weight: 60`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1594,7 +1707,8 @@ Weight: 60`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-user-wallet-balance is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1622,11 +1736,14 @@ walletCommands.push({
     command: 'toggle-bnb-burn-on-spot-trade-and-margin-interest',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Toggle BNB Burn On Spot Trade And Margin Interest
+        decodeSelectedEntities(
+            `Toggle BNB Burn On Spot Trade And Margin Interest
 
 * &quot;spotBNBBurn&quot; and &quot;interestBNBBurn&quot; should be sent at least one.
 
-Weight: 1(IP)`),
+Weight: 1(IP)`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'spot-bnb-burn': {
@@ -1650,6 +1767,7 @@ Weight: 1(IP)`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1660,7 +1778,8 @@ Weight: 1(IP)`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'toggle-bnb-burn-on-spot-trade-and-margin-interest is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1689,9 +1808,12 @@ walletCommands.push({
     command: 'trade-fee',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Fetch trade fee
+        decodeSelectedEntities(
+            `Fetch trade fee
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             symbol: {
@@ -1713,6 +1835,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1723,7 +1846,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'trade-fee is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1751,12 +1875,15 @@ walletCommands.push({
     command: 'user-asset',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get user assets, just for positive data.
+        decodeSelectedEntities(
+            `Get user assets, just for positive data.
 
 * If asset is set, then return this asset, otherwise return all assets positive.
 * If needBtcValuation is set, then return btcValudation.
 
-Weight: 5`),
+Weight: 5`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             asset: {
@@ -1780,6 +1907,7 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1790,7 +1918,8 @@ Weight: 5`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'user-asset is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1818,7 +1947,8 @@ walletCommands.push({
     command: 'user-universal-transfer',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`user universal transfer
+        decodeSelectedEntities(
+            `user universal transfer
 
 *  &#x60;fromSymbol&#x60; must be sent when type are ISOLATEDMARGIN_MARGIN and ISOLATEDMARGIN_ISOLATEDMARGIN
 *  &#x60;toSymbol&#x60; must be sent when type are MARGIN_ISOLATEDMARGIN and ISOLATEDMARGIN_ISOLATEDMARGIN
@@ -1855,7 +1985,9 @@ walletCommands.push({
 * MAIN_PORTFOLIO_MARGIN  Spot account transfer to Portfolio Margin account
 * PORTFOLIO_MARGIN_MAIN  Portfolio Margin account transfer to Spot account
 
-Weight: 900`),
+Weight: 900`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1891,6 +2023,7 @@ Weight: 900`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1921,6 +2054,7 @@ Weight: 900`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1931,7 +2065,8 @@ Weight: 900`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'user-universal-transfer is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1986,9 +2121,12 @@ walletCommands.push({
     command: 'all-coins-information',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get information of coins (available for deposit and withdraw) for user.
+        decodeSelectedEntities(
+            `Get information of coins (available for deposit and withdraw) for user.
 
-Weight: 10`),
+Weight: 10`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -2005,6 +2143,7 @@ Weight: 10`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2015,7 +2154,8 @@ Weight: 10`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'all-coins-information is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2043,13 +2183,16 @@ walletCommands.push({
     command: 'deposit-address',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Fetch deposit address with network.
+        decodeSelectedEntities(
+            `Fetch deposit address with network.
 
 * If &#x60;network&#x60; is not send, return with default network of the coin.
 * You can get &#x60;network&#x60; and &#x60;isDefault&#x60; in &#x60;networkList&#x60; in the response of &#x60;Get /sapi/v1/capital/config/getall (HMAC SHA256)&#x60;.
 * &#x60;amount&#x60; needs to be sent if using LIGHTNING network
 
-Weight: 10`),
+Weight: 10`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2083,6 +2226,7 @@ Weight: 10`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -2105,6 +2249,7 @@ Weight: 10`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2115,7 +2260,8 @@ Weight: 10`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'deposit-address is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2151,13 +2297,16 @@ walletCommands.push({
     command: 'deposit-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Fetch deposit history.
+        decodeSelectedEntities(
+            `Fetch deposit history.
 
 
 * Please notice the default &#x60;startTime&#x60; and &#x60;endTime&#x60; to make sure that time interval is within 0-90 days.
 * If both &#x60;&#x60;startTime&#x60;&#x60; and &#x60;&#x60;endTime&#x60;&#x60; are sent, time between &#x60;&#x60;startTime&#x60;&#x60; and &#x60;&#x60;endTime&#x60;&#x60; must be less than 90 days.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'include-source': {
@@ -2218,6 +2367,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2228,7 +2378,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'deposit-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2256,13 +2407,16 @@ walletCommands.push({
     command: 'fetch-deposit-address-list-with-network',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Fetch deposit address list with network.
+        decodeSelectedEntities(
+            `Fetch deposit address list with network.
 
 
 * If network is not send, return with default network of the coin.
 * You can get network and isDefault in networkList in the response of &#x60;Get /sapi/v1/capital/config/getall&#x60;.
 
-Weight: 10`),
+Weight: 10`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2286,6 +2440,7 @@ Weight: 10`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -2308,6 +2463,7 @@ Weight: 10`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2318,7 +2474,8 @@ Weight: 10`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'fetch-deposit-address-list-with-network is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2354,11 +2511,15 @@ walletCommands.push({
     command: 'fetch-withdraw-address-list',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Fetch withdraw address list
+        decodeSelectedEntities(
+            `Fetch withdraw address list
 
-Weight: 10`),
+Weight: 10`,
+            isFullDescription
+        ),
     handler: async () => {
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'fetch-withdraw-address-list is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2381,11 +2542,15 @@ walletCommands.push({
     command: 'fetch-withdraw-quota',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Fetch withdraw quota
+        decodeSelectedEntities(
+            `Fetch withdraw quota
 
-Weight: 10`),
+Weight: 10`,
+            isFullDescription
+        ),
     handler: async () => {
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'fetch-withdraw-quota is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2408,11 +2573,14 @@ walletCommands.push({
     command: 'one-click-arrival-deposit-apply',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Apply deposit credit for expired address (One click arrival)
+        decodeSelectedEntities(
+            `Apply deposit credit for expired address (One click arrival)
 
 * Params need to be in the POST body
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'deposit-id': {
@@ -2440,6 +2608,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2450,7 +2619,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'one-click-arrival-deposit-apply is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2478,14 +2648,17 @@ walletCommands.push({
     command: 'withdraw',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Submit a withdraw request.
+        decodeSelectedEntities(
+            `Submit a withdraw request.
 
 
 * If &#x60;network&#x60; not send, return with default network of the coin.
 * You can get &#x60;network&#x60; and &#x60;isDefault&#x60; in &#x60;networkList&#x60; of a coin in the response of &#x60;Get /sapi/v1/capital/config/getall (HMAC SHA256)&#x60;.
 * To check if travel rule is required, by using  &#x60;GET /sapi/v1/localentity/questionnaire-requirements&#x60; and if it returns anything other than &#x60;NIL&#x60; you will need update SAPI to &#x60;POST /sapi/v1/localentity/withdraw/apply&#x60; else you can continue &#x60;POST /sapi/v1/capital/withdraw/apply&#x60;. Please note that if you are required to comply to travel rule please refer to the Travel Rule SAPI.
 
-Weight: 900`),
+Weight: 900`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2537,6 +2710,7 @@ Weight: 900`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -2567,6 +2741,7 @@ Weight: 900`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2577,7 +2752,8 @@ Weight: 900`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'withdraw is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2632,7 +2808,8 @@ walletCommands.push({
     command: 'withdraw-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Fetch withdraw history.
+        decodeSelectedEntities(
+            `Fetch withdraw history.
 
 * &#x60;network&#x60; may not be in the response for old withdraw.
 * Please notice the default &#x60;startTime&#x60; and &#x60;endTime&#x60; to make sure that time interval is within 0-90 days.
@@ -2642,7 +2819,9 @@ walletCommands.push({
 * Maximum support &#x60;idList&#x60; number is 45.
 
 Weight: 18000
-Request limit: 10 requests per second`),
+Request limit: 10 requests per second`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             coin: {
@@ -2705,6 +2884,7 @@ Request limit: 10 requests per second`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2715,7 +2895,8 @@ Request limit: 10 requests per second`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'withdraw-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2741,9 +2922,12 @@ Request limit: 10 requests per second`),
 
 walletCommands.push({
     command: 'get-symbols-delist-schedule-for-spot',
-    describe: decodeSelectedEntities(`Get symbols delist schedule for spot
+    describe: decodeSelectedEntities(
+        `Get symbols delist schedule for spot
 
-Weight: 100`),
+Weight: 100`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -2760,6 +2944,7 @@ Weight: 100`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2769,6 +2954,8 @@ Weight: 100`),
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (questions.length > 0) {
             const answers = await inquirer.prompt(questions);
@@ -2788,10 +2975,15 @@ Weight: 100`),
 
 walletCommands.push({
     command: 'system-status',
-    describe: decodeSelectedEntities(`Fetch system status.
+    describe: decodeSelectedEntities(
+        `Fetch system status.
 
-Weight: 1`),
+Weight: 1`,
+        isFullDescription
+    ),
     handler: async () => {
+        const { client } = getClient();
+
         try {
             const response = await client.restAPI.systemStatus();
             const responseData = await response.data();
@@ -2807,14 +2999,17 @@ walletCommands.push({
     command: 'broker-withdraw',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Submit a withdrawal request for brokers of local entities that required travel rule.
+        decodeSelectedEntities(
+            `Submit a withdrawal request for brokers of local entities that required travel rule.
 
 * If &#x60;network&#x60; not send, return with default network of the coin, but if the address could not match default network, the withdraw will be rejected.
 * You can get &#x60;network&#x60; in &#x60;networkList&#x60; of a coin in the response
 * Questionnaire is different for each local entity, please refer to
 * If getting error like &#x60;Questionnaire format not valid.&#x60; or &#x60;Questionnaire must not be blank&#x60;,
 
-Weight: 600`),
+Weight: 600`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2874,6 +3069,7 @@ Weight: 600`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -2920,6 +3116,7 @@ Weight: 600`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2930,7 +3127,8 @@ Weight: 600`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'broker-withdraw is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3021,9 +3219,12 @@ walletCommands.push({
     command: 'check-questionnaire-requirements',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`This API will return user-specific Travel Rule questionnaire requirement information in reference to the current API key.
+        decodeSelectedEntities(
+            `This API will return user-specific Travel Rule questionnaire requirement information in reference to the current API key.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -3040,6 +3241,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3050,7 +3252,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'check-questionnaire-requirements is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3078,13 +3281,16 @@ walletCommands.push({
     command: 'deposit-history-travel-rule',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Fetch deposit history for local entities that required travel rule.
+        decodeSelectedEntities(
+            `Fetch deposit history for local entities that required travel rule.
 
 * Please notice the default &#x60;startTime&#x60; and &#x60;endTime&#x60; to make sure that time interval is within
 * If both &#x60;&#x60;startTime&#x60;&#x60; and &#x60;&#x60;endTime&#x60;&#x60; are sent, time between &#x60;&#x60;startTime&#x60;&#x60; and &#x60;&#x60;endTime&#x60;&#x60; must
 * Please, note that due to network-specific characteristics, the returned source address may be inaccurate. If multiple source addresses are found, only the first one will be returned.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'tr-id': {
@@ -3155,6 +3361,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3165,7 +3372,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'deposit-history-travel-rule is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3193,13 +3401,16 @@ walletCommands.push({
     command: 'deposit-history-v2',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Fetch deposit history for local entities that with required travel rule information.
+        decodeSelectedEntities(
+            `Fetch deposit history for local entities that with required travel rule information.
 
 * Please notice the default &#x60;startTime&#x60; and &#x60;endTime&#x60; to make sure that time interval is within
 * If both &#x60;&#x60;startTime&#x60;&#x60; and &#x60;&#x60;endTime&#x60;&#x60; are sent, time between &#x60;&#x60;startTime&#x60;&#x60; and &#x60;&#x60;endTime&#x60;&#x60; must
 * Please, note that due to network-specific characteristics, the returned source address may be inaccurate. If multiple source addresses are found, only the first one will be returned.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'deposit-id': {
@@ -3258,6 +3469,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3268,7 +3480,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'deposit-history-v2 is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3296,9 +3509,12 @@ walletCommands.push({
     command: 'fetch-address-verification-list',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Fetch address verification list for user to check on status and other details for the addresses stored in Address Book.
+        decodeSelectedEntities(
+            `Fetch address verification list for user to check on status and other details for the addresses stored in Address Book.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -3315,6 +3531,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3325,7 +3542,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'fetch-address-verification-list is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3353,14 +3571,17 @@ walletCommands.push({
     command: 'submit-deposit-questionnaire',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Submit questionnaire for brokers of local entities that require travel rule.
+        decodeSelectedEntities(
+            `Submit questionnaire for brokers of local entities that require travel rule.
 The questionnaire is only applies to transactions from un-hosted wallets or VASPs that are not
 yet onboarded with GTR.
 
 * Questionnaire is different for each local entity, please refer
 * If getting error like &#x60;Questionnaire format not valid.&#x60; or &#x60;Questionnaire must not be blank&#x60;,
 
-Weight: 600`),
+Weight: 600`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -3412,6 +3633,7 @@ Weight: 600`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -3450,6 +3672,7 @@ Weight: 600`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3460,7 +3683,8 @@ Weight: 600`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'submit-deposit-questionnaire is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3533,14 +3757,17 @@ walletCommands.push({
     command: 'submit-deposit-questionnaire-travel-rule',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Submit questionnaire for local entities that require travel rule.
+        decodeSelectedEntities(
+            `Submit questionnaire for local entities that require travel rule.
 The questionnaire is only applies to transactions from unhosted wallets or VASPs that are not
 yet onboarded with GTR.
 
 * Questionnaire is different for each local entity, please refer
 * If getting error like &#x60;Questionnaire format not valid.&#x60; or &#x60;Questionnaire must not be blank&#x60;,
 
-Weight: 600`),
+Weight: 600`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -3560,6 +3787,7 @@ Weight: 600`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -3586,6 +3814,7 @@ Weight: 600`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3596,7 +3825,8 @@ Weight: 600`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'submit-deposit-questionnaire-travel-rule is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3642,14 +3872,17 @@ walletCommands.push({
     command: 'submit-deposit-questionnaire-v2',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Submit questionnaire for local entities that require travel rule.
+        decodeSelectedEntities(
+            `Submit questionnaire for local entities that require travel rule.
 The questionnaire is only applies to transactions from unhosted wallets or VASPs that are not
 yet onboarded with GTR.
 
 * Questionnaire is different for each local entity, please refer
 * If getting error like &#x60;Questionnaire format not valid.&#x60; or &#x60;Questionnaire must not be blank&#x60;,
 
-Weight: 600`),
+Weight: 600`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -3669,6 +3902,7 @@ Weight: 600`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -3695,6 +3929,7 @@ Weight: 600`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3705,7 +3940,8 @@ Weight: 600`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'submit-deposit-questionnaire-v2 is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3751,9 +3987,12 @@ walletCommands.push({
     command: 'vasp-list',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Fetch the VASP list for local entities.
+        decodeSelectedEntities(
+            `Fetch the VASP list for local entities.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -3770,6 +4009,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3780,7 +4020,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'vasp-list is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3808,13 +4049,16 @@ walletCommands.push({
     command: 'withdraw-history-v1',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Fetch withdraw history for local entities that required travel rule.
+        decodeSelectedEntities(
+            `Fetch withdraw history for local entities that required travel rule.
 
 * &#x60;network&#x60; may not be in the response for old withdraw.
 * Please notice the default &#x60;startTime&#x60; and &#x60;endTime&#x60; to make sure that time interval is within
 * If both &#x60;startTime&#x60; and &#x60;endTime&#x60;are sent, time between &#x60;startTime&#x60;and &#x60;endTime&#x60;must be less
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'tr-id': {
@@ -3885,6 +4129,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3895,7 +4140,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'withdraw-history-v1 is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3923,7 +4169,8 @@ walletCommands.push({
     command: 'withdraw-history-v2',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Fetch withdraw history for local entities that required travel rule.
+        decodeSelectedEntities(
+            `Fetch withdraw history for local entities that required travel rule.
 
 * &#x60;network&#x60; may not be in the response for old withdraw.
 * Withdrawal made through /sapi/v1/capital/withdraw/apply may not be in the response.
@@ -3935,7 +4182,9 @@ walletCommands.push({
 * WithdrawOrderId only support 1.
 * If responsible does not include withdrawalStatus, please input trId or txId retrieve the data.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'tr-id': {
@@ -4006,6 +4255,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -4016,7 +4266,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'withdraw-history-v2 is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -4044,14 +4295,17 @@ walletCommands.push({
     command: 'withdraw-travel-rule',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Submit a withdrawal request for local entities that required travel rule.
+        decodeSelectedEntities(
+            `Submit a withdrawal request for local entities that required travel rule.
 
 * If &#x60;network&#x60; not send, return with default network of the coin, but if the address could not match default network, the withdraw will be rejected.
 * You can get &#x60;network&#x60; and &#x60;isDefault&#x60; in &#x60;networkList&#x60; of a coin in the response
 * Questionnaire is different for each local entity, please refer to
 * If getting error like &#x60;Questionnaire format not valid.&#x60; or &#x60;Questionnaire must not be blank&#x60;,
 
-Weight: 600`),
+Weight: 600`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -4107,6 +4361,7 @@ Weight: 600`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -4141,6 +4396,7 @@ Weight: 600`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -4151,7 +4407,8 @@ Weight: 600`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'withdraw-travel-rule is signed. Please create a profile using `binance-cli profile create`.'
             );

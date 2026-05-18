@@ -6,38 +6,46 @@ import {
     getUserAgent,
     isEmpty,
     readStdinObj,
+    getParsedArgs,
 } from './utils';
-import { Parser, hideBin } from 'yargs/helpers';
 
-const parsedArgs = Parser(hideBin(process.argv));
+const parsedArgs = getParsedArgs();
+const isFullDescription = parsedArgs?.['full-description'] ?? false;
 
-process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('staking');
+const getClient = () => {
+    if (!process.env?.LOG_LEVEL) {
+        process.env.LOG_LEVEL = 'ERROR';
+    }
+    process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('staking');
 
-const stdinObj: any = readStdinObj();
+    let basePath = STAKING_REST_API_PROD_URL;
 
-let basePath = STAKING_REST_API_PROD_URL;
+    const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'staking');
 
-const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'staking');
+    if (process.env.BINANCE_STAKING_BASE_PATH) {
+        basePath = process.env.BINANCE_STAKING_BASE_PATH;
+    } else if (configurationRestAPI && configurationRestAPI['basePath']) {
+        basePath = configurationRestAPI['basePath'];
+    }
 
-if (process.env.BINANCE_STAKING_BASE_PATH) {
-    basePath = process.env.BINANCE_STAKING_BASE_PATH;
-} else if (configurationRestAPI && configurationRestAPI['basePath']) {
-    basePath = configurationRestAPI['basePath'];
-}
+    let client;
+    let hasConfig = false;
+    if (configurationRestAPI !== null) {
+        hasConfig = true;
+        client = new Staking({
+            configurationRestAPI: { ...configurationRestAPI, basePath },
+        });
+    } else {
+        client = new Staking({
+            configurationRestAPI: {
+                apiKey: '',
+                basePath,
+            },
+        });
+    }
 
-let client;
-if (configurationRestAPI !== null) {
-    client = new Staking({
-        configurationRestAPI: { ...configurationRestAPI, basePath },
-    });
-} else {
-    client = new Staking({
-        configurationRestAPI: {
-            apiKey: '',
-            basePath,
-        },
-    });
-}
+    return { client, hasConfig };
+};
 
 const stakingCommands: any[] = [];
 
@@ -45,9 +53,12 @@ stakingCommands.push({
     command: 'eth-staking-account',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`ETH Staking account
+        decodeSelectedEntities(
+            `ETH Staking account
 
-Weight: 150`),
+Weight: 150`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -64,6 +75,7 @@ Weight: 150`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -74,7 +86,8 @@ Weight: 150`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'eth-staking-account is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -102,9 +115,12 @@ stakingCommands.push({
     command: 'get-current-eth-staking-quota',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get current ETH staking quota
+        decodeSelectedEntities(
+            `Get current ETH staking quota
 
-Weight: 150`),
+Weight: 150`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -121,6 +137,7 @@ Weight: 150`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -131,7 +148,8 @@ Weight: 150`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-current-eth-staking-quota is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -159,14 +177,17 @@ stakingCommands.push({
     command: 'get-eth-redemption-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get ETH redemption history
+        decodeSelectedEntities(
+            `Get ETH redemption history
 
 * The time between &#x60;startTime&#x60; and &#x60;endTime&#x60; cannot be longer than 3 months.
 * If &#x60;startTime&#x60; and &#x60;endTime&#x60; are both not sent, then the last 30 days&#39; data will be returned.
 * If &#x60;startTime&#x60; is sent but &#x60;endTime&#x60; is not sent, the next 30 days&#39; data beginning from &#x60;startTime&#x60; will be returned.
 * If &#x60;endTime&#x60; is sent but &#x60;startTime&#x60; is not sent, the 30 days&#39; data before &#x60;endTime&#x60; will be returned.
 
-Weight: 150`),
+Weight: 150`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'redeem-id': {
@@ -210,6 +231,7 @@ Weight: 150`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -220,7 +242,8 @@ Weight: 150`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-eth-redemption-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -248,14 +271,17 @@ stakingCommands.push({
     command: 'get-eth-staking-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get ETH staking history
+        decodeSelectedEntities(
+            `Get ETH staking history
 
 * The time between &#x60;startTime&#x60; and &#x60;endTime&#x60; cannot be longer than 3 months.
 * If &#x60;startTime&#x60; and &#x60;endTime&#x60; are both not sent, then the last 30 days&#39; data will be returned.
 * If &#x60;startTime&#x60; is sent but &#x60;endTime&#x60; is not sent, the next 30 days&#39; data beginning from &#x60;startTime&#x60; will be returned.
 * If &#x60;endTime&#x60; is sent but &#x60;startTime&#x60; is not sent, the 30 days&#39; data before &#x60;endTime&#x60; will be returned.
 
-Weight: 150`),
+Weight: 150`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'purchase-id': {
@@ -299,6 +325,7 @@ Weight: 150`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -309,7 +336,8 @@ Weight: 150`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-eth-staking-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -337,14 +365,17 @@ stakingCommands.push({
     command: 'get-wbeth-rate-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get WBETH Rate History
+        decodeSelectedEntities(
+            `Get WBETH Rate History
 
 * The time between &#x60;startTime&#x60; and &#x60;endTime&#x60; cannot be longer than 3 months.
 * If &#x60;startTime&#x60; and &#x60;endTime&#x60; are both not sent, then the last 30 days&#39; data will be returned.
 * If &#x60;startTime&#x60; is sent but &#x60;endTime&#x60; is not sent, the next 30 days&#39; data beginning from &#x60;startTime&#x60; will be returned.
 * If &#x60;endTime&#x60; is sent but &#x60;startTime&#x60; is not sent, the 30 days&#39; data before &#x60;endTime&#x60; will be returned.
 
-Weight: 150`),
+Weight: 150`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'start-time': {
@@ -383,6 +414,7 @@ Weight: 150`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -393,7 +425,8 @@ Weight: 150`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-wbeth-rate-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -421,14 +454,17 @@ stakingCommands.push({
     command: 'get-wbeth-rewards-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get WBETH rewards history
+        decodeSelectedEntities(
+            `Get WBETH rewards history
 
 * The time between &#x60;startTime&#x60; and &#x60;endTime&#x60; cannot be longer than 3 months.
 * If &#x60;startTime&#x60; and &#x60;endTime&#x60; are both not sent, then the last 30 days&#39; data will be returned.
 * If &#x60;startTime&#x60; is sent but &#x60;endTime&#x60; is not sent, the next 30 days&#39; data beginning from &#x60;startTime&#x60; will be returned.
 * If &#x60;endTime&#x60; is sent but &#x60;startTime&#x60; is not sent, the 30 days&#39; data before &#x60;endTime&#x60; will be returned.
 
-Weight: 150`),
+Weight: 150`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'start-time': {
@@ -467,6 +503,7 @@ Weight: 150`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -477,7 +514,8 @@ Weight: 150`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-wbeth-rewards-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -505,14 +543,17 @@ stakingCommands.push({
     command: 'get-wbeth-unwrap-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get WBETH unwrap history
+        decodeSelectedEntities(
+            `Get WBETH unwrap history
 
 * The time between &#x60;startTime&#x60; and &#x60;endTime&#x60; cannot be longer than 3 months.
 * If &#x60;startTime&#x60; and &#x60;endTime&#x60; are both not sent, then the last 30 days&#39; data will be returned.
 * If &#x60;startTime&#x60; is sent but &#x60;endTime&#x60; is not sent, the next 30 days&#39; data beginning from &#x60;startTime&#x60; will be returned.
 * If &#x60;endTime&#x60; is sent but &#x60;startTime&#x60; is not sent, the 30 days&#39; data before &#x60;endTime&#x60; will be returned.
 
-Weight: 150`),
+Weight: 150`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'start-time': {
@@ -551,6 +592,7 @@ Weight: 150`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -561,7 +603,8 @@ Weight: 150`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-wbeth-unwrap-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -589,14 +632,17 @@ stakingCommands.push({
     command: 'get-wbeth-wrap-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get WBETH wrap history
+        decodeSelectedEntities(
+            `Get WBETH wrap history
 
 * The time between &#x60;startTime&#x60; and &#x60;endTime&#x60; cannot be longer than 3 months.
 * If &#x60;startTime&#x60; and &#x60;endTime&#x60; are both not sent, then the last 30 days&#39; data will be returned.
 * If &#x60;startTime&#x60; is sent but &#x60;endTime&#x60; is not sent, the next 30 days&#39; data beginning from &#x60;startTime&#x60; will be returned.
 * If &#x60;endTime&#x60; is sent but &#x60;startTime&#x60; is not sent, the 30 days&#39; data before &#x60;endTime&#x60; will be returned.
 
-Weight: 150`),
+Weight: 150`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'start-time': {
@@ -635,6 +681,7 @@ Weight: 150`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -645,7 +692,8 @@ Weight: 150`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-wbeth-wrap-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -673,11 +721,14 @@ stakingCommands.push({
     command: 'redeem-eth',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Redeem WBETH or BETH and get ETH
+        decodeSelectedEntities(
+            `Redeem WBETH or BETH and get ETH
 
 * You need to open Enable Spot &amp; Margin Trading permission for the API Key which requests this endpoint.
 
-Weight: 150`),
+Weight: 150`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -701,6 +752,7 @@ Weight: 150`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -723,6 +775,7 @@ Weight: 150`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -733,7 +786,8 @@ Weight: 150`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'redeem-eth is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -770,11 +824,14 @@ stakingCommands.push({
     command: 'subscribe-eth-staking',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Subscribe ETH Staking
+        decodeSelectedEntities(
+            `Subscribe ETH Staking
 
 * You need to open Enable Spot &amp; Margin Trading permission for the API Key which requests this endpoint.
 
-Weight: 150`),
+Weight: 150`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -794,6 +851,7 @@ Weight: 150`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -816,6 +874,7 @@ Weight: 150`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -826,7 +885,8 @@ Weight: 150`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'subscribe-eth-staking is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -863,11 +923,14 @@ stakingCommands.push({
     command: 'wrap-beth',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Wrap BETH
+        decodeSelectedEntities(
+            `Wrap BETH
 
 * You need to open Enable Spot &amp; Margin Trading permission for the API Key which requests this endpoint.
 
-Weight: 150`),
+Weight: 150`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -887,6 +950,7 @@ Weight: 150`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -909,6 +973,7 @@ Weight: 150`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -919,7 +984,8 @@ Weight: 150`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'wrap-beth is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -956,9 +1022,12 @@ stakingCommands.push({
     command: 'get-on-chain-yields-locked-personal-left-quota',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get On-chain Yields Locked Personal Left Quota
+        decodeSelectedEntities(
+            `Get On-chain Yields Locked Personal Left Quota
 
-Weight: 50`),
+Weight: 50`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -980,6 +1049,7 @@ Weight: 50`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1002,6 +1072,7 @@ Weight: 50`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1012,7 +1083,8 @@ Weight: 50`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-on-chain-yields-locked-personal-left-quota is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1048,11 +1120,14 @@ stakingCommands.push({
     command: 'get-on-chain-yields-locked-product-list',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get available On-chain Yields Locked product list
+        decodeSelectedEntities(
+            `Get available On-chain Yields Locked product list
 
 * Get available On-chain Yields Locked product list
 
-Weight: 50`),
+Weight: 50`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             asset: {
@@ -1086,6 +1161,7 @@ Weight: 50`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1096,7 +1172,8 @@ Weight: 50`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-on-chain-yields-locked-product-list is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1124,9 +1201,12 @@ stakingCommands.push({
     command: 'get-on-chain-yields-locked-product-position',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get On-chain Yields Locked Product Position
+        decodeSelectedEntities(
+            `Get On-chain Yields Locked Product Position
 
-Weight: 50`),
+Weight: 50`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             asset: {
@@ -1170,6 +1250,7 @@ Weight: 50`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1180,7 +1261,8 @@ Weight: 50`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-on-chain-yields-locked-product-position is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1208,14 +1290,17 @@ stakingCommands.push({
     command: 'get-on-chain-yields-locked-redemption-record',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get On-chain Yields Locked Redemption Record
+        decodeSelectedEntities(
+            `Get On-chain Yields Locked Redemption Record
 
 * The time between &#x60;startTime&#x60; and &#x60;endTime&#x60; cannot be longer than 3 months.
 * If &#x60;startTime&#x60; and &#x60;endTime&#x60; are both not sent, then the last 30 days&#39; data will be returned.
 * If &#x60;startTime&#x60; is sent but &#x60;endTime&#x60; is not sent, the next 30 days&#39; data beginning from &#x60;startTime&#x60; will be returned.
 * If &#x60;endTime&#x60; is sent but &#x60;startTime&#x60; is not sent, the 30 days&#39; data before &#x60;endTime&#x60; will be returned.
 
-Weight: 50`),
+Weight: 50`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'position-id': {
@@ -1269,6 +1354,7 @@ Weight: 50`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1279,7 +1365,8 @@ Weight: 50`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-on-chain-yields-locked-redemption-record is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1307,14 +1394,17 @@ stakingCommands.push({
     command: 'get-on-chain-yields-locked-rewards-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get On-chain Yields Locked Rewards History
+        decodeSelectedEntities(
+            `Get On-chain Yields Locked Rewards History
 
 * The time between &#x60;startTime&#x60; and &#x60;endTime&#x60; cannot be longer than 3 months.
 * If &#x60;startTime&#x60; and &#x60;endTime&#x60; are both not sent, then the last 30 days&#39; data will be returned.
 * If &#x60;startTime&#x60; is sent but &#x60;endTime&#x60; is not sent, the next 30 days&#39; data beginning from &#x60;startTime&#x60; will be returned.
 * If &#x60;endTime&#x60; is sent but &#x60;startTime&#x60; is not sent, the 30 days&#39; data before &#x60;endTime&#x60; will be returned.
 
-Weight: 50`),
+Weight: 50`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'position-id': {
@@ -1363,6 +1453,7 @@ Weight: 50`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1373,7 +1464,8 @@ Weight: 50`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-on-chain-yields-locked-rewards-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1401,9 +1493,12 @@ stakingCommands.push({
     command: 'get-on-chain-yields-locked-subscription-preview',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get On-chain Yields Locked Subscription Preview
+        decodeSelectedEntities(
+            `Get On-chain Yields Locked Subscription Preview
 
-Weight: 50`),
+Weight: 50`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1435,6 +1530,7 @@ Weight: 50`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1461,6 +1557,7 @@ Weight: 50`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1471,7 +1568,8 @@ Weight: 50`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-on-chain-yields-locked-subscription-preview is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1516,14 +1614,17 @@ stakingCommands.push({
     command: 'get-on-chain-yields-locked-subscription-record',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get On-chain Yields Locked Subscription Record
+        decodeSelectedEntities(
+            `Get On-chain Yields Locked Subscription Record
 
 * The time between &#x60;startTime&#x60; and &#x60;endTime&#x60; cannot be longer than 3 months.
 * If &#x60;startTime&#x60; and &#x60;endTime&#x60; are both not sent, then the last 30 days&#39; data will be returned.
 * If &#x60;startTime&#x60; is sent but &#x60;endTime&#x60; is not sent, the next 30 days&#39; data beginning from &#x60;startTime&#x60; will be returned.
 * If &#x60;endTime&#x60; is sent but &#x60;startTime&#x60; is not sent, the 30 days&#39; data before &#x60;endTime&#x60; will be returned.
 
-Weight: 50`),
+Weight: 50`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'purchase-id': {
@@ -1577,6 +1678,7 @@ Weight: 50`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1587,7 +1689,8 @@ Weight: 50`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-on-chain-yields-locked-subscription-record is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1615,9 +1718,12 @@ stakingCommands.push({
     command: 'on-chain-yields-account',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`On-chain Yields Account query
+        decodeSelectedEntities(
+            `On-chain Yields Account query
 
-Weight: 50`),
+Weight: 50`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -1634,6 +1740,7 @@ Weight: 50`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1644,7 +1751,8 @@ Weight: 50`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'on-chain-yields-account is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1672,11 +1780,14 @@ stakingCommands.push({
     command: 'redeem-on-chain-yields-locked-product',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Redeem On-chain Yields Locked Product
+        decodeSelectedEntities(
+            `Redeem On-chain Yields Locked Product
 
 * You need to open &#x60;Enable Spot &amp; Margin Trading&#x60; permission for the API Key which requests this endpoint.
 
-Weight: 1/3s per account`),
+Weight: 1/3s per account`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1700,6 +1811,7 @@ Weight: 1/3s per account`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1722,6 +1834,7 @@ Weight: 1/3s per account`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1732,7 +1845,8 @@ Weight: 1/3s per account`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'redeem-on-chain-yields-locked-product is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1769,9 +1883,12 @@ stakingCommands.push({
     command: 'set-on-chain-yields-locked-auto-subscribe',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Set On-chain Yield locked auto subscribe
+        decodeSelectedEntities(
+            `Set On-chain Yield locked auto subscribe
 
-Weight: 50`),
+Weight: 50`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1795,6 +1912,7 @@ Weight: 50`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1821,6 +1939,7 @@ Weight: 50`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1831,7 +1950,8 @@ Weight: 50`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'set-on-chain-yields-locked-auto-subscribe is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1877,9 +1997,12 @@ stakingCommands.push({
     command: 'set-on-chain-yields-locked-product-redeem-option',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Set On-chain Yields redeem option for Locked product
+        decodeSelectedEntities(
+            `Set On-chain Yields redeem option for Locked product
 
-Weight: 50`),
+Weight: 50`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1903,6 +2026,7 @@ Weight: 50`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1929,6 +2053,7 @@ Weight: 50`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1939,7 +2064,8 @@ Weight: 50`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'set-on-chain-yields-locked-product-redeem-option is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1986,11 +2112,14 @@ stakingCommands.push({
     command: 'subscribe-on-chain-yields-locked-product',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Subscribe On-chain Yields Locked Product
+        decodeSelectedEntities(
+            `Subscribe On-chain Yields Locked Product
 
 * You need to open &#x60;Enable Spot &amp; Margin Trading&#x60; permission for the API Key which requests this endpoint.
 
-Weight: 200`),
+Weight: 200`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2034,6 +2163,7 @@ Weight: 200`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -2060,6 +2190,7 @@ Weight: 200`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2070,7 +2201,8 @@ Weight: 200`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'subscribe-on-chain-yields-locked-product is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2116,9 +2248,12 @@ stakingCommands.push({
     command: 'get-soft-staking-product-list',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get the available Soft Staking product list.
+        decodeSelectedEntities(
+            `Get the available Soft Staking product list.
 
-Weight: 50`),
+Weight: 50`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             asset: {
@@ -2152,6 +2287,7 @@ Weight: 50`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2162,7 +2298,8 @@ Weight: 50`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-soft-staking-product-list is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2190,12 +2327,15 @@ stakingCommands.push({
     command: 'get-soft-staking-rewards-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`* The time between &#x60;startTime&#x60; and &#x60;endTime&#x60; cannot be longer than 3 months.
+        decodeSelectedEntities(
+            `* The time between &#x60;startTime&#x60; and &#x60;endTime&#x60; cannot be longer than 3 months.
 * If &#x60;startTime&#x60; and &#x60;endTime&#x60; are both not sent, then the last 30 days&#39; data will be returned.
 * If &#x60;startTime&#x60; is sent but &#x60;endTime&#x60; is not sent, the next 30 days&#39; data beginning from &#x60;startTime&#x60; will be returned.
 * If &#x60;endTime&#x60; is sent but &#x60;startTime&#x60; is not sent, the 30 days&#39; data before &#x60;endTime&#x60; will be returned.
 
-Weight: 50`),
+Weight: 50`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             asset: {
@@ -2239,6 +2379,7 @@ Weight: 50`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2249,7 +2390,8 @@ Weight: 50`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-soft-staking-rewards-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2277,9 +2419,12 @@ stakingCommands.push({
     command: 'set-soft-staking',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Enable or disable Soft Staking.
+        decodeSelectedEntities(
+            `Enable or disable Soft Staking.
 
-Weight: 50`),
+Weight: 50`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2301,6 +2446,7 @@ Weight: 50`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -2323,6 +2469,7 @@ Weight: 50`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2333,7 +2480,8 @@ Weight: 50`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'set-soft-staking is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2369,11 +2517,14 @@ stakingCommands.push({
     command: 'claim-boost-rewards',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Claim Boost APR Airdrop Rewards
+        decodeSelectedEntities(
+            `Claim Boost APR Airdrop Rewards
 
 * You need to open Enable Spot &amp; Margin Trading permission for the API Key which requests this endpoint.
 
-Weight: 150`),
+Weight: 150`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -2389,6 +2540,7 @@ Weight: 150`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2399,7 +2551,8 @@ Weight: 150`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'claim-boost-rewards is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2427,14 +2580,17 @@ stakingCommands.push({
     command: 'get-bnsol-rate-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get BNSOL Rate History
+        decodeSelectedEntities(
+            `Get BNSOL Rate History
 
 * The time between &#x60;startTime&#x60; and &#x60;endTime&#x60; cannot be longer than 3 months.
 * If &#x60;startTime&#x60; and &#x60;endTime&#x60; are both not sent, then the last 30 days&#39; data will be returned.
 * If &#x60;startTime&#x60; is sent but &#x60;endTime&#x60; is not sent, the next 30 days&#39; data beginning from &#x60;startTime&#x60; will be returned.
 * If &#x60;endTime&#x60; is sent but &#x60;startTime&#x60; is not sent, the 30 days&#39; data before &#x60;endTime&#x60; will be returned.
 
-Weight: 150`),
+Weight: 150`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'start-time': {
@@ -2473,6 +2629,7 @@ Weight: 150`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2483,7 +2640,8 @@ Weight: 150`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-bnsol-rate-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2511,14 +2669,17 @@ stakingCommands.push({
     command: 'get-bnsol-rewards-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get BNSOL rewards history
+        decodeSelectedEntities(
+            `Get BNSOL rewards history
 
 * The time between &#x60;startTime&#x60; and &#x60;endTime&#x60; cannot be longer than 3 months.
 * If &#x60;startTime&#x60; and &#x60;endTime&#x60; are both not sent, then the last 30 days&#39; data will be returned.
 * If &#x60;startTime&#x60; is sent but &#x60;endTime&#x60; is not sent, the next 30 days&#39; data beginning from &#x60;startTime&#x60; will be returned.
 * If &#x60;endTime&#x60; is sent but &#x60;startTime&#x60; is not sent, the 30 days&#39; data before &#x60;endTime&#x60; will be returned.
 
-Weight: 150`),
+Weight: 150`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'start-time': {
@@ -2557,6 +2718,7 @@ Weight: 150`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2567,7 +2729,8 @@ Weight: 150`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-bnsol-rewards-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2595,14 +2758,17 @@ stakingCommands.push({
     command: 'get-boost-rewards-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Boost rewards history
+        decodeSelectedEntities(
+            `Get Boost rewards history
 
 * The time between &#x60;startTime&#x60; and &#x60;endTime&#x60; cannot be longer than 3 months.
 * If &#x60;startTime&#x60; and &#x60;endTime&#x60; are both not sent, then the last 30 days&#39; data will be returned.
 * If &#x60;startTime&#x60; is sent but &#x60;endTime&#x60; is not sent, the next 30 days&#39; data beginning from &#x60;startTime&#x60; will be returned.
 * If &#x60;endTime&#x60; is sent but &#x60;startTime&#x60; is not sent, the 30 days&#39; data before &#x60;endTime&#x60; will be returned.
 
-Weight: 150`),
+Weight: 150`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2648,6 +2814,7 @@ Weight: 150`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -2670,6 +2837,7 @@ Weight: 150`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2680,7 +2848,8 @@ Weight: 150`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-boost-rewards-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2716,14 +2885,17 @@ stakingCommands.push({
     command: 'get-sol-redemption-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get SOL redemption history
+        decodeSelectedEntities(
+            `Get SOL redemption history
 
 * The time between &#x60;startTime&#x60; and &#x60;endTime&#x60; cannot be longer than 3 months.
 * If &#x60;startTime&#x60; and &#x60;endTime&#x60; are both not sent, then the last 30 days&#39; data will be returned.
 * If &#x60;startTime&#x60; is sent but &#x60;endTime&#x60; is not sent, the next 30 days&#39; data beginning from &#x60;startTime&#x60; will be returned.
 * If &#x60;endTime&#x60; is sent but &#x60;startTime&#x60; is not sent, the 30 days&#39; data before &#x60;endTime&#x60; will be returned.
 
-Weight: 150`),
+Weight: 150`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'redeem-id': {
@@ -2767,6 +2939,7 @@ Weight: 150`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2777,7 +2950,8 @@ Weight: 150`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-sol-redemption-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2805,14 +2979,17 @@ stakingCommands.push({
     command: 'get-sol-staking-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get SOL staking history
+        decodeSelectedEntities(
+            `Get SOL staking history
 
 * The time between &#x60;startTime&#x60; and &#x60;endTime&#x60; cannot be longer than 3 months.
 * If &#x60;startTime&#x60; and &#x60;endTime&#x60; are both not sent, then the last 30 days&#39; data will be returned.
 * If &#x60;startTime&#x60; is sent but &#x60;endTime&#x60; is not sent, the next 30 days&#39; data beginning from &#x60;startTime&#x60; will be returned.
 * If &#x60;endTime&#x60; is sent but &#x60;startTime&#x60; is not sent, the 30 days&#39; data before &#x60;endTime&#x60; will be returned.
 
-Weight: 150`),
+Weight: 150`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'purchase-id': {
@@ -2856,6 +3033,7 @@ Weight: 150`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2866,7 +3044,8 @@ Weight: 150`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-sol-staking-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2894,9 +3073,12 @@ stakingCommands.push({
     command: 'get-sol-staking-quota-details',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get SOL staking quota
+        decodeSelectedEntities(
+            `Get SOL staking quota
 
-Weight: 150`),
+Weight: 150`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -2913,6 +3095,7 @@ Weight: 150`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2923,7 +3106,8 @@ Weight: 150`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-sol-staking-quota-details is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2951,14 +3135,17 @@ stakingCommands.push({
     command: 'get-unclaimed-rewards',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Unclaimed rewards
+        decodeSelectedEntities(
+            `Get Unclaimed rewards
 
 * The time between &#x60;startTime&#x60; and &#x60;endTime&#x60; cannot be longer than 3 months.
 * If &#x60;startTime&#x60; and &#x60;endTime&#x60; are both not sent, then the last 30 days&#39; data will be returned.
 * If &#x60;startTime&#x60; is sent but &#x60;endTime&#x60; is not sent, the next 30 days&#39; data beginning from &#x60;startTime&#x60; will be returned.
 * If &#x60;endTime&#x60; is sent but &#x60;startTime&#x60; is not sent, the 30 days&#39; data before &#x60;endTime&#x60; will be returned.
 
-Weight: 150`),
+Weight: 150`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -2975,6 +3162,7 @@ Weight: 150`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2985,7 +3173,8 @@ Weight: 150`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-unclaimed-rewards is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3013,11 +3202,14 @@ stakingCommands.push({
     command: 'redeem-sol',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Redeem BNSOL get SOL
+        decodeSelectedEntities(
+            `Redeem BNSOL get SOL
 
 * You need to open Enable Spot &amp; Margin Trading permission for the API Key which requests this endpoint.
 
-Weight: 150`),
+Weight: 150`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -3037,6 +3229,7 @@ Weight: 150`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -3059,6 +3252,7 @@ Weight: 150`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3069,7 +3263,8 @@ Weight: 150`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'redeem-sol is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3106,9 +3301,12 @@ stakingCommands.push({
     command: 'sol-staking-account',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`SOL Staking account
+        decodeSelectedEntities(
+            `SOL Staking account
 
-Weight: 150`),
+Weight: 150`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -3125,6 +3323,7 @@ Weight: 150`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3135,7 +3334,8 @@ Weight: 150`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'sol-staking-account is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3163,11 +3363,14 @@ stakingCommands.push({
     command: 'subscribe-sol-staking',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Subscribe SOL Staking
+        decodeSelectedEntities(
+            `Subscribe SOL Staking
 
 * You need to open Enable Spot &amp; Margin Trading permission for the API Key which requests this endpoint.
 
-Weight: 150`),
+Weight: 150`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -3187,6 +3390,7 @@ Weight: 150`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -3209,6 +3413,7 @@ Weight: 150`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3219,7 +3424,8 @@ Weight: 150`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'subscribe-sol-staking is signed. Please create a profile using `binance-cli profile create`.'
             );

@@ -4,8 +4,8 @@ import os, { platform, arch } from 'os';
 import { convert } from 'html-to-text';
 import { markdownToTxt } from 'markdown-to-txt';
 import type { ConfigurationRestAPI } from '@binance/common';
+import { hideBin, Parser } from 'yargs/helpers';
 
-let stdin: any = null;
 const homeDir = os.homedir();
 const BINANCE_LOGIN_DIR = path.join(homeDir, '.binance');
 
@@ -29,7 +29,8 @@ export function isHmacSecretKey(key: string): boolean {
 }
 
 type CliConfiguration = ConfigurationRestAPI & {
-    env: string | null;
+    env?: string;
+    wsStreamsBasePath?: string;
 };
 
 export const getCurrentProfile = (): string | null => {
@@ -88,6 +89,10 @@ export const getProfileConfig = (profileName: string, packageName: string = '') 
             packageName && creds[`${packageName}-base-path`]
                 ? creds[`${packageName}-base-path`]
                 : '',
+        wsStreamsBasePath:
+            packageName && creds[`${packageName}-ws-streams-base-path`]
+                ? creds[`${packageName}-ws-streams-base-path`]
+                : '',
         ...creds,
     };
 };
@@ -132,13 +137,25 @@ function readStdinSync(): string | null {
     }
 }
 
+let stdin: string | null = null;
+let stdinObj: any | null = null;
+let readStdinObjInitialized = false;
+
 export const readStdinObj = (): any => {
+    if (readStdinObjInitialized) {
+        return stdinObj ?? {};
+    }
+
+    readStdinObjInitialized = true;
+
     if (stdin === null) {
         stdin = readStdinSync();
     }
+
     if (stdin !== null && stdin.length > 0) {
         try {
-            return JSON.parse(stdin);
+            stdinObj = JSON.parse(stdin);
+            return stdinObj;
         } catch {
             const preview = stdin.length > 80 ? stdin.slice(0, 80) + '...' : stdin;
             console.error(
@@ -149,7 +166,9 @@ export const readStdinObj = (): any => {
             process.exit(1);
         }
     }
-    return {};
+
+    stdinObj = {};
+    return stdinObj;
 };
 
 export const getConfigurationRestAPI = (
@@ -173,14 +192,22 @@ export const getConfigurationRestAPI = (
     }
 };
 
-export const decodeSelectedEntities = (str: string) => {
+export const decodeSelectedEntities = (str: string, isFull = false) => {
     const options = {
         selectors: [
             { selector: 'table', format: 'dataTable' }, // Critical for visual table alignment
         ],
     };
+
+    let description;
+    if (isFull) {
+        description = str;
+    } else {
+        description = str.split('\n\n')[0] ?? '';
+    }
+
     return convert(
-        markdownToTxt(str)
+        markdownToTxt(description)
             .replace(/&#39;/g, "'")
             .replace(/&#x3D;/g, '=')
             .replace(/&#x60;/g, '`')
@@ -233,7 +260,7 @@ export const getUserAgent = (product: string = 'unknown'): string => {
         clientType = 'skill';
     }
 
-    return `binance-${clientType}/${product}/1.1.1 (Node.js/${process.version}; ${platform()}; ${arch()})`;
+    return `binance-${clientType}/${product}/1.2.0 (Node.js/${process.version}; ${platform()}; ${arch()})`;
 };
 
 export const validateProfileName = (name: string): boolean => {
@@ -250,3 +277,12 @@ export const validateProfileNameMessage = (name: string): string => {
         'Must start with a letter or number. Max 63 characters.'
     );
 };
+
+let parsedArgs: ReturnType<typeof Parser> | undefined;
+
+export function getParsedArgs() {
+    if (parsedArgs === undefined) {
+        parsedArgs = Parser(hideBin(process.argv));
+    }
+    return parsedArgs;
+}

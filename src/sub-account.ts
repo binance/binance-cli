@@ -6,38 +6,46 @@ import {
     getUserAgent,
     isEmpty,
     readStdinObj,
+    getParsedArgs,
 } from './utils';
-import { Parser, hideBin } from 'yargs/helpers';
 
-const parsedArgs = Parser(hideBin(process.argv));
+const parsedArgs = getParsedArgs();
+const isFullDescription = parsedArgs?.['full-description'] ?? false;
 
-process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('sub-account');
+const getClient = () => {
+    if (!process.env?.LOG_LEVEL) {
+        process.env.LOG_LEVEL = 'ERROR';
+    }
+    process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('sub-account');
 
-const stdinObj: any = readStdinObj();
+    let basePath = SUB_ACCOUNT_REST_API_PROD_URL;
 
-let basePath = SUB_ACCOUNT_REST_API_PROD_URL;
+    const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'sub-account');
 
-const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'sub-account');
+    if (process.env.BINANCE_SUB_ACCOUNT_BASE_PATH) {
+        basePath = process.env.BINANCE_SUB_ACCOUNT_BASE_PATH;
+    } else if (configurationRestAPI && configurationRestAPI['basePath']) {
+        basePath = configurationRestAPI['basePath'];
+    }
 
-if (process.env.BINANCE_SUB_ACCOUNT_BASE_PATH) {
-    basePath = process.env.BINANCE_SUB_ACCOUNT_BASE_PATH;
-} else if (configurationRestAPI && configurationRestAPI['basePath']) {
-    basePath = configurationRestAPI['basePath'];
-}
+    let client;
+    let hasConfig = false;
+    if (configurationRestAPI !== null) {
+        hasConfig = true;
+        client = new SubAccount({
+            configurationRestAPI: { ...configurationRestAPI, basePath },
+        });
+    } else {
+        client = new SubAccount({
+            configurationRestAPI: {
+                apiKey: '',
+                basePath,
+            },
+        });
+    }
 
-let client;
-if (configurationRestAPI !== null) {
-    client = new SubAccount({
-        configurationRestAPI: { ...configurationRestAPI, basePath },
-    });
-} else {
-    client = new SubAccount({
-        configurationRestAPI: {
-            apiKey: '',
-            basePath,
-        },
-    });
-}
+    return { client, hasConfig };
+};
 
 const subAccountCommands: any[] = [];
 
@@ -45,12 +53,15 @@ subAccountCommands.push({
     command: 'create-a-virtual-sub-account',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Create a Virtual Sub-account
+        decodeSelectedEntities(
+            `Create a Virtual Sub-account
 
 * This request will generate a virtual sub account under your master account.
 * You need to enable &quot;trade&quot; option for the API Key which requests this endpoint.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -70,6 +81,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -92,6 +104,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -102,7 +115,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'create-a-virtual-sub-account is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -139,9 +153,12 @@ subAccountCommands.push({
     command: 'enable-futures-for-sub-account',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Enable Futures for Sub-account for Master Account
+        decodeSelectedEntities(
+            `Enable Futures for Sub-account for Master Account
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -161,6 +178,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -183,6 +201,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -193,7 +212,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'enable-futures-for-sub-account is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -230,9 +250,12 @@ subAccountCommands.push({
     command: 'enable-options-for-sub-account',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Enable Options for Sub-account (For Master Account).
+        decodeSelectedEntities(
+            `Enable Options for Sub-account (For Master Account).
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -252,6 +275,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -274,6 +298,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -284,7 +309,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'enable-options-for-sub-account is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -321,9 +347,12 @@ subAccountCommands.push({
     command: 'get-futures-position-risk-of-sub-account',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Futures Position-Risk of Sub-account
+        decodeSelectedEntities(
+            `Get Futures Position-Risk of Sub-account
 
-Weight: 10`),
+Weight: 10`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -345,6 +374,7 @@ Weight: 10`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -367,6 +397,7 @@ Weight: 10`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -377,7 +408,8 @@ Weight: 10`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-futures-position-risk-of-sub-account is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -413,9 +445,12 @@ subAccountCommands.push({
     command: 'get-futures-position-risk-of-sub-account-v2',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Futures Position-Risk of Sub-account V2
+        decodeSelectedEntities(
+            `Get Futures Position-Risk of Sub-account V2
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -444,6 +479,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -470,6 +506,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -480,7 +517,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-futures-position-risk-of-sub-account-v2 is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -524,11 +562,14 @@ subAccountCommands.push({
     command: 'get-sub-accounts-status-on-margin-or-futures',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Sub-account&#39;s Status on Margin Or Futures
+        decodeSelectedEntities(
+            `Get Sub-account&#39;s Status on Margin Or Futures
 
 * If no email sent, all sub-accounts&#39; information will be returned.
 
-Weight: 10`),
+Weight: 10`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             email: {
@@ -550,6 +591,7 @@ Weight: 10`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -560,7 +602,8 @@ Weight: 10`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-sub-accounts-status-on-margin-or-futures is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -588,9 +631,12 @@ subAccountCommands.push({
     command: 'query-sub-account-list',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query Sub-account List
+        decodeSelectedEntities(
+            `Query Sub-account List
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             email: {
@@ -627,6 +673,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -637,7 +684,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-sub-account-list is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -665,9 +713,12 @@ subAccountCommands.push({
     command: 'query-sub-account-transaction-statistics',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query Sub-account Transaction statistics (For Master Account).
+        decodeSelectedEntities(
+            `Query Sub-account Transaction statistics (For Master Account).
 
-Weight: 60`),
+Weight: 60`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             email: {
@@ -689,6 +740,7 @@ Weight: 60`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -699,7 +751,8 @@ Weight: 60`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-sub-account-transaction-statistics is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -727,11 +780,14 @@ subAccountCommands.push({
     command: 'add-ip-restriction-for-sub-account-api-key',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Add IP Restriction for Sub-Account API key
+        decodeSelectedEntities(
+            `Add IP Restriction for Sub-Account API key
 
 * You need to enable Enable Spot &amp; Margin Trading option for the api key which requests this endpoint
 
-Weight: 3000`),
+Weight: 3000`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -763,6 +819,7 @@ Weight: 3000`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -793,6 +850,7 @@ Weight: 3000`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -803,7 +861,8 @@ Weight: 3000`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'add-ip-restriction-for-sub-account-api-key is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -858,11 +917,14 @@ subAccountCommands.push({
     command: 'delete-ip-list-for-a-sub-account-api-key',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Delete IP List For a Sub-account API Key
+        decodeSelectedEntities(
+            `Delete IP List For a Sub-account API Key
 
 * You need to enable Enable Spot &amp; Margin Trading option for the api key which requests this endpoint
 
-Weight: 3000`),
+Weight: 3000`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -896,6 +958,7 @@ Weight: 3000`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -926,6 +989,7 @@ Weight: 3000`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -936,7 +1000,8 @@ Weight: 3000`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'delete-ip-list-for-a-sub-account-api-key is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -988,9 +1053,12 @@ subAccountCommands.push({
     command: 'get-ip-restriction-for-a-sub-account-api-key',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get IP Restriction for a Sub-account API Key
+        decodeSelectedEntities(
+            `Get IP Restriction for a Sub-account API Key
 
-Weight: 3000`),
+Weight: 3000`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1017,6 +1085,7 @@ Weight: 3000`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1043,6 +1112,7 @@ Weight: 3000`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1053,7 +1123,8 @@ Weight: 3000`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-ip-restriction-for-a-sub-account-api-key is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1097,11 +1168,14 @@ subAccountCommands.push({
     command: 'futures-transfer-for-sub-account',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Futures Transfer for Sub-account
+        decodeSelectedEntities(
+            `Futures Transfer for Sub-account
 
 * You need to open Enable Spot &amp; Margin Trading permission for the API Key which requests this endpoint.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1133,6 +1207,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1167,6 +1242,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1177,7 +1253,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'futures-transfer-for-sub-account is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1241,9 +1318,12 @@ subAccountCommands.push({
     command: 'get-detail-on-sub-accounts-futures-account',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Detail on Sub-account&#39;s Futures Account
+        decodeSelectedEntities(
+            `Get Detail on Sub-account&#39;s Futures Account
 
-Weight: 10`),
+Weight: 10`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1265,6 +1345,7 @@ Weight: 10`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1287,6 +1368,7 @@ Weight: 10`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1297,7 +1379,8 @@ Weight: 10`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-detail-on-sub-accounts-futures-account is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1333,9 +1416,12 @@ subAccountCommands.push({
     command: 'get-detail-on-sub-accounts-futures-account-v2',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Detail on Sub-account&#39;s Futures Account
+        decodeSelectedEntities(
+            `Get Detail on Sub-account&#39;s Futures Account
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1364,6 +1450,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1390,6 +1477,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1400,7 +1488,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-detail-on-sub-accounts-futures-account-v2 is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1444,9 +1533,12 @@ subAccountCommands.push({
     command: 'get-detail-on-sub-accounts-margin-account',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Detail on Sub-account&#39;s Margin Account
+        decodeSelectedEntities(
+            `Get Detail on Sub-account&#39;s Margin Account
 
-Weight: 10`),
+Weight: 10`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1468,6 +1560,7 @@ Weight: 10`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1490,6 +1583,7 @@ Weight: 10`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1500,7 +1594,8 @@ Weight: 10`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-detail-on-sub-accounts-margin-account is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1536,13 +1631,16 @@ subAccountCommands.push({
     command: 'get-move-position-history-for-sub-account',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query move position history
+        decodeSelectedEntities(
+            `Query move position history
 
 * If &#x60;startTime&#x60; and &#x60;endTime&#x60; not sent, return records of the last 90 days by default with 1000 maximum limits
 * If &#x60;startTime&#x60; is sent and &#x60;endTime&#x60; is not sent, return records of [max(startTime, now-90d), now].
 * If &#x60;startTime&#x60; is not sent and &#x60;endTime&#x60; is sent, return records of [max(now,endTime-90d), endTime].
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1556,7 +1654,7 @@ Weight: 1`),
                     type: 'string',
                     group: 'Command Options:',
                 },
-                row: {
+                rows: {
                     describe: decodeSelectedEntities(''),
                     type: 'string',
                     group: 'Command Options:',
@@ -1584,6 +1682,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1601,8 +1700,8 @@ Weight: 1`),
                     requiredParams.push('page');
                 }
 
-                if (!options?.['row'] && !options?.interactive) {
-                    requiredParams.push('row');
+                if (!options?.['rows'] && !options?.interactive) {
+                    requiredParams.push('rows');
                 }
 
                 if (requiredParams.length > 0) {
@@ -1614,6 +1713,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1624,7 +1724,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-move-position-history-for-sub-account is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1648,12 +1749,12 @@ Weight: 1`),
                 validate: (input: string) => (input ? true : 'page cannot be empty'),
             });
         }
-        if (options.interactive && !options.row) {
+        if (options.interactive && !options.rows) {
             questions.push({
                 type: 'input',
-                name: 'row',
-                message: 'Input row:',
-                validate: (input: string) => (input ? true : 'row cannot be empty'),
+                name: 'rows',
+                message: 'Input rows:',
+                validate: (input: string) => (input ? true : 'rows cannot be empty'),
             });
         }
         if (questions.length > 0) {
@@ -1676,11 +1777,14 @@ subAccountCommands.push({
     command: 'get-sub-account-deposit-address',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Fetch sub-account deposit address
+        decodeSelectedEntities(
+            `Fetch sub-account deposit address
 
 * &#x60;amount&#x60; needs to be sent if using LIGHTNING network
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1719,6 +1823,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1745,6 +1850,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1755,7 +1861,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-sub-account-deposit-address is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1799,9 +1906,12 @@ subAccountCommands.push({
     command: 'get-sub-account-deposit-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Fetch sub-account deposit history
+        decodeSelectedEntities(
+            `Fetch sub-account deposit history
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1860,6 +1970,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1882,6 +1993,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1892,7 +2004,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-sub-account-deposit-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1928,9 +2041,12 @@ subAccountCommands.push({
     command: 'get-summary-of-sub-accounts-futures-account',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Summary of Sub-account&#39;s Futures Account
+        decodeSelectedEntities(
+            `Get Summary of Sub-account&#39;s Futures Account
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1957,6 +2073,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1983,6 +2100,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1993,7 +2111,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-summary-of-sub-accounts-futures-account is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2037,9 +2156,12 @@ subAccountCommands.push({
     command: 'get-summary-of-sub-accounts-futures-account-v2',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Summary of Sub-account&#39;s Futures Account
+        decodeSelectedEntities(
+            `Get Summary of Sub-account&#39;s Futures Account
 
-Weight: 10`),
+Weight: 10`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2073,6 +2195,7 @@ Weight: 10`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -2095,6 +2218,7 @@ Weight: 10`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2105,7 +2229,8 @@ Weight: 10`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-summary-of-sub-accounts-futures-account-v2 is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2141,9 +2266,12 @@ subAccountCommands.push({
     command: 'get-summary-of-sub-accounts-margin-account',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Summary of Sub-account&#39;s Margin Account
+        decodeSelectedEntities(
+            `Get Summary of Sub-account&#39;s Margin Account
 
-Weight: 10`),
+Weight: 10`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -2160,6 +2288,7 @@ Weight: 10`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2170,7 +2299,8 @@ Weight: 10`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-summary-of-sub-accounts-margin-account is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2198,11 +2328,14 @@ subAccountCommands.push({
     command: 'margin-transfer-for-sub-account',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Margin Transfer for Sub-account
+        decodeSelectedEntities(
+            `Margin Transfer for Sub-account
 
 * You need to open Enable Spot &amp; Margin Trading permission for the API Key which requests this endpoint.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2234,6 +2367,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -2268,6 +2402,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2278,7 +2413,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'margin-transfer-for-sub-account is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2342,7 +2478,8 @@ subAccountCommands.push({
     command: 'move-position-for-sub-account',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Move position between sub-master, master-sub, or sub-sub accounts when necessary
+        decodeSelectedEntities(
+            `Move position between sub-master, master-sub, or sub-sub accounts when necessary
 
 * You need to Enable Trading permission for the API Key which requests this endpoint.
 * This function only support VIP level 7-9.
@@ -2356,7 +2493,9 @@ subAccountCommands.push({
 * Not support for MSA.
 * Not support for the symbol under Reduce-Only.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2388,6 +2527,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -2422,6 +2562,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2432,7 +2573,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'move-position-for-sub-account is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2496,9 +2638,12 @@ subAccountCommands.push({
     command: 'query-sub-account-assets',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Fetch sub-account assets
+        decodeSelectedEntities(
+            `Fetch sub-account assets
 
-Weight: 60`),
+Weight: 60`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2520,6 +2665,7 @@ Weight: 60`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -2542,6 +2688,7 @@ Weight: 60`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2552,7 +2699,8 @@ Weight: 60`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-sub-account-assets is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2588,9 +2736,12 @@ subAccountCommands.push({
     command: 'query-sub-account-assets-asset-management',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Fetch sub-account assets
+        decodeSelectedEntities(
+            `Fetch sub-account assets
 
-Weight: 60`),
+Weight: 60`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2612,6 +2763,7 @@ Weight: 60`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -2634,6 +2786,7 @@ Weight: 60`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2644,7 +2797,8 @@ Weight: 60`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-sub-account-assets-asset-management is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2680,9 +2834,12 @@ subAccountCommands.push({
     command: 'query-sub-account-futures-asset-transfer-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query Sub-account Futures Asset Transfer History
+        decodeSelectedEntities(
+            `Query Sub-account Futures Asset Transfer History
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2731,6 +2888,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -2757,6 +2915,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2767,7 +2926,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-sub-account-futures-asset-transfer-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2812,12 +2972,15 @@ subAccountCommands.push({
     command: 'query-sub-account-spot-asset-transfer-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query Sub-account Spot Asset Transfer History
+        decodeSelectedEntities(
+            `Query Sub-account Spot Asset Transfer History
 
 * fromEmail and toEmail cannot be sent at the same time.
 * Return fromEmail equal master account email by default.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'from-email': {
@@ -2864,6 +3027,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2874,7 +3038,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-sub-account-spot-asset-transfer-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2902,9 +3067,12 @@ subAccountCommands.push({
     command: 'query-sub-account-spot-assets-summary',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get BTC valued asset summary of subaccounts.
+        decodeSelectedEntities(
+            `Get BTC valued asset summary of subaccounts.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             email: {
@@ -2936,6 +3104,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2946,7 +3115,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-sub-account-spot-assets-summary is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2974,14 +3144,17 @@ subAccountCommands.push({
     command: 'query-universal-transfer-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query Universal Transfer History
+        decodeSelectedEntities(
+            `Query Universal Transfer History
 
 * fromEmail and toEmail cannot be sent at the same time.
 * Return fromEmail equal master account email by default.
 * The query time period must be less than 7 days.
 * If startTime and endTime not sent, return records of the last 7 days by default.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'from-email': {
@@ -3033,6 +3206,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3043,7 +3217,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-universal-transfer-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3071,13 +3246,16 @@ subAccountCommands.push({
     command: 'sub-account-futures-asset-transfer',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Sub-account Futures Asset Transfer
+        decodeSelectedEntities(
+            `Sub-account Futures Asset Transfer
 
 
 * Master account can transfer max 2000 times a minute
 * There must be sufficient margin balance in futures wallet to execute transferring.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -3113,6 +3291,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -3151,6 +3330,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3161,7 +3341,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'sub-account-futures-asset-transfer is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3234,12 +3415,15 @@ subAccountCommands.push({
     command: 'sub-account-transfer-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Sub-account Transfer History
+        decodeSelectedEntities(
+            `Sub-account Transfer History
 
 * If type is not sent, the records of type 2: transfer out will be returned by default.
 * If startTime and endTime are not sent, the recent 30-day data will be returned.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             asset: {
@@ -3290,6 +3474,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3300,7 +3485,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'sub-account-transfer-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3328,11 +3514,14 @@ subAccountCommands.push({
     command: 'transfer-to-master',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Transfer to Master
+        decodeSelectedEntities(
+            `Transfer to Master
 
 * You need to open Enable Spot &amp; Margin Trading permission for the API Key which requests this endpoint.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -3356,6 +3545,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -3382,6 +3572,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3392,7 +3583,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'transfer-to-master is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3438,11 +3630,14 @@ subAccountCommands.push({
     command: 'transfer-to-sub-account-of-same-master',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Transfer to Sub-account of Same Master
+        decodeSelectedEntities(
+            `Transfer to Sub-account of Same Master
 
 * You need to open Enable Spot &amp; Margin Trading permission for the API Key which requests this endpoint.
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -3470,6 +3665,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -3500,6 +3696,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3510,7 +3707,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'transfer-to-sub-account-of-same-master is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3565,7 +3763,8 @@ subAccountCommands.push({
     command: 'universal-transfer',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Universal Transfer
+        decodeSelectedEntities(
+            `Universal Transfer
 
 * You need to enable &quot;internal transfer&quot; option for the api key which requests this endpoint.
 * Transfer from master account by default if fromEmail is not sent.
@@ -3579,7 +3778,9 @@ subAccountCommands.push({
 * Sub-account &#x60;MARGIN(Cross)&#x60; transfer to Sub-account &#x60;MARGIN(Cross)&#x60;
 * &#x60;ALPHA&#x60; to &#x60;ALPHA&#x60;  (regardless of master or sub)
 
-Weight: 360`),
+Weight: 360`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -3627,6 +3828,7 @@ Weight: 360`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -3661,6 +3863,7 @@ Weight: 360`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3671,7 +3874,8 @@ Weight: 360`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'universal-transfer is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3735,11 +3939,14 @@ subAccountCommands.push({
     command: 'deposit-assets-into-the-managed-sub-account',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Deposit Assets Into The Managed Sub-account
+        decodeSelectedEntities(
+            `Deposit Assets Into The Managed Sub-account
 
 * You need to enable &#x60;Enable Spot &amp; Margin Trading&#x60; option for the api key which requests this endpoint
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -3767,6 +3974,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -3797,6 +4005,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3807,7 +4016,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'deposit-assets-into-the-managed-sub-account is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3862,12 +4072,15 @@ subAccountCommands.push({
     command: 'get-managed-sub-account-deposit-address',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get investor&#39;s managed sub-account deposit address.
+        decodeSelectedEntities(
+            `Get investor&#39;s managed sub-account deposit address.
 
 * If &#x60;network&#x60; is not send, return with default &#x60;network&#x60; of the &#x60;coin&#x60;.
 * * &#x60;amount&#x60; needs to be sent if using LIGHTNING network
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -3906,6 +4119,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -3932,6 +4146,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3942,7 +4157,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-managed-sub-account-deposit-address is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3986,9 +4202,12 @@ subAccountCommands.push({
     command: 'query-managed-sub-account-asset-details',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query Managed Sub-account Asset Details
+        decodeSelectedEntities(
+            `Query Managed Sub-account Asset Details
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -4010,6 +4229,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -4032,6 +4252,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -4042,7 +4263,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-managed-sub-account-asset-details is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -4078,9 +4300,12 @@ subAccountCommands.push({
     command: 'query-managed-sub-account-futures-asset-details',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Investor can use this api to query managed sub account futures asset details
+        decodeSelectedEntities(
+            `Investor can use this api to query managed sub account futures asset details
 
-Weight: 60`),
+Weight: 60`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -4104,6 +4329,7 @@ Weight: 60`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -4126,6 +4352,7 @@ Weight: 60`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -4136,7 +4363,8 @@ Weight: 60`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-managed-sub-account-futures-asset-details is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -4173,9 +4401,12 @@ subAccountCommands.push({
     command: 'query-managed-sub-account-list',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get investor&#39;s managed sub-account list.
+        decodeSelectedEntities(
+            `Get investor&#39;s managed sub-account list.
 
-Weight: 60`),
+Weight: 60`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             email: {
@@ -4207,6 +4438,7 @@ Weight: 60`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -4217,7 +4449,8 @@ Weight: 60`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-managed-sub-account-list is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -4245,9 +4478,12 @@ subAccountCommands.push({
     command: 'query-managed-sub-account-margin-asset-details',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Investor can use this api to query managed sub account margin asset details
+        decodeSelectedEntities(
+            `Investor can use this api to query managed sub account margin asset details
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -4271,6 +4507,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -4293,6 +4530,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -4303,7 +4541,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-managed-sub-account-margin-asset-details is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -4339,13 +4578,16 @@ subAccountCommands.push({
     command: 'query-managed-sub-account-snapshot',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query Managed Sub-account Snapshot
+        decodeSelectedEntities(
+            `Query Managed Sub-account Snapshot
 
 * The query time period must be less then 30 days
 * Support query within the last one month only
 * If startTimeand endTime not sent, return records of the last 7 days by default
 
-Weight: 2400`),
+Weight: 2400`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -4389,6 +4631,7 @@ Weight: 2400`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -4415,6 +4658,7 @@ Weight: 2400`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -4425,7 +4669,8 @@ Weight: 2400`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-managed-sub-account-snapshot is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -4469,10 +4714,13 @@ subAccountCommands.push({
     command: 'query-managed-sub-account-transfer-log-master-account-investor',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Investor can use this api to query managed sub account transfer log. This endpoint is available for investor of Managed Sub-Account. A Managed Sub-Account is an account type for investors who value flexibility in asset allocation and account application, while delegating trades to a professional trading team.
+        decodeSelectedEntities(
+            `Investor can use this api to query managed sub account transfer log. This endpoint is available for investor of Managed Sub-Account. A Managed Sub-Account is an account type for investors who value flexibility in asset allocation and account application, while delegating trades to a professional trading team.
 Please refer to [link](https://www.binance.com/en/support/faq/how-to-get-started-with-managed-sub-account-functions-and-frequently-asked-questions-0594748722704383a7c369046e489459)
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -4523,6 +4771,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -4561,6 +4810,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -4571,7 +4821,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-managed-sub-account-transfer-log-master-account-investor is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -4642,10 +4893,13 @@ subAccountCommands.push({
     command: 'query-managed-sub-account-transfer-log-master-account-trading',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Trading team can use this api to query managed sub account transfer log. This endpoint is available for trading team of Managed Sub-Account. A Managed Sub-Account is an account type for investors who value flexibility in asset allocation and account application, while delegating trades to a professional trading team.
+        decodeSelectedEntities(
+            `Trading team can use this api to query managed sub account transfer log. This endpoint is available for trading team of Managed Sub-Account. A Managed Sub-Account is an account type for investors who value flexibility in asset allocation and account application, while delegating trades to a professional trading team.
 Please refer to [link](https://www.binance.com/en/support/faq/how-to-get-started-with-managed-sub-account-functions-and-frequently-asked-questions-0594748722704383a7c369046e489459)
 
-Weight: 60`),
+Weight: 60`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -4696,6 +4950,7 @@ Weight: 60`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -4734,6 +4989,7 @@ Weight: 60`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -4744,7 +5000,8 @@ Weight: 60`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-managed-sub-account-transfer-log-master-account-trading is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -4813,9 +5070,12 @@ subAccountCommands.push({
     command: 'query-managed-sub-account-transfer-log-sub-account-trading',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query Managed Sub Account Transfer Log (For Trading Team Sub Account)
+        decodeSelectedEntities(
+            `Query Managed Sub Account Transfer Log (For Trading Team Sub Account)
 
-Weight: 60`),
+Weight: 60`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -4866,6 +5126,7 @@ Weight: 60`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -4900,6 +5161,7 @@ Weight: 60`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -4910,7 +5172,8 @@ Weight: 60`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-managed-sub-account-transfer-log-sub-account-trading is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -4971,11 +5234,14 @@ subAccountCommands.push({
     command: 'withdrawl-assets-from-the-managed-sub-account',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Withdrawl Assets From The Managed Sub-account
+        decodeSelectedEntities(
+            `Withdrawl Assets From The Managed Sub-account
 
 * You need to enable &#x60;Enable Spot &amp; Margin Trading&#x60; option for the api key which requests this endpoint
 
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -5007,6 +5273,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -5037,6 +5304,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -5047,7 +5315,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'withdrawl-assets-from-the-managed-sub-account is signed. Please create a profile using `binance-cli profile create`.'
             );

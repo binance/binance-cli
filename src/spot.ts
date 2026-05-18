@@ -1,8 +1,8 @@
 import {
     Spot,
     SPOT_REST_API_PROD_URL,
-    SPOT_REST_API_DEMO_URL,
     SPOT_REST_API_TESTNET_URL,
+    SPOT_REST_API_DEMO_URL,
 } from '@binance/spot';
 import inquirer from 'inquirer';
 import {
@@ -11,47 +11,55 @@ import {
     getUserAgent,
     isEmpty,
     readStdinObj,
+    getParsedArgs,
 } from './utils';
-import { Parser, hideBin } from 'yargs/helpers';
 
-const parsedArgs = Parser(hideBin(process.argv));
+const parsedArgs = getParsedArgs();
+const isFullDescription = parsedArgs?.['full-description'] ?? false;
 
-process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('spot');
-
-const stdinObj: any = readStdinObj();
-
-let basePath = SPOT_REST_API_PROD_URL;
-
-const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'spot');
-
-if (process.env.BINANCE_SPOT_BASE_PATH) {
-    basePath = process.env.BINANCE_SPOT_BASE_PATH;
-} else if (configurationRestAPI && configurationRestAPI['basePath']) {
-    basePath = configurationRestAPI['basePath'];
-} else if (configurationRestAPI && configurationRestAPI['env']) {
-    switch (configurationRestAPI['env']) {
-        case 'testnet':
-            basePath = SPOT_REST_API_TESTNET_URL;
-            break;
-        case 'demo':
-            basePath = SPOT_REST_API_DEMO_URL;
-            break;
+const getClient = () => {
+    if (!process.env?.LOG_LEVEL) {
+        process.env.LOG_LEVEL = 'ERROR';
     }
-}
+    process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('spot');
 
-let client;
-if (configurationRestAPI !== null) {
-    client = new Spot({
-        configurationRestAPI: { ...configurationRestAPI, basePath },
-    });
-} else {
-    client = new Spot({
-        configurationRestAPI: {
-            apiKey: '',
-            basePath,
-        },
-    });
-}
+    let basePath = SPOT_REST_API_PROD_URL;
+
+    const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'spot');
+
+    if (process.env.BINANCE_SPOT_BASE_PATH) {
+        basePath = process.env.BINANCE_SPOT_BASE_PATH;
+    } else if (configurationRestAPI && configurationRestAPI['basePath']) {
+        basePath = configurationRestAPI['basePath'];
+    } else if (configurationRestAPI && configurationRestAPI['env']) {
+        switch (configurationRestAPI['env']) {
+            case 'testnet':
+                basePath = SPOT_REST_API_TESTNET_URL;
+                break;
+            case 'demo':
+                basePath = SPOT_REST_API_DEMO_URL;
+                break;
+        }
+    }
+
+    let client;
+    let hasConfig = false;
+    if (configurationRestAPI !== null) {
+        hasConfig = true;
+        client = new Spot({
+            configurationRestAPI: { ...configurationRestAPI, basePath },
+        });
+    } else {
+        client = new Spot({
+            configurationRestAPI: {
+                apiKey: '',
+                basePath,
+            },
+        });
+    }
+
+    return { client, hasConfig };
+};
 
 const spotCommands: any[] = [];
 
@@ -59,8 +67,11 @@ spotCommands.push({
     command: 'account-commission',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get current account commission rates.
-Weight: 20`),
+        decodeSelectedEntities(
+            `Get current account commission rates.
+Weight: 20`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -77,6 +88,7 @@ Weight: 20`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -99,6 +111,7 @@ Weight: 20`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -109,7 +122,8 @@ Weight: 20`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'account-commission is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -145,10 +159,13 @@ spotCommands.push({
     command: 'all-order-list',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Retrieves all order lists based on provided optional parameters.
+        decodeSelectedEntities(
+            `Retrieves all order lists based on provided optional parameters.
 
 Note that the time between &#x60;startTime&#x60; and &#x60;endTime&#x60; can&#39;t be longer than 24 hours.
-Weight: 20`),
+Weight: 20`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'from-id': {
@@ -191,6 +208,7 @@ Weight: 20`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -201,7 +219,8 @@ Weight: 20`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'all-order-list is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -229,8 +248,11 @@ spotCommands.push({
     command: 'all-orders',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get all account orders; active, canceled, or filled.
-Weight: 20`),
+        decodeSelectedEntities(
+            `Get all account orders; active, canceled, or filled.
+Weight: 20`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -278,6 +300,7 @@ Weight: 20`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -300,6 +323,7 @@ Weight: 20`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -310,7 +334,8 @@ Weight: 20`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'all-orders is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -346,8 +371,11 @@ spotCommands.push({
     command: 'get-account',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get current account information.
-Weight: 20`),
+        decodeSelectedEntities(
+            `Get current account information.
+Weight: 20`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'omit-zero-balances': {
@@ -373,6 +401,7 @@ Weight: 20`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -383,7 +412,8 @@ Weight: 20`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-account is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -411,8 +441,11 @@ spotCommands.push({
     command: 'get-open-orders',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get all open orders on a symbol. **Careful** when accessing this with no symbol.
-Weight: 6 for a single symbol; **80** when the symbol parameter is omitted`),
+        decodeSelectedEntities(
+            `Get all open orders on a symbol. **Careful** when accessing this with no symbol.
+Weight: 6 for a single symbol; **80** when the symbol parameter is omitted`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             symbol: {
@@ -436,6 +469,7 @@ Weight: 6 for a single symbol; **80** when the symbol parameter is omitted`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -446,7 +480,8 @@ Weight: 6 for a single symbol; **80** when the symbol parameter is omitted`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-open-orders is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -474,8 +509,11 @@ spotCommands.push({
     command: 'get-order',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Check an order&#39;s status.
-Weight: 4`),
+        decodeSelectedEntities(
+            `Check an order&#39;s status.
+Weight: 4`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -509,6 +547,7 @@ Weight: 4`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -531,6 +570,7 @@ Weight: 4`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -541,7 +581,8 @@ Weight: 4`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-order is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -577,8 +618,11 @@ spotCommands.push({
     command: 'get-order-list',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Retrieves a specific order list based on provided optional parameters.
-Weight: 4`),
+        decodeSelectedEntities(
+            `Retrieves a specific order list based on provided optional parameters.
+Weight: 4`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'order-list-id': {
@@ -609,6 +653,7 @@ Weight: 4`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -619,7 +664,8 @@ Weight: 4`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-order-list is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -647,8 +693,11 @@ spotCommands.push({
     command: 'my-allocations',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Retrieves allocations resulting from SOR order placement.
-Weight: 20`),
+        decodeSelectedEntities(
+            `Retrieves allocations resulting from SOR order placement.
+Weight: 20`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -701,6 +750,7 @@ Weight: 20`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -723,6 +773,7 @@ Weight: 20`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -733,7 +784,8 @@ Weight: 20`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'my-allocations is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -769,8 +821,11 @@ spotCommands.push({
     command: 'my-filters',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Retrieves the list of [filters](filters.md) relevant to an account on a given symbol. This is the only endpoint that shows if an account has &#x60;MAX_ASSET&#x60; filters applied to it.
-Weight: 40`),
+        decodeSelectedEntities(
+            `Retrieves the list of [filters](filters.md) relevant to an account on a given symbol. This is the only endpoint that shows if an account has &#x60;MAX_ASSET&#x60; filters applied to it.
+Weight: 40`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -794,6 +849,7 @@ Weight: 40`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -816,6 +872,7 @@ Weight: 40`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -826,7 +883,8 @@ Weight: 40`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'my-filters is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -862,7 +920,8 @@ spotCommands.push({
     command: 'my-prevented-matches',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Displays the list of orders that were expired due to STP.
+        decodeSelectedEntities(
+            `Displays the list of orders that were expired due to STP.
 
 These are the combinations supported:
 
@@ -874,7 +933,9 @@ Weight: Case                            | Weight
 ----                            | -----
 If &#x60;symbol&#x60; is invalid          | 2
 Querying by &#x60;preventedMatchId&#x60;  | 2
-Querying by &#x60;orderId&#x60;           | 20`),
+Querying by &#x60;orderId&#x60;           | 20`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -918,6 +979,7 @@ Querying by &#x60;orderId&#x60;           | 20`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -940,6 +1002,7 @@ Querying by &#x60;orderId&#x60;           | 20`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -950,7 +1013,8 @@ Querying by &#x60;orderId&#x60;           | 20`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'my-prevented-matches is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -986,11 +1050,14 @@ spotCommands.push({
     command: 'my-trades',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get trades for a specific account and symbol.
+        decodeSelectedEntities(
+            `Get trades for a specific account and symbol.
 Weight: Condition| Weight|
 ---| ---
 |Without orderId|20|
-|With orderId|5|`),
+|With orderId|5|`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1043,6 +1110,7 @@ Weight: Condition| Weight|
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1065,6 +1133,7 @@ Weight: Condition| Weight|
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1075,7 +1144,8 @@ Weight: Condition| Weight|
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'my-trades is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1111,8 +1181,11 @@ spotCommands.push({
     command: 'open-order-list',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`
-Weight: 6`),
+        decodeSelectedEntities(
+            `
+Weight: 6`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -1131,6 +1204,7 @@ Weight: 6`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1141,7 +1215,8 @@ Weight: 6`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'open-order-list is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1169,8 +1244,11 @@ spotCommands.push({
     command: 'order-amendments',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Queries all amendments of a single order.
-Weight: 4`),
+        decodeSelectedEntities(
+            `Queries all amendments of a single order.
+Weight: 4`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1190,7 +1268,7 @@ Weight: 4`),
                     group: 'Command Options:',
                 },
                 limit: {
-                    describe: decodeSelectedEntities('Default:500; Maximum: 1000 '),
+                    describe: decodeSelectedEntities('Default: 500; Maximum: 1000'),
                     type: 'string',
                     group: 'Command Options:',
                 },
@@ -1209,6 +1287,7 @@ Weight: 4`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1235,6 +1314,7 @@ Weight: 4`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1245,7 +1325,8 @@ Weight: 4`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'order-amendments is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1289,8 +1370,11 @@ spotCommands.push({
     command: 'rate-limit-order',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Displays the user&#39;s unfilled order count for all intervals.
-Weight: 40`),
+        decodeSelectedEntities(
+            `Displays the user&#39;s unfilled order count for all intervals.
+Weight: 40`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -1309,6 +1393,7 @@ Weight: 40`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1319,7 +1404,8 @@ Weight: 40`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'rate-limit-order is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1345,8 +1431,11 @@ Weight: 40`),
 
 spotCommands.push({
     command: 'exchange-info',
-    describe: decodeSelectedEntities(`Current exchange trading rules and symbol information
-Weight: 20`),
+    describe: decodeSelectedEntities(
+        `Current exchange trading rules and symbol information
+Weight: 20`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             symbol: {
@@ -1385,6 +1474,7 @@ Weight: 20`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1394,6 +1484,8 @@ Weight: 20`),
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (questions.length > 0) {
             const answers = await inquirer.prompt(questions);
@@ -1413,13 +1505,16 @@ Weight: 20`),
 
 spotCommands.push({
     command: 'execution-rules',
-    describe: decodeSelectedEntities(`
+    describe: decodeSelectedEntities(
+        `
 Weight: Parameter | Weight|
 ---        | ---
 &#x60;symbol&#x60;  | 2
 &#x60;symbols&#x60; | 2 for each &#x60;symbol&#x60;, capped at a max of 40|
 &#x60;symbolStatus&#x60; |40|
-None            |40|`),
+None            |40|`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             symbol: {
@@ -1446,6 +1541,7 @@ None            |40|`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1455,6 +1551,8 @@ None            |40|`),
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (questions.length > 0) {
             const answers = await inquirer.prompt(questions);
@@ -1474,9 +1572,14 @@ None            |40|`),
 
 spotCommands.push({
     command: 'ping',
-    describe: decodeSelectedEntities(`Test connectivity to the Rest API.
-Weight: 1`),
+    describe: decodeSelectedEntities(
+        `Test connectivity to the Rest API.
+Weight: 1`,
+        isFullDescription
+    ),
     handler: async () => {
+        const { client } = getClient();
+
         try {
             await client.restAPI.ping();
         } catch (e: any) {
@@ -1488,10 +1591,14 @@ Weight: 1`),
 
 spotCommands.push({
     command: 'time',
-    describe:
-        decodeSelectedEntities(`Test connectivity to the Rest API and get the current server time.
-Weight: 1`),
+    describe: decodeSelectedEntities(
+        `Test connectivity to the Rest API and get the current server time.
+Weight: 1`,
+        isFullDescription
+    ),
     handler: async () => {
+        const { client } = getClient();
+
         try {
             const response = await client.restAPI.time();
             const responseData = await response.data();
@@ -1505,9 +1612,11 @@ Weight: 1`),
 
 spotCommands.push({
     command: 'agg-trades',
-    describe:
-        decodeSelectedEntities(`Get compressed, aggregate trades. Trades that fill at the time, from the same taker order, with the same price will have the quantity aggregated.
-Weight: 4`),
+    describe: decodeSelectedEntities(
+        `Get compressed, aggregate trades. Trades that fill at the time, from the same taker order, with the same price will have the quantity aggregated.
+Weight: 4`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1548,6 +1657,7 @@ Weight: 4`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1570,6 +1680,7 @@ Weight: 4`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1579,6 +1690,8 @@ Weight: 4`),
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (options.interactive && !options.symbol) {
             questions.push({
@@ -1606,8 +1719,11 @@ Weight: 4`),
 
 spotCommands.push({
     command: 'avg-price',
-    describe: decodeSelectedEntities(`Current average price for a symbol.
-Weight: 2`),
+    describe: decodeSelectedEntities(
+        `Current average price for a symbol.
+Weight: 2`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1624,6 +1740,7 @@ Weight: 2`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1646,6 +1763,7 @@ Weight: 2`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1655,6 +1773,8 @@ Weight: 2`),
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (options.interactive && !options.symbol) {
             questions.push({
@@ -1682,7 +1802,8 @@ Weight: 2`),
 
 spotCommands.push({
     command: 'depth',
-    describe: decodeSelectedEntities(`
+    describe: decodeSelectedEntities(
+        `
 Weight: Adjusted based on the limit:
 
 |Limit|Request Weight
@@ -1690,7 +1811,9 @@ Weight: Adjusted based on the limit:
 1-100|  5
 101-500| 25
 501-1000| 50
-1001-5000| 250`),
+1001-5000| 250`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1717,6 +1840,7 @@ Weight: Adjusted based on the limit:
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1739,6 +1863,7 @@ Weight: Adjusted based on the limit:
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1748,6 +1873,8 @@ Weight: Adjusted based on the limit:
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (options.interactive && !options.symbol) {
             questions.push({
@@ -1775,8 +1902,11 @@ Weight: Adjusted based on the limit:
 
 spotCommands.push({
     command: 'get-trades',
-    describe: decodeSelectedEntities(`Get recent trades.
-Weight: 25`),
+    describe: decodeSelectedEntities(
+        `Get recent trades.
+Weight: 25`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1798,6 +1928,7 @@ Weight: 25`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1820,6 +1951,7 @@ Weight: 25`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1829,6 +1961,8 @@ Weight: 25`),
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (options.interactive && !options.symbol) {
             questions.push({
@@ -1855,9 +1989,117 @@ Weight: 25`),
 });
 
 spotCommands.push({
+    command: 'historical-block-trades',
+    describe: decodeSelectedEntities(
+        `Get block trades.
+Weight: 25`,
+        isFullDescription
+    ),
+    builder: (yargsCmd: any) => {
+        return yargsCmd
+            .options({
+                symbol: {
+                    describe: decodeSelectedEntities(''),
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'from-id': {
+                    describe: decodeSelectedEntities('Block trade ID to fetch from'),
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                limit: {
+                    describe: decodeSelectedEntities('Default: 500; Maximum: 1000'),
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
+                },
+            })
+            .check((options: any) => {
+                const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
+
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['symbol'] && !options?.interactive) {
+                    requiredParams.push('symbol');
+                }
+
+                if (!options?.['fromId'] && !options?.interactive) {
+                    requiredParams.push('fromId');
+                }
+
+                if (requiredParams.length > 0) {
+                    return `Following arguments are required: ${requiredParams.join(', ')}`;
+                }
+
+                return true;
+            });
+    },
+    handler: async (options: any) => {
+        const questions: any = [];
+        const stdinObj: any = readStdinObj();
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
+        const { client } = getClient();
+
+        if (options.interactive && !options.symbol) {
+            questions.push({
+                type: 'input',
+                name: 'symbol',
+                message: 'Input symbol:',
+                validate: (input: string) => (input ? true : 'symbol cannot be empty'),
+            });
+        }
+        if (options.interactive && !options.fromId) {
+            questions.push({
+                type: 'input',
+                name: 'fromId',
+                message: 'Input fromId:',
+                validate: (input: string) => (input ? true : 'fromId cannot be empty'),
+            });
+        }
+        if (questions.length > 0) {
+            const answers = await inquirer.prompt(questions);
+            options = { ...options, ...answers };
+        }
+
+        try {
+            const response = await client.restAPI.historicalBlockTrades(options);
+            const responseData = await response.data();
+            console.log(JSON.stringify(responseData, null, 2));
+        } catch (e: any) {
+            console.log(e.message);
+            return;
+        }
+    },
+});
+
+spotCommands.push({
     command: 'historical-trades',
-    describe: decodeSelectedEntities(`Get older trades.
-Weight: 25`),
+    describe: decodeSelectedEntities(
+        `Get older trades.
+Weight: 25`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1884,6 +2126,7 @@ Weight: 25`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1906,6 +2149,7 @@ Weight: 25`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1915,6 +2159,8 @@ Weight: 25`),
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (options.interactive && !options.symbol) {
             questions.push({
@@ -1942,9 +2188,12 @@ Weight: 25`),
 
 spotCommands.push({
     command: 'klines',
-    describe: decodeSelectedEntities(`Kline/candlestick bars for a symbol.
+    describe: decodeSelectedEntities(
+        `Kline/candlestick bars for a symbol.
 Klines are uniquely identified by their open time.
-Weight: 2`),
+Weight: 2`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1990,6 +2239,7 @@ Weight: 2`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -2016,6 +2266,7 @@ Weight: 2`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2025,6 +2276,8 @@ Weight: 2`),
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (options.interactive && !options.symbol) {
             questions.push({
@@ -2060,8 +2313,11 @@ Weight: 2`),
 
 spotCommands.push({
     command: 'reference-price',
-    describe: decodeSelectedEntities(`
-Weight: 2`),
+    describe: decodeSelectedEntities(
+        `
+Weight: 2`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2078,6 +2334,7 @@ Weight: 2`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -2100,6 +2357,7 @@ Weight: 2`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2109,6 +2367,8 @@ Weight: 2`),
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (options.interactive && !options.symbol) {
             questions.push({
@@ -2136,9 +2396,11 @@ Weight: 2`),
 
 spotCommands.push({
     command: 'reference-price-calculation',
-    describe:
-        decodeSelectedEntities(`Describes how reference price is calculated for a given symbol.
-Weight: 2`),
+    describe: decodeSelectedEntities(
+        `Describes how reference price is calculated for a given symbol.
+Weight: 2`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2160,6 +2422,7 @@ Weight: 2`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -2182,6 +2445,7 @@ Weight: 2`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2191,6 +2455,8 @@ Weight: 2`),
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (options.interactive && !options.symbol) {
             questions.push({
@@ -2218,8 +2484,11 @@ Weight: 2`),
 
 spotCommands.push({
     command: 'ticker',
-    describe: decodeSelectedEntities(`
-Weight: 4 for each requested &lt;tt&gt;symbol&lt;/tt&gt; regardless of &lt;tt&gt;windowSize&lt;/tt&gt;. &lt;br/&gt;&lt;br/&gt; The weight for this request will cap at 200 once the number of &#x60;symbols&#x60; in the request is more than 50.`),
+    describe: decodeSelectedEntities(
+        `
+Weight: 4 for each requested &lt;tt&gt;symbol&lt;/tt&gt; regardless of &lt;tt&gt;windowSize&lt;/tt&gt;. &lt;br/&gt;&lt;br/&gt; The weight for this request will cap at 200 once the number of &#x60;symbols&#x60; in the request is more than 50.`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             symbol: {
@@ -2256,6 +2525,7 @@ Weight: 4 for each requested &lt;tt&gt;symbol&lt;/tt&gt; regardless of &lt;tt&gt
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2265,6 +2535,8 @@ Weight: 4 for each requested &lt;tt&gt;symbol&lt;/tt&gt; regardless of &lt;tt&gt
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (questions.length > 0) {
             const answers = await inquirer.prompt(questions);
@@ -2284,8 +2556,8 @@ Weight: 4 for each requested &lt;tt&gt;symbol&lt;/tt&gt; regardless of &lt;tt&gt
 
 spotCommands.push({
     command: 'ticker24hr',
-    describe:
-        decodeSelectedEntities(`24 hour rolling window price change statistics. **Careful** when accessing this with no symbol.
+    describe: decodeSelectedEntities(
+        `24 hour rolling window price change statistics. **Careful** when accessing this with no symbol.
 Weight: &lt;table&gt;
 &lt;thead&gt;
     &lt;tr&gt;
@@ -2322,7 +2594,9 @@ Weight: &lt;table&gt;
         &lt;td&gt;80&lt;/td&gt;
     &lt;/tr&gt;
 &lt;/tbody&gt;
-&lt;/table&gt;`),
+&lt;/table&gt;`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             symbol: {
@@ -2354,6 +2628,7 @@ Weight: &lt;table&gt;
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2363,6 +2638,8 @@ Weight: &lt;table&gt;
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (questions.length > 0) {
             const answers = await inquirer.prompt(questions);
@@ -2382,7 +2659,8 @@ Weight: &lt;table&gt;
 
 spotCommands.push({
     command: 'ticker-book-ticker',
-    describe: decodeSelectedEntities(`Best price/qty on the order book for a symbol or symbols.
+    describe: decodeSelectedEntities(
+        `Best price/qty on the order book for a symbol or symbols.
 Weight: &lt;table&gt;
 &lt;thead&gt;
     &lt;tr&gt;
@@ -2407,7 +2685,9 @@ Weight: &lt;table&gt;
         &lt;td&gt;4&lt;/td&gt;
     &lt;/tr&gt;
 &lt;/tbody&gt;
-&lt;/table&gt;`),
+&lt;/table&gt;`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             symbol: {
@@ -2434,6 +2714,7 @@ Weight: &lt;table&gt;
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2443,6 +2724,8 @@ Weight: &lt;table&gt;
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (questions.length > 0) {
             const answers = await inquirer.prompt(questions);
@@ -2462,7 +2745,8 @@ Weight: &lt;table&gt;
 
 spotCommands.push({
     command: 'ticker-price',
-    describe: decodeSelectedEntities(`Latest price for a symbol or symbols.
+    describe: decodeSelectedEntities(
+        `Latest price for a symbol or symbols.
 Weight: &lt;table&gt;
 &lt;thead&gt;
     &lt;tr&gt;
@@ -2487,7 +2771,9 @@ Weight: &lt;table&gt;
         &lt;td&gt;4&lt;/td&gt;
     &lt;/tr&gt;
 &lt;/tbody&gt;
-&lt;/table&gt;`),
+&lt;/table&gt;`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             symbol: {
@@ -2514,6 +2800,7 @@ Weight: &lt;table&gt;
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2523,6 +2810,8 @@ Weight: &lt;table&gt;
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (questions.length > 0) {
             const answers = await inquirer.prompt(questions);
@@ -2542,8 +2831,11 @@ Weight: &lt;table&gt;
 
 spotCommands.push({
     command: 'ticker-trading-day',
-    describe: decodeSelectedEntities(`Price change statistics for a trading day.
-Weight: 4 for each requested &lt;tt&gt;symbol&lt;/tt&gt;. &lt;br/&gt;&lt;br/&gt; The weight for this request will cap at 200 once the number of &#x60;symbols&#x60; in the request is more than 50.`),
+    describe: decodeSelectedEntities(
+        `Price change statistics for a trading day.
+Weight: 4 for each requested &lt;tt&gt;symbol&lt;/tt&gt;. &lt;br/&gt;&lt;br/&gt; The weight for this request will cap at 200 once the number of &#x60;symbols&#x60; in the request is more than 50.`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             symbol: {
@@ -2580,6 +2872,7 @@ Weight: 4 for each requested &lt;tt&gt;symbol&lt;/tt&gt;. &lt;br/&gt;&lt;br/&gt;
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2589,6 +2882,8 @@ Weight: 4 for each requested &lt;tt&gt;symbol&lt;/tt&gt;. &lt;br/&gt;&lt;br/&gt;
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (questions.length > 0) {
             const answers = await inquirer.prompt(questions);
@@ -2608,11 +2903,13 @@ Weight: 4 for each requested &lt;tt&gt;symbol&lt;/tt&gt;. &lt;br/&gt;&lt;br/&gt;
 
 spotCommands.push({
     command: 'ui-klines',
-    describe:
-        decodeSelectedEntities(`The request is similar to klines having the same parameters and response.
+    describe: decodeSelectedEntities(
+        `The request is similar to klines having the same parameters and response.
 
 &#x60;uiKlines&#x60; return modified kline data, optimized for presentation of candlestick charts.
-Weight: 2`),
+Weight: 2`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2658,6 +2955,7 @@ Weight: 2`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -2684,6 +2982,7 @@ Weight: 2`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2693,6 +2992,8 @@ Weight: 2`),
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (options.interactive && !options.symbol) {
             questions.push({
@@ -2730,9 +3031,12 @@ spotCommands.push({
     command: 'delete-open-orders',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Cancels all active orders on a symbol.
+        decodeSelectedEntities(
+            `Cancels all active orders on a symbol.
 This includes orders that are part of an order list.
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2756,6 +3060,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -2778,6 +3083,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2788,7 +3094,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'delete-open-orders is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2824,8 +3131,11 @@ spotCommands.push({
     command: 'delete-order',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Cancel an active order.
-Weight: 1`),
+        decodeSelectedEntities(
+            `Cancel an active order.
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2871,6 +3181,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -2893,6 +3204,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -2903,7 +3215,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'delete-order is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -2939,8 +3252,11 @@ spotCommands.push({
     command: 'delete-order-list',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Cancel an entire Order list
-Weight: 1`),
+        decodeSelectedEntities(
+            `Cancel an entire Order list
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -2983,6 +3299,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -3005,6 +3322,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3015,7 +3333,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'delete-order-list is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3051,10 +3370,13 @@ spotCommands.push({
     command: 'new-order',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Send in a new order.
+        decodeSelectedEntities(
+            `Send in a new order.
 
 This adds 1 order to the &#x60;EXCHANGE_MAX_ORDERS&#x60; filter and the &#x60;MAX_NUM_ORDERS&#x60; filter.
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -3142,6 +3464,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -3172,6 +3495,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3182,7 +3506,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'new-order is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3237,12 +3562,15 @@ spotCommands.push({
     command: 'order-amend-keep-priority',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Reduce the quantity of an existing open order.
+        decodeSelectedEntities(
+            `Reduce the quantity of an existing open order.
 
 This adds 0 orders to the &#x60;EXCHANGE_MAX_ORDERS&#x60; filter and the &#x60;MAX_NUM_ORDERS&#x60; filter.
 
 Read [Order Amend Keep Priority FAQ](faqs/order_amend_keep_priority.md) to learn more.
-Weight: 4`),
+Weight: 4`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -3278,6 +3606,7 @@ Weight: 4`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -3304,6 +3633,7 @@ Weight: 4`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3314,7 +3644,8 @@ Weight: 4`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'order-amend-keep-priority is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3360,11 +3691,14 @@ spotCommands.push({
     command: 'order-cancel-replace',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`* Cancels an existing order and places a new order on the same symbol.
+        decodeSelectedEntities(
+            `* Cancels an existing order and places a new order on the same symbol.
 * Filters and Order Count are evaluated before the processing of the cancellation and order placement occurs.
 * A new order that was not attempted (i.e. when &#x60;newOrderResult: NOT_ATTEMPTED&#x60;), will still increase the unfilled order count by 1.
 * You can only cancel an individual order from an orderList using this endpoint, but the result is the same as canceling the entire orderList.
-Weight: 1`),
+Weight: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -3476,6 +3810,7 @@ Weight: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -3510,6 +3845,7 @@ Weight: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3520,7 +3856,8 @@ Weight: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'order-cancel-replace is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3584,7 +3921,8 @@ spotCommands.push({
     command: 'order-list-oco',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Send in an one-cancels-the-other (OCO) pair, where activation of one order immediately cancels the other.
+        decodeSelectedEntities(
+            `Send in an one-cancels-the-other (OCO) pair, where activation of one order immediately cancels the other.
 
 * An OCO has 2 orders called the **above order** and **below order**.
 * One of the orders must be a &#x60;LIMIT_MAKER/TAKE_PROFIT/TAKE_PROFIT_LIMIT&#x60; order and the other must be &#x60;STOP_LOSS&#x60; or &#x60;STOP_LOSS_LIMIT&#x60; order.
@@ -3598,7 +3936,9 @@ spotCommands.push({
 * OCOs add **2 orders** to the &#x60;EXCHANGE_MAX_ORDERS&#x60; filter and the &#x60;MAX_NUM_ORDERS&#x60; filter.
 Weight: 1
 
-Unfilled Order Count: 2`),
+Unfilled Order Count: 2`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -3734,6 +4074,7 @@ Unfilled Order Count: 2`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -3772,6 +4113,7 @@ Unfilled Order Count: 2`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -3782,7 +4124,8 @@ Unfilled Order Count: 2`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'order-list-oco is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -3855,12 +4198,15 @@ spotCommands.push({
     command: 'order-list-opo',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Place an [OPO](./faqs/opo.md).
+        decodeSelectedEntities(
+            `Place an [OPO](./faqs/opo.md).
 
 * OPOs add 2 orders to the EXCHANGE_MAX_NUM_ORDERS filter and MAX_NUM_ORDERS filter.
 Weight: 1
 
-Unfilled Order Count: 2`),
+Unfilled Order Count: 2`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -3992,6 +4338,7 @@ Unfilled Order Count: 2`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -4038,6 +4385,7 @@ Unfilled Order Count: 2`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -4048,7 +4396,8 @@ Unfilled Order Count: 2`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'order-list-opo is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -4139,10 +4488,13 @@ spotCommands.push({
     command: 'order-list-opoco',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Place an [OPOCO](./faqs/opo.md).
+        decodeSelectedEntities(
+            `Place an [OPOCO](./faqs/opo.md).
 Weight: 1
 
-Unfilled Order Count: 3`),
+Unfilled Order Count: 3`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -4322,6 +4674,7 @@ Unfilled Order Count: 3`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -4368,6 +4721,7 @@ Unfilled Order Count: 3`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -4378,7 +4732,8 @@ Unfilled Order Count: 3`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'order-list-opoco is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -4469,7 +4824,8 @@ spotCommands.push({
     command: 'order-list-oto',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Place an OTO.
+        decodeSelectedEntities(
+            `Place an OTO.
 
 * An OTO (One-Triggers-the-Other) is an order list comprised of 2 orders.
 * The first order is called the **working order** and must be &#x60;LIMIT&#x60; or &#x60;LIMIT_MAKER&#x60;. Initially, only the working order goes on the order book.
@@ -4479,7 +4835,9 @@ spotCommands.push({
 * OTOs add **2 orders** to the &#x60;EXCHANGE_MAX_NUM_ORDERS&#x60; filter and &#x60;MAX_NUM_ORDERS&#x60; filter.
 Weight: 1
 
-Unfilled Order Count: 2`),
+Unfilled Order Count: 2`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -4615,6 +4973,7 @@ Unfilled Order Count: 2`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -4665,6 +5024,7 @@ Unfilled Order Count: 2`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -4675,7 +5035,8 @@ Unfilled Order Count: 2`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'order-list-oto is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -4775,7 +5136,8 @@ spotCommands.push({
     command: 'order-list-otoco',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Place an OTOCO.
+        decodeSelectedEntities(
+            `Place an OTOCO.
 
 * An OTOCO (One-Triggers-One-Cancels-the-Other) is an order list comprised of 3 orders.
 * The first order is called the **working order** and must be &#x60;LIMIT&#x60; or &#x60;LIMIT_MAKER&#x60;. Initially, only the working order goes on the order book.
@@ -4785,7 +5147,9 @@ spotCommands.push({
 * OTOCOs add **3 orders** to the &#x60;EXCHANGE_MAX_NUM_ORDERS&#x60; filter and &#x60;MAX_NUM_ORDERS&#x60; filter.
 Weight: 1
 
-Unfilled Order Count: 3`),
+Unfilled Order Count: 3`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -4969,6 +5333,7 @@ Unfilled Order Count: 3`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -5019,6 +5384,7 @@ Unfilled Order Count: 3`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -5029,7 +5395,8 @@ Unfilled Order Count: 3`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'order-list-otoco is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -5129,7 +5496,8 @@ spotCommands.push({
     command: 'order-oco',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Send in a new OCO.
+        decodeSelectedEntities(
+            `Send in a new OCO.
 
 * Price Restrictions:
     * &#x60;SELL&#x60;: Limit Price &gt; Last Price &gt; Stop Price
@@ -5140,7 +5508,9 @@ spotCommands.push({
 * &#x60;OCO&#x60; adds **2 orders** to the &#x60;EXCHANGE_MAX_ORDERS&#x60; filter and the &#x60;MAX_NUM_ORDERS&#x60; filter.
 Weight: 1
 
-Unfilled Order Count: 2`),
+Unfilled Order Count: 2`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -5232,6 +5602,7 @@ Unfilled Order Count: 2`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -5270,6 +5641,7 @@ Unfilled Order Count: 2`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -5280,7 +5652,8 @@ Unfilled Order Count: 2`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'order-oco is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -5353,12 +5726,15 @@ spotCommands.push({
     command: 'order-test',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Test new order creation and signature/recvWindow long.
+        decodeSelectedEntities(
+            `Test new order creation and signature/recvWindow long.
 Creates and validates a new order but does not send it into the matching engine.
 Weight: |Condition| Request Weight|
 |------------           | ------------ |
 |Without &#x60;computeCommissionRates&#x60;| 1|
-|With &#x60;computeCommissionRates&#x60;|20|`),
+|With &#x60;computeCommissionRates&#x60;|20|`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -5450,6 +5826,7 @@ Weight: |Condition| Request Weight|
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -5480,6 +5857,7 @@ Weight: |Condition| Request Weight|
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -5490,7 +5868,8 @@ Weight: |Condition| Request Weight|
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'order-test is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -5545,14 +5924,17 @@ spotCommands.push({
     command: 'sor-order',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Places an order using smart order routing (SOR).
+        decodeSelectedEntities(
+            `Places an order using smart order routing (SOR).
 
 This adds 1 order to the &#x60;EXCHANGE_MAX_ORDERS&#x60; filter and the &#x60;MAX_NUM_ORDERS&#x60; filter.
 
 Read [SOR FAQ](faqs/sor_faq.md) to learn more.
 Weight: 1
 
-Unfilled Order Count: 1`),
+Unfilled Order Count: 1`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -5616,6 +5998,7 @@ Unfilled Order Count: 1`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -5650,6 +6033,7 @@ Unfilled Order Count: 1`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -5660,7 +6044,8 @@ Unfilled Order Count: 1`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'sor-order is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -5724,12 +6109,15 @@ spotCommands.push({
     command: 'sor-order-test',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Test new order creation and signature/recvWindow using smart order routing (SOR).
+        decodeSelectedEntities(
+            `Test new order creation and signature/recvWindow using smart order routing (SOR).
 Creates and validates a new order but does not send it into the matching engine.
 Weight: | Condition | Request Weight |
 | --------- | -------------- |
 | Without &#x60;computeCommissionRates&#x60;  |  1 |
-| With &#x60;computeCommissionRates&#x60;     | 20 |`),
+| With &#x60;computeCommissionRates&#x60;     | 20 |`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -5797,6 +6185,7 @@ Weight: | Condition | Request Weight |
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -5831,6 +6220,7 @@ Weight: | Condition | Request Weight |
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -5841,7 +6231,8 @@ Weight: | Condition | Request Weight |
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'sor-order-test is signed. Please create a profile using `binance-cli profile create`.'
             );

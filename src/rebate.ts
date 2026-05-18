@@ -6,38 +6,46 @@ import {
     getUserAgent,
     isEmpty,
     readStdinObj,
+    getParsedArgs,
 } from './utils';
-import { Parser, hideBin } from 'yargs/helpers';
 
-const parsedArgs = Parser(hideBin(process.argv));
+const parsedArgs = getParsedArgs();
+const isFullDescription = parsedArgs?.['full-description'] ?? false;
 
-process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('rebate');
+const getClient = () => {
+    if (!process.env?.LOG_LEVEL) {
+        process.env.LOG_LEVEL = 'ERROR';
+    }
+    process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent('rebate');
 
-const stdinObj: any = readStdinObj();
+    let basePath = REBATE_REST_API_PROD_URL;
 
-let basePath = REBATE_REST_API_PROD_URL;
+    const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'rebate');
 
-const configurationRestAPI = getConfigurationRestAPI(parsedArgs?.profile, 'rebate');
+    if (process.env.BINANCE_REBATE_BASE_PATH) {
+        basePath = process.env.BINANCE_REBATE_BASE_PATH;
+    } else if (configurationRestAPI && configurationRestAPI['basePath']) {
+        basePath = configurationRestAPI['basePath'];
+    }
 
-if (process.env.BINANCE_REBATE_BASE_PATH) {
-    basePath = process.env.BINANCE_REBATE_BASE_PATH;
-} else if (configurationRestAPI && configurationRestAPI['basePath']) {
-    basePath = configurationRestAPI['basePath'];
-}
+    let client;
+    let hasConfig = false;
+    if (configurationRestAPI !== null) {
+        hasConfig = true;
+        client = new Rebate({
+            configurationRestAPI: { ...configurationRestAPI, basePath },
+        });
+    } else {
+        client = new Rebate({
+            configurationRestAPI: {
+                apiKey: '',
+                basePath,
+            },
+        });
+    }
 
-let client;
-if (configurationRestAPI !== null) {
-    client = new Rebate({
-        configurationRestAPI: { ...configurationRestAPI, basePath },
-    });
-} else {
-    client = new Rebate({
-        configurationRestAPI: {
-            apiKey: '',
-            basePath,
-        },
-    });
-}
+    return { client, hasConfig };
+};
 
 const rebateCommands: any[] = [];
 
@@ -45,14 +53,17 @@ rebateCommands.push({
     command: 'get-spot-rebate-history-records',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Spot Rebate History Records
+        decodeSelectedEntities(
+            `Get Spot Rebate History Records
 
 * The max interval between startTime and endTime is 30 days.
 * If startTime and endTime are not sent, the recent 7 days&#39; data will be returned.
 * The earliest startTime is supported on June 10, 2020
 * Return up to 200 records per request.
 
-Weight: 12000`),
+Weight: 12000`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'start-time': {
@@ -84,6 +95,7 @@ Weight: 12000`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -94,7 +106,8 @@ Weight: 12000`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-spot-rebate-history-records is signed. Please create a profile using `binance-cli profile create`.'
             );

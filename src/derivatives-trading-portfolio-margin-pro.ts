@@ -9,43 +9,51 @@ import {
     getUserAgent,
     isEmpty,
     readStdinObj,
+    getParsedArgs,
 } from './utils';
-import { Parser, hideBin } from 'yargs/helpers';
 
-const parsedArgs = Parser(hideBin(process.argv));
+const parsedArgs = getParsedArgs();
+const isFullDescription = parsedArgs?.['full-description'] ?? false;
 
-process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent(
-    'derivatives-trading-portfolio-margin-pro'
-);
+const getClient = () => {
+    if (!process.env?.LOG_LEVEL) {
+        process.env.LOG_LEVEL = 'ERROR';
+    }
+    process.env.BINANCE_CONNECTOR_JS_USER_AGENT = getUserAgent(
+        'derivatives-trading-portfolio-margin-pro'
+    );
 
-const stdinObj: any = readStdinObj();
+    let basePath = DERIVATIVES_TRADING_PORTFOLIO_MARGIN_PRO_REST_API_PROD_URL;
 
-let basePath = DERIVATIVES_TRADING_PORTFOLIO_MARGIN_PRO_REST_API_PROD_URL;
+    const configurationRestAPI = getConfigurationRestAPI(
+        parsedArgs?.profile,
+        'derivatives-portfolio-margin-pro'
+    );
 
-const configurationRestAPI = getConfigurationRestAPI(
-    parsedArgs?.profile,
-    'derivatives-portfolio-margin-pro'
-);
+    if (process.env.BINANCE_DERIVATIVES_PORTFOLIO_MARGIN_PRO_BASE_PATH) {
+        basePath = process.env.BINANCE_DERIVATIVES_PORTFOLIO_MARGIN_PRO_BASE_PATH;
+    } else if (configurationRestAPI && configurationRestAPI['basePath']) {
+        basePath = configurationRestAPI['basePath'];
+    }
 
-if (process.env.BINANCE_DERIVATIVES_PORTFOLIO_MARGIN_PRO_BASE_PATH) {
-    basePath = process.env.BINANCE_DERIVATIVES_PORTFOLIO_MARGIN_PRO_BASE_PATH;
-} else if (configurationRestAPI && configurationRestAPI['basePath']) {
-    basePath = configurationRestAPI['basePath'];
-}
+    let client;
+    let hasConfig = false;
+    if (configurationRestAPI !== null) {
+        hasConfig = true;
+        client = new DerivativesTradingPortfolioMarginPro({
+            configurationRestAPI: { ...configurationRestAPI, basePath },
+        });
+    } else {
+        client = new DerivativesTradingPortfolioMarginPro({
+            configurationRestAPI: {
+                apiKey: '',
+                basePath,
+            },
+        });
+    }
 
-let client;
-if (configurationRestAPI !== null) {
-    client = new DerivativesTradingPortfolioMarginPro({
-        configurationRestAPI: { ...configurationRestAPI, basePath },
-    });
-} else {
-    client = new DerivativesTradingPortfolioMarginPro({
-        configurationRestAPI: {
-            apiKey: '',
-            basePath,
-        },
-    });
-}
+    return { client, hasConfig };
+};
 
 const derivativesTradingPortfolioMarginProCommands: any[] = [];
 
@@ -53,12 +61,15 @@ derivativesTradingPortfolioMarginProCommands.push({
     command: 'bnb-transfer',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`BNB transfer can be between Margin Account and USDM Account
+        decodeSelectedEntities(
+            `BNB transfer can be between Margin Account and USDM Account
 
 
 * You can only use this function 2 times per 10 minutes in a rolling manner
 
-Weight: 1500`),
+Weight: 1500`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -82,6 +93,7 @@ Weight: 1500`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -108,6 +120,7 @@ Weight: 1500`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -118,7 +131,8 @@ Weight: 1500`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'bnb-transfer is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -164,9 +178,12 @@ derivativesTradingPortfolioMarginProCommands.push({
     command: 'change-auto-repay-futures-status',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Change Auto-repay-futures Status
+        decodeSelectedEntities(
+            `Change Auto-repay-futures Status
 
-Weight: 1500`),
+Weight: 1500`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -186,6 +203,7 @@ Weight: 1500`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -208,6 +226,7 @@ Weight: 1500`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -218,7 +237,8 @@ Weight: 1500`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'change-auto-repay-futures-status is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -252,15 +272,80 @@ Weight: 1500`),
 });
 
 derivativesTradingPortfolioMarginProCommands.push({
+    command: 'delete-margin-call-level',
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(
+            `Delete the margin call level for a Portfolio Margin account.
+
+Weight: 1500`,
+            isFullDescription
+        ),
+    builder: (yargsCmd: any) => {
+        return yargsCmd.options({
+            'recv-window': {
+                describe: decodeSelectedEntities(''),
+                type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
+            },
+        });
+    },
+    handler: async (options: any) => {
+        const questions: any = [];
+        const stdinObj: any = readStdinObj();
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
+            console.error(
+                'delete-margin-call-level is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
+            return;
+        }
+
+        if (questions.length > 0) {
+            const answers = await inquirer.prompt(questions);
+            options = { ...options, ...answers };
+        }
+
+        try {
+            const response = await client.restAPI.deleteMarginCallLevel(options);
+            const responseData = await response.data();
+            console.log(JSON.stringify(responseData, null, 2));
+        } catch (e: any) {
+            console.log(e.message);
+            return;
+        }
+    },
+});
+
+derivativesTradingPortfolioMarginProCommands.push({
     command: 'fund-auto-collection',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Transfers all assets from Futures Account to Margin account
+        decodeSelectedEntities(
+            `Transfers all assets from Futures Account to Margin account
 
 * The BNB would not be collected from UM-PM account to the Portfolio Margin account.
 * You can only use this function 500 times per hour in a rolling manner.
 
-Weight: 1500`),
+Weight: 1500`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -276,6 +361,7 @@ Weight: 1500`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -286,7 +372,8 @@ Weight: 1500`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'fund-auto-collection is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -314,11 +401,14 @@ derivativesTradingPortfolioMarginProCommands.push({
     command: 'fund-collection-by-asset',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Transfers specific asset from Futures Account to Margin account
+        decodeSelectedEntities(
+            `Transfers specific asset from Futures Account to Margin account
 
 * The BNB transfer is not be supported
 
-Weight: 60`),
+Weight: 60`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -338,6 +428,7 @@ Weight: 60`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -360,6 +451,7 @@ Weight: 60`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -370,7 +462,8 @@ Weight: 60`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'fund-collection-by-asset is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -407,9 +500,12 @@ derivativesTradingPortfolioMarginProCommands.push({
     command: 'get-auto-repay-futures-status',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query Auto-repay-futures Status
+        decodeSelectedEntities(
+            `Query Auto-repay-futures Status
 
-Weight: 30`),
+Weight: 30`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -426,6 +522,7 @@ Weight: 30`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -436,7 +533,8 @@ Weight: 30`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-auto-repay-futures-status is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -464,9 +562,12 @@ derivativesTradingPortfolioMarginProCommands.push({
     command: 'get-delta-mode-status',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query the Delta mode status of current account.
+        decodeSelectedEntities(
+            `Query the Delta mode status of current account.
 
-Weight: 1500`),
+Weight: 1500`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -483,6 +584,7 @@ Weight: 1500`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -493,7 +595,8 @@ Weight: 1500`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-delta-mode-status is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -518,12 +621,77 @@ Weight: 1500`),
 });
 
 derivativesTradingPortfolioMarginProCommands.push({
+    command: 'get-margin-call-level',
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(
+            `Get the margin call level for a Portfolio Margin account.
+
+Weight: 1500`,
+            isFullDescription
+        ),
+    builder: (yargsCmd: any) => {
+        return yargsCmd.options({
+            'recv-window': {
+                describe: decodeSelectedEntities(''),
+                type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
+            },
+        });
+    },
+    handler: async (options: any) => {
+        const questions: any = [];
+        const stdinObj: any = readStdinObj();
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
+            console.error(
+                'get-margin-call-level is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
+            return;
+        }
+
+        if (questions.length > 0) {
+            const answers = await inquirer.prompt(questions);
+            options = { ...options, ...answers };
+        }
+
+        try {
+            const response = await client.restAPI.getMarginCallLevel(options);
+            const responseData = await response.data();
+            console.log(JSON.stringify(responseData, null, 2));
+        } catch (e: any) {
+            console.log(e.message);
+            return;
+        }
+    },
+});
+
+derivativesTradingPortfolioMarginProCommands.push({
     command: 'get-portfolio-margin-pro-account-balance',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query Portfolio Margin Pro account balance
+        decodeSelectedEntities(
+            `Query Portfolio Margin Pro account balance
 
-Weight: 20`),
+Weight: 20`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             asset: {
@@ -545,6 +713,7 @@ Weight: 20`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -555,7 +724,8 @@ Weight: 20`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-portfolio-margin-pro-account-balance is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -583,9 +753,12 @@ derivativesTradingPortfolioMarginProCommands.push({
     command: 'get-portfolio-margin-pro-account-info',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Portfolio Margin Pro Account Info
+        decodeSelectedEntities(
+            `Get Portfolio Margin Pro Account Info
 
-Weight: 5`),
+Weight: 5`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -602,6 +775,7 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -612,7 +786,8 @@ Weight: 5`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-portfolio-margin-pro-account-info is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -640,9 +815,12 @@ derivativesTradingPortfolioMarginProCommands.push({
     command: 'get-portfolio-margin-pro-span-account-info',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Portfolio Margin Pro SPAN Account Info (For Portfolio Margin Pro SPAN users only)
+        decodeSelectedEntities(
+            `Get Portfolio Margin Pro SPAN Account Info (For Portfolio Margin Pro SPAN users only)
 
-Weight: 5`),
+Weight: 5`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -659,6 +837,7 @@ Weight: 5`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -669,7 +848,8 @@ Weight: 5`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-portfolio-margin-pro-span-account-info is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -697,9 +877,12 @@ derivativesTradingPortfolioMarginProCommands.push({
     command: 'get-transferable-earn-asset-balance-for-portfolio-margin',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get transferable earn asset balance for all types of Portfolio Margin account
+        decodeSelectedEntities(
+            `Get transferable earn asset balance for all types of Portfolio Margin account
 
-Weight: 1500`),
+Weight: 1500`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -728,6 +911,7 @@ Weight: 1500`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -754,6 +938,7 @@ Weight: 1500`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -764,7 +949,8 @@ Weight: 1500`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-transferable-earn-asset-balance-for-portfolio-margin is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -809,11 +995,14 @@ derivativesTradingPortfolioMarginProCommands.push({
     command: 'portfolio-margin-pro-bankruptcy-loan-repay',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Repay Portfolio Margin Pro Bankruptcy Loan
+        decodeSelectedEntities(
+            `Repay Portfolio Margin Pro Bankruptcy Loan
 
 * Please note that the API Key has enabled Spot &amp; Margin Trading permissions to access this endpoint.
 
-Weight: 3000`),
+Weight: 3000`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             from: {
@@ -833,6 +1022,7 @@ Weight: 3000`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -843,7 +1033,8 @@ Weight: 3000`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'portfolio-margin-pro-bankruptcy-loan-repay is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -871,11 +1062,14 @@ derivativesTradingPortfolioMarginProCommands.push({
     command: 'query-portfolio-margin-pro-bankruptcy-loan-amount',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query Portfolio Margin Pro Bankruptcy Loan Amount
+        decodeSelectedEntities(
+            `Query Portfolio Margin Pro Bankruptcy Loan Amount
 
 * If there’s no classic portfolio margin bankruptcy loan, the amount would be 0
 
-Weight: 500`),
+Weight: 500`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -892,6 +1086,7 @@ Weight: 500`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -902,7 +1097,8 @@ Weight: 500`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-portfolio-margin-pro-bankruptcy-loan-amount is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -931,14 +1127,17 @@ derivativesTradingPortfolioMarginProCommands.push({
     command: 'query-portfolio-margin-pro-bankruptcy-loan-repay-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query repay history of pmloan for portfolio margin pro.
+        decodeSelectedEntities(
+            `Query repay history of pmloan for portfolio margin pro.
 
 * &#x60;startTime&#x60; and &#x60;endTime&#x60; cannot be longer than 360 days
 * If &#x60;startTime&#x60; and &#x60;endTime&#x60; not sent, return records of the last 30 days by default.
 * If &#x60;startTime&#x60;is sent and &#x60;endTime&#x60; is not sent, return records of [startTime, startTime+30d].
 * If &#x60;startTime&#x60; is not sent and &#x60;endTime&#x60; is sent, return records of [endTime-30d, endTime].
 
-Weight: 500`),
+Weight: 500`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'start-time': {
@@ -977,6 +1176,7 @@ Weight: 500`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -987,7 +1187,8 @@ Weight: 500`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-portfolio-margin-pro-bankruptcy-loan-repay-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1016,9 +1217,12 @@ derivativesTradingPortfolioMarginProCommands.push({
     command: 'query-portfolio-margin-pro-negative-balance-interest-history',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Query interest history of negative balance for portfolio margin.
+        decodeSelectedEntities(
+            `Query interest history of negative balance for portfolio margin.
 
-Weight: 50`),
+Weight: 50`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             asset: {
@@ -1055,6 +1259,7 @@ Weight: 50`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1065,7 +1270,8 @@ Weight: 50`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'query-portfolio-margin-pro-negative-balance-interest-history is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1094,9 +1300,12 @@ derivativesTradingPortfolioMarginProCommands.push({
     command: 'repay-futures-negative-balance',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Repay futures Negative Balance
+        decodeSelectedEntities(
+            `Repay futures Negative Balance
 
-Weight: 1500`),
+Weight: 1500`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             from: {
@@ -1116,6 +1325,7 @@ Weight: 1500`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1126,7 +1336,8 @@ Weight: 1500`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'repay-futures-negative-balance is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1151,12 +1362,112 @@ Weight: 1500`),
 });
 
 derivativesTradingPortfolioMarginProCommands.push({
+    command: 'set-margin-call-level',
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(
+            `Set the margin call level for a Portfolio Margin account. When the account&#39;s uniMMR drops to the specified level, a notification will be sent via email and SMS.
+
+Weight: 1500`,
+            isFullDescription
+        ),
+    builder: (yargsCmd: any) => {
+        return yargsCmd
+            .options({
+                'margin-call-level': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                'recv-window': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
+                },
+            })
+            .check((options: any) => {
+                const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
+
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['marginCallLevel'] && !options?.interactive) {
+                    requiredParams.push('marginCallLevel');
+                }
+
+                if (requiredParams.length > 0) {
+                    return `Following arguments are required: ${requiredParams.join(', ')}`;
+                }
+
+                return true;
+            });
+    },
+    handler: async (options: any) => {
+        const questions: any = [];
+        const stdinObj: any = readStdinObj();
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
+            console.error(
+                'set-margin-call-level is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
+            return;
+        }
+
+        if (options.interactive && !options?.['marginCallLevel']) {
+            questions.push({
+                type: 'input',
+                name: 'marginCallLevel',
+                message: 'Input marginCallLevel:',
+                validate: (input: string) => (input ? true : 'marginCallLevel cannot be empty'),
+            });
+        }
+
+        if (questions.length > 0) {
+            const answers = await inquirer.prompt(questions);
+            options = { ...options, ...answers };
+        }
+
+        try {
+            const response = await client.restAPI.setMarginCallLevel(options);
+            const responseData = await response.data();
+            console.log(JSON.stringify(responseData, null, 2));
+        } catch (e: any) {
+            console.log(e.message);
+            return;
+        }
+    },
+});
+
+derivativesTradingPortfolioMarginProCommands.push({
     command: 'switch-delta-mode',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Switch the Delta mode for existing PM PRO / PM RETAIL accounts.
+        decodeSelectedEntities(
+            `Switch the Delta mode for existing PM PRO / PM RETAIL accounts.
 
-Weight: 1500`),
+Weight: 1500`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1176,6 +1487,7 @@ Weight: 1500`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1198,6 +1510,7 @@ Weight: 1500`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1208,7 +1521,8 @@ Weight: 1500`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'switch-delta-mode is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1245,9 +1559,12 @@ derivativesTradingPortfolioMarginProCommands.push({
     command: 'transfer-ldusdt-rwusd-for-portfolio-margin',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Transfer LDUSDT/RWUSD as collateral for all types of Portfolio Margin account
+        decodeSelectedEntities(
+            `Transfer LDUSDT/RWUSD as collateral for all types of Portfolio Margin account
 
-Weight: 1500`),
+Weight: 1500`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
@@ -1275,6 +1592,7 @@ Weight: 1500`),
             })
             .check((options: any) => {
                 const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
 
                 if (!isEmpty(stdinObj)) {
                     options = { ...options, ...stdinObj };
@@ -1305,6 +1623,7 @@ Weight: 1500`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1315,7 +1634,8 @@ Weight: 1500`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'transfer-ldusdt-rwusd-for-portfolio-margin is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1370,11 +1690,15 @@ derivativesTradingPortfolioMarginProCommands.push({
     command: 'get-portfolio-margin-asset-leverage',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Get Portfolio Margin Asset Leverage
+        decodeSelectedEntities(
+            `Get Portfolio Margin Asset Leverage
 
-Weight: 50`),
+Weight: 50`,
+            isFullDescription
+        ),
     handler: async () => {
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'get-portfolio-margin-asset-leverage is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1395,10 +1719,15 @@ Weight: 50`),
 
 derivativesTradingPortfolioMarginProCommands.push({
     command: 'portfolio-margin-collateral-rate',
-    describe: decodeSelectedEntities(`Portfolio Margin Collateral Rate
+    describe: decodeSelectedEntities(
+        `Portfolio Margin Collateral Rate
 
-Weight: 50`),
+Weight: 50`,
+        isFullDescription
+    ),
     handler: async () => {
+        const { client } = getClient();
+
         try {
             const response = await client.restAPI.portfolioMarginCollateralRate();
             const responseData = await response.data();
@@ -1414,9 +1743,12 @@ derivativesTradingPortfolioMarginProCommands.push({
     command: 'portfolio-margin-pro-tiered-collateral-rate',
     describe:
         'Authentication required. ' +
-        decodeSelectedEntities(`Portfolio Margin PRO Tiered Collateral Rate
+        decodeSelectedEntities(
+            `Portfolio Margin PRO Tiered Collateral Rate
 
-Weight: 50`),
+Weight: 50`,
+            isFullDescription
+        ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             'recv-window': {
@@ -1433,6 +1765,7 @@ Weight: 50`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1443,7 +1776,8 @@ Weight: 50`),
             delete options.json;
         }
 
-        if (isEmpty(configurationRestAPI)) {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
             console.error(
                 'portfolio-margin-pro-tiered-collateral-rate is signed. Please create a profile using `binance-cli profile create`.'
             );
@@ -1469,9 +1803,12 @@ Weight: 50`),
 
 derivativesTradingPortfolioMarginProCommands.push({
     command: 'query-portfolio-margin-asset-index-price',
-    describe: decodeSelectedEntities(`Query Portfolio Margin Asset Index Price
+    describe: decodeSelectedEntities(
+        `Query Portfolio Margin Asset Index Price
 
-Weight: 1 if send asset or 50 if not send asset`),
+Weight: 1 if send asset or 50 if not send asset`,
+        isFullDescription
+    ),
     builder: (yargsCmd: any) => {
         return yargsCmd.options({
             asset: {
@@ -1488,6 +1825,7 @@ Weight: 1 if send asset or 50 if not send asset`),
     },
     handler: async (options: any) => {
         const questions: any = [];
+        const stdinObj: any = readStdinObj();
 
         if (!isEmpty(stdinObj)) {
             options = { ...options, ...stdinObj };
@@ -1497,6 +1835,8 @@ Weight: 1 if send asset or 50 if not send asset`),
             options = { ...options, ...JSON.parse(options.json) };
             delete options.json;
         }
+
+        const { client } = getClient();
 
         if (questions.length > 0) {
             const answers = await inquirer.prompt(questions);
