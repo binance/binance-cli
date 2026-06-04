@@ -1,7 +1,6 @@
 import {
     DerivativesTradingPortfolioMargin,
     DERIVATIVES_TRADING_PORTFOLIO_MARGIN_REST_API_PROD_URL,
-    DERIVATIVES_TRADING_PORTFOLIO_MARGIN_REST_API_TESTNET_URL,
 } from '@binance/derivatives-trading-portfolio-margin';
 import inquirer from 'inquirer';
 import {
@@ -35,13 +34,6 @@ const getClient = () => {
         basePath = process.env.BINANCE_DERIVATIVES_PORTFOLIO_MARGIN_BASE_PATH;
     } else if (configurationRestAPI && configurationRestAPI['basePath']) {
         basePath = configurationRestAPI['basePath'];
-    } else if (configurationRestAPI && configurationRestAPI['env']) {
-        switch (configurationRestAPI['env']) {
-            case 'demo':
-            case 'testnet':
-                basePath = DERIVATIVES_TRADING_PORTFOLIO_MARGIN_REST_API_TESTNET_URL;
-                break;
-        }
     }
 
     let client;

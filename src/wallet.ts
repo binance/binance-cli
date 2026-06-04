@@ -706,6 +706,10 @@ Weight: 10`,
                     type: 'string',
                     group: 'Command Options:',
                 },
+                'account-type': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
                 'client-id': {
                     type: 'string',
                     group: 'Command Options:',
@@ -811,6 +815,10 @@ Weight: 1`,
     builder: (yargsCmd: any) => {
         return yargsCmd
             .options({
+                'account-type': {
+                    type: 'string',
+                    group: 'Command Options:',
+                },
                 'target-asset': {
                     type: 'string',
                     group: 'Command Options:',
@@ -2655,6 +2663,9 @@ walletCommands.push({
 * If &#x60;network&#x60; not send, return with default network of the coin.
 * You can get &#x60;network&#x60; and &#x60;isDefault&#x60; in &#x60;networkList&#x60; of a coin in the response of &#x60;Get /sapi/v1/capital/config/getall (HMAC SHA256)&#x60;.
 * To check if travel rule is required, by using  &#x60;GET /sapi/v1/localentity/questionnaire-requirements&#x60; and if it returns anything other than &#x60;NIL&#x60; you will need update SAPI to &#x60;POST /sapi/v1/localentity/withdraw/apply&#x60; else you can continue &#x60;POST /sapi/v1/capital/withdraw/apply&#x60;. Please note that if you are required to comply to travel rule please refer to the Travel Rule SAPI.
+* For networks that do not support memo/tag, submitting a withdrawal request with a non-empty &#x60;addressTag&#x60; will return error &#x60;-4106 TAG_NOT_SUPPORTED_FOR_NETWORK&#x60;. Please omit the &#x60;addressTag&#x60; field for such networks. You can check whether a network requires a tag via &#x60;GET /sapi/v1/capital/config/getall&#x60;:
+* If &#x60;withdrawTag&#x60; &#x3D; &#x60;true&#x60; → memo/tag is required.
+* If &#x60;withdrawTag&#x60; &#x3D; &#x60;false&#x60; → memo/tag is not supported; omit &#x60;addressTag&#x60;.
 
 Weight: 900`,
             isFullDescription
@@ -3558,6 +3569,132 @@ Weight: 1`,
 
         try {
             const response = await client.restAPI.fetchAddressVerificationList(options);
+            const responseData = await response.data();
+            console.log(JSON.stringify(responseData, null, 2));
+        } catch (e: any) {
+            console.log(e.message);
+            return;
+        }
+    },
+});
+
+walletCommands.push({
+    command: 'get-country-list',
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(
+            `Query the active country list for travel rule questionnaires.
+
+Weight: 1`,
+            isFullDescription
+        ),
+    handler: async () => {
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
+            console.error(
+                'get-country-list is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
+            return;
+        }
+
+        try {
+            const response = await client.restAPI.getCountryList();
+            const responseData = await response.data();
+            console.log(JSON.stringify(responseData, null, 2));
+        } catch (e: any) {
+            console.log(e.message);
+            return;
+        }
+    },
+});
+
+walletCommands.push({
+    command: 'get-region-list',
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(
+            `Query the active region/city list for a given country.
+
+Weight: 1`,
+            isFullDescription
+        ),
+    builder: (yargsCmd: any) => {
+        return yargsCmd
+            .options({
+                'country-code': {
+                    describe: decodeSelectedEntities(
+                        'ISO 2-digit country code (from &#x60;Country List&#x60; API).'
+                    ),
+                    type: 'string',
+                    group: 'Command Options:',
+                },
+                json: {
+                    describe: 'Send all fields as JSON',
+                    type: 'string',
+                    group: 'JSON Options:',
+                },
+            })
+            .check((options: any) => {
+                const requiredParams: any = [];
+                const stdinObj: any = readStdinObj();
+
+                if (!isEmpty(stdinObj)) {
+                    options = { ...options, ...stdinObj };
+                }
+
+                if (options.json) {
+                    options = { ...options, ...JSON.parse(options.json) };
+                }
+
+                if (!options?.['countryCode'] && !options?.interactive) {
+                    requiredParams.push('countryCode');
+                }
+
+                if (requiredParams.length > 0) {
+                    return `Following arguments are required: ${requiredParams.join(', ')}`;
+                }
+
+                return true;
+            });
+    },
+    handler: async (options: any) => {
+        const questions: any = [];
+        const stdinObj: any = readStdinObj();
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
+            console.error(
+                'get-region-list is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
+            return;
+        }
+
+        if (options.interactive && !options.countryCode) {
+            questions.push({
+                type: 'input',
+                name: 'countryCode',
+                message: 'Input countryCode:',
+                validate: (input: string) => (input ? true : 'countryCode cannot be empty'),
+            });
+        }
+        if (questions.length > 0) {
+            const answers = await inquirer.prompt(questions);
+            options = { ...options, ...answers };
+        }
+
+        try {
+            const response = await client.restAPI.getRegionList(options);
             const responseData = await response.data();
             console.log(JSON.stringify(responseData, null, 2));
         } catch (e: any) {

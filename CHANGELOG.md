@@ -1,5 +1,29 @@
 # Change log
 
+## 1.3.0 - 2026-06-04
+
+**Derivatives Trading Usds Futures**
+
+**Simple Earn**
+
+### Added (1)
+
+- `get-yield-arena-activities` (`GET /sapi/v1/earn/arena/activities`)
+
+**Wallet**
+
+### Added (2)
+
+- `get-country-list` (`GET /sapi/v1/localentity/country/list`)
+- `get-region-list` (`GET /sapi/v1/localentity/region/list`)
+
+### Changed (1)
+
+- Added parameter `accountType`
+  - affected methods:
+    - `dust-convert` (`POST /sapi/v1/asset/dust-convert/convert`)
+    - `dust-convertible-assets` (`POST /sapi/v1/asset/dust-convert/query-convertible-assets`)
+
 ## 1.2.0 - 2026-05-18
 
 - Added WebSocket streams commands.

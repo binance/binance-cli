@@ -260,7 +260,7 @@ export const getUserAgent = (product: string = 'unknown'): string => {
         clientType = 'skill';
     }
 
-    return `binance-${clientType}/${product}/1.2.0 (Node.js/${process.version}; ${platform()}; ${arch()})`;
+    return `binance-${clientType}/${product}/1.3.0 (Node.js/${process.version}; ${platform()}; ${arch()})`;
 };
 
 export const validateProfileName = (name: string): boolean => {
