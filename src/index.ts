@@ -181,7 +181,7 @@ allCommands.command({
         if (configurationRestAPI === null) {
             configurationRestAPI = {
                 apiKey: '',
-                env: null,
+                env: undefined,
             };
         }
 
@@ -207,6 +207,7 @@ allCommands.command({
             url.pathname,
             options.method,
             requestParams,
+            {},
             {},
             options['time-unit'],
             { isSigned: options['signed'] }

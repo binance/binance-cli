@@ -4939,7 +4939,7 @@ Weight: 0`,
 derivativesTradingUsdsFuturesCommands.push({
     command: 'trading-schedule',
     describe: decodeSelectedEntities(
-        `Trading session schedules for the underlying assets of TradFi Perps are provided for a one-week period starting from the day prior to the query time, covering both the U.S. equity and commodity markets. Equity market session types include &quot;PRE_MARKET&quot;, &quot;REGULAR&quot;, &quot;AFTER_MARKET&quot;, &quot;OVERNIGHT&quot;, and &quot;NO_TRADING&quot;, while commodity market session types include &quot;REGULAR&quot; and &quot;NO_TRADING&quot;.
+        `Trading session schedules for the underlying assets of TradFi Perps are provided for a one-week period forward and one-week period backward starting from the day prior to the query time, covering the U.S. equity market, Korean equity market, and commodity markets. U.S. equity market session types include &quot;PRE_MARKET&quot;, &quot;REGULAR&quot;, &quot;AFTER_MARKET&quot;, &quot;OVERNIGHT&quot;, and &quot;NO_TRADING&quot;. Commodity market session types include &quot;REGULAR&quot; and &quot;NO_TRADING&quot;. Korean equity market session types include &quot;REGULAR&quot; and &quot;NO_TRADING&quot;.
 
 Weight: 5`,
         isFullDescription

@@ -4026,6 +4026,70 @@ Weight: 150`,
     },
 });
 
+simpleEarnCommands.push({
+    command: 'get-yield-arena-activities',
+    describe:
+        'Authentication required. ' +
+        decodeSelectedEntities(
+            `Get the list of Earn Yield Arena giveaway activities currently available to the user.
+
+Supported locales: &#x60;en&#x60;, &#x60;en-GB&#x60;, &#x60;en-AU&#x60;, &#x60;cn&#x60;, &#x60;zh&#x60;, &#x60;zh-CN&#x60;, &#x60;tw&#x60;, &#x60;zh-TW&#x60;, &#x60;zh-HK&#x60;, &#x60;ja&#x60;, &#x60;ja-JP&#x60;, &#x60;ru&#x60;, &#x60;ru-RU&#x60;, &#x60;es&#x60;, &#x60;es-ES&#x60;, &#x60;es-LA&#x60;, &#x60;pt&#x60;, &#x60;pt-BR&#x60;, &#x60;pt-PT&#x60;, &#x60;fr&#x60;, &#x60;fr-FR&#x60;, &#x60;de&#x60;, &#x60;de-DE&#x60;, &#x60;it&#x60;, &#x60;it-IT&#x60;, &#x60;id&#x60;, &#x60;id-ID&#x60;, &#x60;vi&#x60;, &#x60;vi-VN&#x60;, &#x60;ar&#x60;, &#x60;ar-SA&#x60;, &#x60;pl&#x60;, &#x60;pl-PL&#x60;, &#x60;uk&#x60;, &#x60;uk-UA&#x60;, &#x60;cs&#x60;, &#x60;cs-CZ&#x60;, &#x60;ro&#x60;, &#x60;ro-RO&#x60;, &#x60;sv&#x60;, &#x60;sv-SE&#x60;, &#x60;bg&#x60;, &#x60;bg-BG&#x60;, &#x60;da&#x60;, &#x60;da-DK&#x60;, &#x60;el&#x60;, &#x60;el-GR&#x60;, &#x60;hu&#x60;, &#x60;hu-HU&#x60;, &#x60;lv&#x60;, &#x60;lv-LV&#x60;, &#x60;sk&#x60;, &#x60;sk-SK&#x60;, &#x60;sl&#x60;, &#x60;sl-SI&#x60;.
+
+Weight: 150`,
+            isFullDescription
+        ),
+    builder: (yargsCmd: any) => {
+        return yargsCmd.options({
+            'recv-window': {
+                describe: decodeSelectedEntities('The value cannot be greater than 60000 (ms)'),
+                type: 'string',
+                group: 'Command Options:',
+            },
+            json: {
+                describe: 'Send all fields as JSON',
+                type: 'string',
+                group: 'JSON Options:',
+            },
+        });
+    },
+    handler: async (options: any) => {
+        const questions: any = [];
+        const stdinObj: any = readStdinObj();
+
+        if (!isEmpty(stdinObj)) {
+            options = { ...options, ...stdinObj };
+        }
+
+        if (options.json) {
+            options = { ...options, ...JSON.parse(options.json) };
+            delete options.json;
+        }
+
+        const { client, hasConfig } = getClient();
+        if (!hasConfig) {
+            console.error(
+                'get-yield-arena-activities is signed. Please create a profile using `binance-cli profile create`.'
+            );
+            process.exitCode = 1;
+            return;
+        }
+
+        if (questions.length > 0) {
+            const answers = await inquirer.prompt(questions);
+            options = { ...options, ...answers };
+        }
+
+        try {
+            const response = await client.restAPI.getYieldArenaActivities(options);
+            const responseData = await response.data();
+            console.log(JSON.stringify(responseData, null, 2));
+        } catch (e: any) {
+            console.log(e.message);
+            return;
+        }
+    },
+});
+
 export default {
     command: 'simple-earn',
     description: 'Binance Simple Earn REST API',
