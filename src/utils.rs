@@ -230,7 +230,16 @@ pub fn get_session_creds(profile: Option<&str>, package_name: &str) -> Option<Cl
         });
     }
 
-    let profile_name = get_current_profile()?;
+    let Some(profile_name) = get_current_profile() else {
+        return Some(CliConfiguration {
+            api_key: String::new(),
+            api_secret: String::new(),
+            env: None,
+            base_path: None,
+            private_key: None,
+        });
+    };
+
 
     get_profile_config(&profile_name, package_name)
 }
