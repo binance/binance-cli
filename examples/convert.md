@@ -1,12 +1,12 @@
 ## MarketData
 
-### [GET /sapi/v1/convert/exchangeInfo](https://developers.binance.com/docs/convert/market-data/) - List All Convert Pairs
+### [GET /sapi/v1/convert/exchangeInfo](https://developers.binance.com/en/docs/catalog/core-trading-convert/api/rest-api/market-data#list-all-convert-pairs) - List All Convert Pairs
 
 ```bash
-binance-cli convert list-all-convert-pairs --from-asset "fromAsset_example" --to-asset "toAsset_example"
+binance-cli convert list-all-convert-pairs --from-asset BTC --to-asset USDT
 ```
 
-### [GET /sapi/v1/convert/assetInfo](https://developers.binance.com/docs/convert/market-data/Query-order-quantity-precision-per-asset) - Query order quantity precision per asset
+### [GET /sapi/v1/convert/assetInfo](https://developers.binance.com/en/docs/catalog/core-trading-convert/api/rest-api/market-data#query-order-quantity-precision-per-asset) - Query order quantity precision per asset (USER_DATA)
 
 ```bash
 binance-cli convert query-order-quantity-precision-per-asset --recv-window 5000
@@ -14,44 +14,44 @@ binance-cli convert query-order-quantity-precision-per-asset --recv-window 5000
 
 ## Trade
 
-### [POST /sapi/v1/convert/acceptQuote](https://developers.binance.com/docs/convert/trade/Accept-Quote) - Accept Quote
+### [POST /sapi/v1/convert/acceptQuote](https://developers.binance.com/en/docs/catalog/core-trading-convert/api/rest-api/trade#accept-quote) - Accept Quote (TRADE)
 
 ```bash
-binance-cli convert accept-quote --json {}
+binance-cli convert accept-quote --quote-id 1 --recv-window 5000
 ```
 
-### [POST /sapi/v1/convert/limit/cancelOrder](https://developers.binance.com/docs/convert/trade/Cancel-Order) - Cancel limit order
+### [POST /sapi/v1/convert/limit/cancelOrder](https://developers.binance.com/en/docs/catalog/core-trading-convert/api/rest-api/trade#cancel-limit-order) - Cancel limit order (TRADE)
 
 ```bash
-binance-cli convert cancel-limit-order --json {}
+binance-cli convert cancel-limit-order --order-id 1603680255057330400 --recv-window 5000
 ```
 
-### [GET /sapi/v1/convert/tradeFlow](https://developers.binance.com/docs/convert/trade/Get-Convert-Trade-History) - Get Convert Trade History
+### [GET /sapi/v1/convert/tradeFlow](https://developers.binance.com/en/docs/catalog/core-trading-convert/api/rest-api/trade#get-convert-trade-history) - Get Convert Trade History (USER_DATA)
 
 ```bash
 binance-cli convert get-convert-trade-history --start-time 1623319461670 --end-time 1641782889000 --limit 100 --recv-window 5000
 ```
 
-### [GET /sapi/v1/convert/orderStatus](https://developers.binance.com/docs/convert/trade/Order-Status) - Order status
+### [GET /sapi/v1/convert/orderStatus](https://developers.binance.com/en/docs/catalog/core-trading-convert/api/rest-api/trade#order-status) - Order status (USER_DATA)
 
 ```bash
-binance-cli convert order-status --order-id "1" --quote-id "1"
+binance-cli convert order-status --order-id 1 --quote-id 1
 ```
 
-### [POST /sapi/v1/convert/limit/placeOrder](https://developers.binance.com/docs/convert/trade/Place-Order) - Place limit order
+### [POST /sapi/v1/convert/limit/placeOrder](https://developers.binance.com/en/docs/catalog/core-trading-convert/api/rest-api/trade#place-limit-order) - Place limit order (TRADE)
 
 ```bash
-binance-cli convert place-limit-order --json {}
+binance-cli convert place-limit-order --base-asset BTC --quote-asset USDT --limit-price 1 --side BUY --expired-type EXPIRED_TYPE_1_D --base-amount 1 --quote-amount 1 --wallet-type SPOT --recv-window 5000
 ```
 
-### [GET /sapi/v1/convert/limit/queryOpenOrders](https://developers.binance.com/docs/convert/trade/Query-Order) - Query limit open orders
+### [GET /sapi/v1/convert/limit/queryOpenOrders](https://developers.binance.com/en/docs/catalog/core-trading-convert/api/rest-api/trade#query-limit-open-orders) - Query limit open orders (USER_DATA)
 
 ```bash
 binance-cli convert query-limit-open-orders --recv-window 5000
 ```
 
-### [POST /sapi/v1/convert/getQuote](https://developers.binance.com/docs/convert/trade/Send-quote-request) - Send Quote Request
+### [POST /sapi/v1/convert/getQuote](https://developers.binance.com/en/docs/catalog/core-trading-convert/api/rest-api/trade#send-quote-request) - Send Quote Request (TRADE)
 
 ```bash
-binance-cli convert send-quote-request --json {}
+binance-cli convert send-quote-request --from-asset BTC --to-asset USDT --from-amount 1 --to-amount 1 --wallet-type SPOT --valid-time VALID_TIME_10s --recv-window 5000
 ```

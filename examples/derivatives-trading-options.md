@@ -1,12 +1,12 @@
 ## Account
 
-### [GET /eapi/v1/bill](https://developers.binance.com/docs/derivatives/options-trading/account/Account-Funding-Flow) - Account Funding Flow
+### [GET /eapi/v1/bill](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/account#account-funding-flow) - Account Funding Flow (USER_DATA)
 
 ```bash
-binance-cli derivatives-options account-funding-flow --currency "currency_example" --record-id 1 --start-time 1623319461670 --end-time 1641782889000 --limit 100 --recv-window 5000
+binance-cli derivatives-options account-funding-flow --currency USDT --record-id 100000 --start-time 1623319461670 --end-time 1641782889000 --limit 20 --recv-window 5000
 ```
 
-### [GET /eapi/v1/marginAccount](https://developers.binance.com/docs/derivatives/options-trading/account/Option-Margin-Account-Information) - Option Margin Account Information
+### [GET /eapi/v1/marginAccount](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/account#option-margin-account-information) - Option Margin Account Information (USER_DATA)
 
 ```bash
 binance-cli derivatives-options option-margin-account-information --recv-window 5000
@@ -14,255 +14,261 @@ binance-cli derivatives-options option-margin-account-information --recv-window 
 
 ## MarketData
 
-### [GET /eapi/v1/time](https://developers.binance.com/docs/derivatives/options-trading/market-data/Check-Server-Time) - Check Server Time
+### [GET /eapi/v1/time](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/market-data#check-server-time) - Check Server Time
 
 ```bash
 binance-cli derivatives-options check-server-time
 ```
 
-### [GET /eapi/v1/exchangeInfo](https://developers.binance.com/docs/derivatives/options-trading/market-data/Exchange-Information) - Exchange Information
+### [GET /eapi/v1/exchangeInfo](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/market-data#exchange-information) - Exchange Information
 
 ```bash
 binance-cli derivatives-options exchange-information
 ```
 
-### [GET /eapi/v1/exerciseHistory](https://developers.binance.com/docs/derivatives/options-trading/market-data/Historical-Exercise-Records) - Historical Exercise Records
+### [GET /eapi/v1/exerciseHistory](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/market-data#historical-exercise-records) - Historical Exercise Records
 
 ```bash
-binance-cli derivatives-options historical-exercise-records --underlying "underlying_example" --start-time 1623319461670 --end-time 1641782889000 --limit 100
+binance-cli derivatives-options historical-exercise-records --underlying BTCUSDT --start-time 1623319461670 --end-time 1641782889000 --limit 20
 ```
 
-### [GET /eapi/v1/index](https://developers.binance.com/docs/derivatives/options-trading/market-data/Symbol-Price-Ticker) - Index Price
+### [GET /eapi/v1/index](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/market-data#index-price) - Index Price
 
 ```bash
-binance-cli derivatives-options index-price --underlying "underlying_example"
+binance-cli derivatives-options index-price --underlying BTCUSDT
 ```
 
-### [GET /eapi/v1/klines](https://developers.binance.com/docs/derivatives/options-trading/market-data/Kline-Candlestick-Data) - Kline/Candlestick Data
+### [GET /eapi/v1/klines](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/market-data#kline-candlestick-data) - Kline/Candlestick Data
 
 ```bash
-binance-cli derivatives-options kline-candlestick-data --symbol "symbol_example" --interval "interval_example" --start-time 1623319461670 --end-time 1641782889000 --limit 100
+binance-cli derivatives-options kline-candlestick-data --symbol BTC-200730-9000-C --interval INTERVAL_1m --start-time 1623319461670 --end-time 1641782889000 --limit 20
 ```
 
-### [GET /eapi/v1/openInterest](https://developers.binance.com/docs/derivatives/options-trading/market-data/Open-Interest) - Open Interest
+### [GET /eapi/v1/openInterest](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/market-data#open-interest) - Open Interest
 
 ```bash
-binance-cli derivatives-options open-interest --underlying-asset "underlyingAsset_example" --expiration "expiration_example"
+binance-cli derivatives-options open-interest --underlying-asset ETH/BTC --expiration 221225
 ```
 
-### [GET /eapi/v1/mark](https://developers.binance.com/docs/derivatives/options-trading/market-data/Option-Mark-Price) - Option Mark Price
+### [GET /eapi/v1/mark](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/market-data#option-mark-price) - Option Mark Price
 
 ```bash
-binance-cli derivatives-options option-mark-price --symbol "symbol_example"
+binance-cli derivatives-options option-mark-price --symbol BTC-200730-9000-C
 ```
 
-### [GET /eapi/v1/depth](https://developers.binance.com/docs/derivatives/options-trading/market-data/Order-Book) - Order Book
+### [GET /eapi/v1/depth](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/market-data#order-book) - Order Book
 
 ```bash
-binance-cli derivatives-options order-book --symbol "symbol_example" --limit 100
+binance-cli derivatives-options order-book --symbol BTC-200730-9000-C --limit 20
 ```
 
-### [GET /eapi/v1/blockTrades](https://developers.binance.com/docs/derivatives/options-trading/market-data/Recent-Block-Trade-List) - Recent Block Trades List
+### [GET /eapi/v1/blockTrades](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/market-data#recent-block-trades-list) - Recent Block Trades List
 
 ```bash
-binance-cli derivatives-options recent-block-trades-list --symbol "symbol_example" --limit 100
+binance-cli derivatives-options recent-block-trades-list --symbol BTC-200730-9000-C --limit 20
 ```
 
-### [GET /eapi/v1/trades](https://developers.binance.com/docs/derivatives/options-trading/market-data/Recent-Trades-List) - Recent Trades List
+### [GET /eapi/v1/trades](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/market-data#recent-trades-list) - Recent Trades List
 
 ```bash
-binance-cli derivatives-options recent-trades-list --symbol "symbol_example" --limit 100
+binance-cli derivatives-options recent-trades-list --symbol BTC-200730-9000-C --limit 20
 ```
 
-### [GET /eapi/v1/ping](https://developers.binance.com/docs/derivatives/options-trading/market-data/Test-Connectivity) - Test Connectivity
+### [GET /eapi/v1/ping](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/market-data#test-connectivity) - Test Connectivity
 
 ```bash
 binance-cli derivatives-options test-connectivity
 ```
 
-### [GET /eapi/v1/ticker](https://developers.binance.com/docs/derivatives/options-trading/market-data/24hr-Ticker-Price-Change-Statistics) - 24hr Ticker Price Change Statistics
+### [GET /eapi/v1/ticker](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/market-data#ticker24hr-price-change-statistics) - 24hr Ticker Price Change Statistics
 
 ```bash
-binance-cli derivatives-options ticker24hr-price-change-statistics --symbol "symbol_example"
+binance-cli derivatives-options ticker24hr-price-change-statistics --symbol BTC-200730-9000-C
 ```
 
 ## MarketMakerBlockTrade
 
-### [POST /eapi/v1/block/order/execute](https://developers.binance.com/docs/derivatives/options-trading/market-maker-block-trade/Accept-Block-Trade-Order) - Accept Block Trade Order
+### [POST /eapi/v1/block/order/execute](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/market-maker-block-trade#accept-block-trade-order) - Accept Block Trade Order (TRADE)
 
 ```bash
-binance-cli derivatives-options accept-block-trade-order --json {}
+binance-cli derivatives-options accept-block-trade-order --block-order-matching-key 7d046e6e-a429-4335-ab9d-6a681febcde5 --recv-window 5000
 ```
 
-### [GET /eapi/v1/block/user-trades](https://developers.binance.com/docs/derivatives/options-trading/market-maker-block-trade/Account-Block-Trade-List) - Account Block Trade List
+### [GET /eapi/v1/block/user-trades](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/market-maker-block-trade#account-block-trade-list) - Account Block Trade List (USER_DATA)
 
 ```bash
-binance-cli derivatives-options account-block-trade-list --end-time 1641782889000 --start-time 1623319461670 --underlying "underlying_example" --recv-window 5000
+binance-cli derivatives-options account-block-trade-list --end-time 1641782889000 --start-time 1623319461670 --underlying BTCUSDT --recv-window 5000
 ```
 
-### [DELETE /eapi/v1/block/order/create](https://developers.binance.com/docs/derivatives/options-trading/market-maker-block-trade/Cancel-Block-Trade-Order) - Cancel Block Trade Order
+### [DELETE /eapi/v1/block/order/create](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/market-maker-block-trade#cancel-block-trade-order) - Cancel Block Trade Order (TRADE)
 
 ```bash
-binance-cli derivatives-options cancel-block-trade-order --block-order-matching-key "blockOrderMatchingKey_example" --recv-window 5000
+binance-cli derivatives-options cancel-block-trade-order --block-order-matching-key 7d046e6e-a429-4335-ab9d-6a681febcde5 --recv-window 5000
 ```
 
-### [PUT /eapi/v1/block/order/create](https://developers.binance.com/docs/derivatives/options-trading/market-maker-block-trade/Extend-Block-Trade-Order) - Extend Block Trade Order
+### [PUT /eapi/v1/block/order/create](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/market-maker-block-trade#extend-block-trade-order) - Extend Block Trade Order (TRADE)
 
 ```bash
-binance-cli derivatives-options extend-block-trade-order --json {}
+binance-cli derivatives-options extend-block-trade-order --block-order-matching-key 3668822b8-1baa-6a2f-adb8-d3de6289b361 --recv-window 5000
 ```
 
-### [POST /eapi/v1/block/order/create](https://developers.binance.com/docs/derivatives/options-trading/market-maker-block-trade/New-Block-Trade-Order) - New Block Trade Order
+### [POST /eapi/v1/block/order/create](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/market-maker-block-trade#new-block-trade-order) - New Block Trade Order (TRADE)
 
 ```bash
-binance-cli derivatives-options new-block-trade-order --json {}
+binance-cli derivatives-options new-block-trade-order --liquidity TAKER --legs [] --recv-window 5000
 ```
 
-### [GET /eapi/v1/block/order/execute](https://developers.binance.com/docs/derivatives/options-trading/market-maker-block-trade/Query-Block-Trade-Detail) - Query Block Trade Details
+### [GET /eapi/v1/block/order/execute](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/market-maker-block-trade#query-block-trade-details) - Query Block Trade Details (USER_DATA)
 
 ```bash
-binance-cli derivatives-options query-block-trade-details --block-order-matching-key "blockOrderMatchingKey_example" --recv-window 5000
+binance-cli derivatives-options query-block-trade-details --block-order-matching-key 12b96c28-ba05-8906-c89t-703215cfb2e6 --recv-window 5000
 ```
 
-### [GET /eapi/v1/block/order/orders](https://developers.binance.com/docs/derivatives/options-trading/market-maker-block-trade/Query-Block-Trade-Order) - Query Block Trade Order
+### [GET /eapi/v1/block/order/orders](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/market-maker-block-trade#query-block-trade-order) - Query Block Trade Order (TRADE)
 
 ```bash
-binance-cli derivatives-options query-block-trade-order --block-order-matching-key "blockOrderMatchingKey_example" --end-time 1641782889000 --start-time 1623319461670 --underlying "underlying_example" --recv-window 5000
+binance-cli derivatives-options query-block-trade-order --block-order-matching-key 7d046e6e-a429-4335-ab9d-6a681febcde5 --end-time 1641782889000 --start-time 1623319461670 --underlying BTCUSDT --recv-window 5000
 ```
 
 ## MarketMakerEndpoints
 
-### [POST /eapi/v1/countdownCancelAllHeartBeat](https://developers.binance.com/docs/derivatives/options-trading/market-maker-endpoints/Auto-Cancel-All-Open-Orders-Heartbeat) - Auto-Cancel All Open Orders (Kill-Switch) Heartbeat
+### [POST /eapi/v1/countdownCancelAllHeartBeat](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/market-maker-endpoints#auto-cancel-all-open-orders) - Auto-Cancel All Open Orders (Kill-Switch) Heartbeat (TRADE)
 
 ```bash
-binance-cli derivatives-options auto-cancel-all-open-orders --json {}
+binance-cli derivatives-options auto-cancel-all-open-orders --underlyings BTCUSDT,ETHUSDT --recv-window 5000
 ```
 
-### [GET /eapi/v1/countdownCancelAll](https://developers.binance.com/docs/derivatives/options-trading/market-maker-endpoints/Get-Auto-Cancel-All-Open-Orders-Config) - Get Auto-Cancel All Open Orders (Kill-Switch) Config
+### [GET /eapi/v1/countdownCancelAll](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/market-maker-endpoints#get-auto-cancel-all-open-orders) - Get Auto-Cancel All Open Orders (Kill-Switch) Config (TRADE)
 
 ```bash
-binance-cli derivatives-options get-auto-cancel-all-open-orders --underlying "underlying_example" --recv-window 5000
+binance-cli derivatives-options get-auto-cancel-all-open-orders --underlying BTCUSDT --recv-window 5000
 ```
 
-### [GET /eapi/v1/mmp](https://developers.binance.com/docs/derivatives/options-trading/market-maker-endpoints/Get-Market-Maker-Protection-Config) - Get Market Maker Protection Config
+### [GET /eapi/v1/mmp](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/market-maker-endpoints#get-market-maker-protection-config) - Get Market Maker Protection Config (TRADE)
 
 ```bash
-binance-cli derivatives-options get-market-maker-protection-config --underlying "underlying_example" --recv-window 5000
+binance-cli derivatives-options get-market-maker-protection-config --underlying BTCUSDT --recv-window 5000
 ```
 
-### [POST /eapi/v1/mmpReset](https://developers.binance.com/docs/derivatives/options-trading/market-maker-endpoints/Reset-Market-Maker-Protection-Config) - Reset Market Maker Protection Config
+### [POST /eapi/v1/mmpReset](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/market-maker-endpoints#reset-market-maker-protection-config) - Reset Market Maker Protection Config (TRADE)
 
 ```bash
-binance-cli derivatives-options reset-market-maker-protection-config --json {}
+binance-cli derivatives-options reset-market-maker-protection-config --underlying BTCUSDT --recv-window 5000
 ```
 
-### [POST /eapi/v1/countdownCancelAll](https://developers.binance.com/docs/derivatives/options-trading/market-maker-endpoints/Set-Auto-Cancel-All-Open-Orders-Config) - Set Auto-Cancel All Open Orders (Kill-Switch) Config
+### [POST /eapi/v1/countdownCancelAll](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/market-maker-endpoints#set-auto-cancel-all-open-orders) - Set Auto-Cancel All Open Orders (Kill-Switch) Config (TRADE)
 
 ```bash
-binance-cli derivatives-options set-auto-cancel-all-open-orders --json {}
+binance-cli derivatives-options set-auto-cancel-all-open-orders --underlying BTCUSDT --countdown-time 5000 --recv-window 5000
 ```
 
-### [POST /eapi/v1/mmpSet](https://developers.binance.com/docs/derivatives/options-trading/market-maker-endpoints/Set-Market-Maker-Protection-Config) - Set Market Maker Protection Config
+### [POST /eapi/v1/mmpSet](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/market-maker-endpoints#set-market-maker-protection-config) - Set Market Maker Protection Config (TRADE)
 
 ```bash
-binance-cli derivatives-options set-market-maker-protection-config --json {}
+binance-cli derivatives-options set-market-maker-protection-config --underlying BTCUSDT --window-time-in-milliseconds 1000 --frozen-time-in-milliseconds 1000 --qty-limit 1.0 --delta-limit 1.0 --recv-window 5000
 ```
 
 ## Trade
 
-### [GET /eapi/v1/userTrades](https://developers.binance.com/docs/derivatives/options-trading/trade/Account-Trade-List) - Account Trade List
+### [GET /eapi/v1/userTrades](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/trade#account-trade-list) - Account Trade List (USER_DATA)
 
 ```bash
-binance-cli derivatives-options account-trade-list --symbol "symbol_example" --from-id 1 --start-time 1623319461670 --end-time 1641782889000 --limit 100 --recv-window 5000
+binance-cli derivatives-options account-trade-list --symbol BTC-200730-9000-C --from-id 1 --start-time 1623319461670 --end-time 1641782889000 --limit 20 --recv-window 5000
 ```
 
-### [DELETE /eapi/v1/allOpenOrdersByUnderlying](https://developers.binance.com/docs/derivatives/options-trading/trade/Cancel-All-Option-Orders-By-Underlying) - Cancel All Option Orders By Underlying
+### [DELETE /eapi/v1/allOpenOrdersByUnderlying](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/trade#cancel-all-option-orders-by-underlying) - Cancel All Option Orders By Underlying (TRADE)
 
 ```bash
-binance-cli derivatives-options cancel-all-option-orders-by-underlying --underlying "underlying_example" --recv-window 5000
+binance-cli derivatives-options cancel-all-option-orders-by-underlying --underlying BTCUSDT --recv-window 5000
 ```
 
-### [DELETE /eapi/v1/allOpenOrders](https://developers.binance.com/docs/derivatives/options-trading/trade/Cancel-all-Option-orders-on-specific-symbol) - Cancel all Option orders on specific symbol
+### [DELETE /eapi/v1/allOpenOrders](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/trade#cancel-all-option-orders-on-specific-symbol) - Cancel all Option orders on specific symbol (TRADE)
 
 ```bash
-binance-cli derivatives-options cancel-all-option-orders-on-specific-symbol --symbol "symbol_example" --recv-window 5000
+binance-cli derivatives-options cancel-all-option-orders-on-specific-symbol --symbol BTC-200730-9000-C --recv-window 5000
 ```
 
-### [DELETE /eapi/v1/batchOrders](https://developers.binance.com/docs/derivatives/options-trading/trade/Cancel-Multiple-Option-Orders) - Cancel Multiple Option Orders
+### [DELETE /eapi/v1/batchOrders](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/trade#cancel-multiple-option-orders) - Cancel Multiple Option Orders (TRADE)
 
 ```bash
-binance-cli derivatives-options cancel-multiple-option-orders --symbol "symbol_example" --order-ids 4611875134427365000  --client-order-ids "my_id_1"  --recv-window 5000
+binance-cli derivatives-options cancel-multiple-option-orders --symbol BTC-200730-9000-C --order-ids 4611875134427365000  --client-order-ids my_id_1  --recv-window 5000
 ```
 
-### [DELETE /eapi/v1/order](https://developers.binance.com/docs/derivatives/options-trading/trade/Cancel-Option-Order) - Cancel Option Order
+### [DELETE /eapi/v1/order](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/trade#cancel-option-order) - Cancel Option Order (TRADE)
 
 ```bash
-binance-cli derivatives-options cancel-option-order --symbol "symbol_example" --order-id 1 --client-order-id "1" --recv-window 5000
+binance-cli derivatives-options cancel-option-order --symbol BTC-200730-9000-C --order-id 4611875134427365000 --client-order-id 10000 --recv-window 5000
 ```
 
-### [POST /eapi/v1/order](https://developers.binance.com/docs/derivatives/options-trading/trade/New-Order) - New Order
+### [POST /eapi/v1/order](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/trade#new-order) - New Order (TRADE)
 
 ```bash
-binance-cli derivatives-options new-order --json {}
+binance-cli derivatives-options new-order --symbol BTC-200730-9000-C --side BUY --rtype LIMIT --quantity 1.0 --price 1.0 --time-in-force GTC --reduce-only false --post-only false --new-order-resp-type ACK --client-order-id 1 --is-mmp true --self-trade-prevention-mode NONE --recv-window 5000
 ```
 
-### [GET /eapi/v1/position](https://developers.binance.com/docs/derivatives/options-trading/trade/Option-Position-Information) - Option Position Information
+### [GET /eapi/v1/position](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/trade#option-position-information) - Option Position Information (USER_DATA)
 
 ```bash
-binance-cli derivatives-options option-position-information --symbol "symbol_example" --recv-window 5000
+binance-cli derivatives-options option-position-information --symbol BTC-200730-9000-C --recv-window 5000
 ```
 
-### [POST /eapi/v1/batchOrders](https://developers.binance.com/docs/derivatives/options-trading/trade/Place-Multiple-Orders) - Place Multiple Orders
+### [POST /eapi/v1/batchOrders](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/trade#place-multiple-orders) - Place Multiple Orders (TRADE)
 
 ```bash
-binance-cli derivatives-options place-multiple-orders --json {}
+binance-cli derivatives-options place-multiple-orders --orders [] --recv-window 5000
 ```
 
-### [GET /eapi/v1/openOrders](https://developers.binance.com/docs/derivatives/options-trading/trade/Query-Current-Open-Option-Orders) - Query Current Open Option Orders
+### [GET /eapi/v1/openOrders](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/trade#query-current-open-option-orders) - Query Current Open Option Orders (USER_DATA)
 
 ```bash
-binance-cli derivatives-options query-current-open-option-orders --symbol "symbol_example" --order-id 1 --start-time 1623319461670 --end-time 1641782889000 --recv-window 5000
+binance-cli derivatives-options query-current-open-option-orders --symbol BTC-200730-9000-C --order-id 4611875134427365000 --start-time 1623319461670 --end-time 1641782889000 --recv-window 5000
 ```
 
-### [GET /eapi/v1/historyOrders](https://developers.binance.com/docs/derivatives/options-trading/trade/Query-Option-Order-History) - Query Option Order History
+### [GET /eapi/v1/historyOrders](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/trade#query-option-order-history) - Query Option Order History (TRADE)
 
 ```bash
-binance-cli derivatives-options query-option-order-history --symbol "symbol_example" --order-id 1 --start-time 1623319461670 --end-time 1641782889000 --limit 100 --recv-window 5000
+binance-cli derivatives-options query-option-order-history --symbol BTC-200730-9000-C --order-id 4611875134427365000 --start-time 1623319461670 --end-time 1641782889000 --limit 20 --recv-window 5000
 ```
 
-### [GET /eapi/v1/order](https://developers.binance.com/docs/derivatives/options-trading/trade/Query-Single-Order) - Query Single Order
+### [GET /eapi/v1/order](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/trade#query-single-order) - Query Single Order (TRADE)
 
 ```bash
-binance-cli derivatives-options query-single-order --symbol "symbol_example" --order-id 1 --client-order-id "1" --recv-window 5000
+binance-cli derivatives-options query-single-order --symbol BTC-200730-9000-C --order-id 4611875134427365000 --client-order-id abc123 --recv-window 5000
 ```
 
-### [GET /eapi/v1/commission](https://developers.binance.com/docs/derivatives/options-trading/trade/User-Commission) - User Commission
+### [POST /eapi/v1/stock/contract](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/trade#tradfi-options-contract) - TradFi Options Contract (USER_DATA)
+
+```bash
+binance-cli derivatives-options tradfi-options-contract --recv-window 5000
+```
+
+### [GET /eapi/v1/commission](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/trade#user-commission) - User Commission (USER_DATA)
 
 ```bash
 binance-cli derivatives-options user-commission --recv-window 5000
 ```
 
-### [GET /eapi/v1/exerciseRecord](https://developers.binance.com/docs/derivatives/options-trading/trade/User-Exercise-Record) - User Exercise Record
+### [GET /eapi/v1/exerciseRecord](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/trade#user-exercise-record) - User Exercise Record (USER_DATA)
 
 ```bash
-binance-cli derivatives-options user-exercise-record --symbol "symbol_example" --start-time 1623319461670 --end-time 1641782889000 --limit 100 --recv-window 5000
+binance-cli derivatives-options user-exercise-record --symbol BTC-200730-9000-C --start-time 1623319461670 --end-time 1641782889000 --limit 20 --recv-window 5000
 ```
 
 ## UserDataStreams
 
-### [DELETE /eapi/v1/listenKey](https://developers.binance.com/docs/derivatives/options-trading/user-data-streams/Close-User-Data-Stream) - Close User Data Stream
+### [DELETE /eapi/v1/listenKey](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/user-data-streams#close-user-data-stream) - Close User Data Stream (USER_STREAM)
 
 ```bash
 binance-cli derivatives-options close-user-data-stream
 ```
 
-### [PUT /eapi/v1/listenKey](https://developers.binance.com/docs/derivatives/options-trading/user-data-streams/Keepalive-User-Data-Stream) - Keepalive User Data Stream
+### [PUT /eapi/v1/listenKey](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/user-data-streams#keepalive-user-data-stream) - Keepalive User Data Stream (USER_STREAM)
 
 ```bash
 binance-cli derivatives-options keepalive-user-data-stream
 ```
 
-### [POST /eapi/v1/listenKey](https://developers.binance.com/docs/derivatives/options-trading/user-data-streams/Start-User-Data-Stream) - Start User Data Stream
+### [POST /eapi/v1/listenKey](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-options/api/rest-api/user-data-streams#start-user-data-stream) - Start User Data Stream (USER_STREAM)
 
 ```bash
 binance-cli derivatives-options start-user-data-stream

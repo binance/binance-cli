@@ -1,5 +1,30 @@
 # Change log
 
+## 2.0.0 - 2025-07-28
+
+- Rewrote binance-cli in Rust
+
+### Added (11)
+
+- `alpha full-depth` (`GET /bapi/defi/v1/public/alpha-trade/fullDepth`)
+- `derivatives-trading-options tradfi-options-contract` (`POST /eapi/v1/stock/contract`)
+- `margin-trading query-liquidation-loan-repay-history` (`GET /sapi/v1/margin/liquidation-loan/repay-history`)
+- `margin-trading query-liquidation-loan` (`GET /sapi/v1/margin/liquidation-loan`)
+- `margin-trading liquidation-loan-repay` (`POST /sapi/v1/margin/exit-special-key-mode/sapi/v1/margin/liquidation-loan/repay`)
+- `sub-account modify-sub-account-api-key-permission` (`POST /sapi/v1/sub-account/subAccountApiPermission`)
+- `sub-account delete-sub-account-api-key` (`DELETE /sapi/v1/sub-account/subAccountApi`)
+- `sub-account query-sub-account-api-key` (`GET /sapi/v1/sub-account/subAccountApi`)
+- `sub-account create-sub-account-api-key` (`POST /sapi/v1/sub-account/subAccountApi`)
+- `vip-loan get-viploan-repayment-history` (`GET /sapi/v1/loan/vip/repay/history`)
+- `vip-loan query-viploan-fixed-rate-market` (`GET /sapi/v1/loan/vip/fixed/market`)
+- `vip-loan vip-loan-fixed-rate-borrow` (`POST /sapi/v1/loan/vip/fixed/borrow`)
+- Added W3W Prediction API collection of endpoints.
+
+### Removed (1)
+
+- `check-collateral-repay-rate-stable-rate` `GET /sapi/v1/loan/repay/collateral/rate`
+
+
 ## 1.3.0 - 2026-06-04
 
 **Derivatives Trading Usds Futures**
