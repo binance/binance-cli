@@ -1,7 +1,7 @@
-## C2C
+## Default
 
-### [GET /sapi/v1/c2c/orderMatch/listUserOrderHistory](https://developers.binance.com/docs/c2c/rest-api/Get-C2C-Trade-History) - Get C2C Trade History
+### [GET /sapi/v1/c2c/orderMatch/listUserOrderHistory](https://developers.binance.com/en/docs/catalog/investment-and-services-c2-c/api/rest-api/~#get-c2-ctrade-history) - Get C2C Trade History (USER_DATA)
 
 ```bash
-binance-cli c2c get-c2-c-trade-history --trade-type "tradeType_example" --start-timestamp 1 --end-timestamp 1 --page 1 --rows 100 --recv-window 5000
+binance-cli c2c get-c2-c-trade-history --trade-type BUY --start-timestamp 1770736694138 --end-timestamp 1770736694138 --page 1 --rows 100
 ```

@@ -1,7 +1,6 @@
 # Binance CLI
 
 [![Latest Release](https://img.shields.io/github/release/binance/binance-cli.svg)](https://github.com/binance/binance-cli/releases)
-[![npm Downloads](https://img.shields.io/npm/dm/@binance/binance-cli.svg)](https://www.npmjs.com/package/@binance/binance-cli)
 
 A simple CLI that interacts with the Binance API
 
@@ -9,10 +8,7 @@ A simple CLI that interacts with the Binance API
 
 ## Installation
 
-```bash
-# Install from npm
-npm install -g @binance/binance-cli
-```
+Download the correct binary from [Release](https://github.com/binance/binance-cli/releases) 
 
 ## Usage
 
@@ -171,7 +167,7 @@ In order to add completion, the following steps can be followed:
 Append the output to the .bashrc file:
 
 ```bash
-binance-cli completion >> ~/.bashrc
+binance-cli completion bash >> ~/.bashrc
 ```
 
 ##### For Zsh:
@@ -179,7 +175,7 @@ binance-cli completion >> ~/.bashrc
 Append the output to the .zshrc file:
 
 ```bash
-binance-cli completion >> ~/.zshrc
+binance-cli completion zsh >> ~/.zshrc
 ```
 
 After updating the file, the terminal needs to be restarted or activate the completion with `source ~/.bashrc (or .zshrc)`.
