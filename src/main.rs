@@ -1,24 +1,33 @@
 mod algo;
 mod alpha;
+mod alpha_ws_streams;
 mod c2c;
 mod convert;
 mod copy_trading;
 mod crypto_loan;
 mod custom_requests;
 mod derivatives_trading_coin_futures;
+mod derivatives_trading_coin_futures_ws_streams;
 mod derivatives_trading_options;
+mod derivatives_trading_options_ws_streams;
 mod derivatives_trading_portfolio_margin;
 mod derivatives_trading_portfolio_margin_pro;
+mod derivatives_trading_portfolio_margin_pro_ws_streams;
+mod derivatives_trading_portfolio_margin_ws_streams;
 mod derivatives_trading_usds_futures;
+mod derivatives_trading_usds_futures_ws_streams;
 mod dual_investment;
+mod fiat;
 mod gift_card;
 mod margin_trading;
+mod margin_trading_ws_streams;
 mod mining;
 mod pay;
 mod profile;
 mod rebate;
 mod simple_earn;
 mod spot;
+mod spot_ws_streams;
 mod staking;
 mod sub_account;
 mod utils;
@@ -28,6 +37,7 @@ mod wallet;
 
 use crate::algo::{AlgoCommands, handle_algo_command};
 use crate::alpha::{AlphaCommands, handle_alpha_command};
+use crate::alpha_ws_streams::{AlphaWebsocketStreamsCommands, handle_alpha_ws_streams_command};
 use crate::c2c::{C2CCommands, handle_c2c_command};
 use crate::convert::{ConvertCommands, handle_convert_command};
 use crate::copy_trading::{CopyTradingCommands, handle_copy_trading_command};
@@ -36,8 +46,16 @@ use crate::custom_requests::{CustomRequestCommand, handle_custom_request};
 use crate::derivatives_trading_coin_futures::{
     DerivativesTradingCoinFuturesCommands, handle_derivatives_trading_coin_futures_command,
 };
+use crate::derivatives_trading_coin_futures_ws_streams::{
+    DerivativesTradingCoinFuturesWebsocketStreamsCommands,
+    handle_derivatives_trading_coin_futures_ws_streams_command,
+};
 use crate::derivatives_trading_options::{
     DerivativesTradingOptionsCommands, handle_derivatives_trading_options_command,
+};
+use crate::derivatives_trading_options_ws_streams::{
+    DerivativesTradingOptionsWebsocketStreamsCommands,
+    handle_derivatives_trading_options_ws_streams_command,
 };
 use crate::derivatives_trading_portfolio_margin::{
     DerivativesTradingPortfolioMarginCommands, handle_derivatives_trading_portfolio_margin_command,
@@ -46,17 +64,34 @@ use crate::derivatives_trading_portfolio_margin_pro::{
     DerivativesTradingPortfolioMarginProCommands,
     handle_derivatives_trading_portfolio_margin_pro_command,
 };
+use crate::derivatives_trading_portfolio_margin_pro_ws_streams::{
+    DerivativesTradingPortfolioMarginProWebsocketStreamsCommands,
+    handle_derivatives_trading_portfolio_margin_pro_ws_streams_command,
+};
+use crate::derivatives_trading_portfolio_margin_ws_streams::{
+    DerivativesTradingPortfolioMarginWebsocketStreamsCommands,
+    handle_derivatives_trading_portfolio_margin_ws_streams_command,
+};
 use crate::derivatives_trading_usds_futures::{
     DerivativesTradingUsdsFuturesCommands, handle_derivatives_trading_usds_futures_command,
 };
+use crate::derivatives_trading_usds_futures_ws_streams::{
+    DerivativesTradingUsdsFuturesWebsocketStreamsCommands,
+    handle_derivatives_trading_usds_futures_ws_streams_command,
+};
 use crate::dual_investment::{DualInvestmentCommands, handle_dual_investment_command};
+use crate::fiat::{FiatCommands, handle_fiat_command};
 use crate::gift_card::{GiftCardCommands, handle_gift_card_command};
 use crate::margin_trading::{MarginTradingCommands, handle_margin_trading_command};
+use crate::margin_trading_ws_streams::{
+    MarginTradingWebsocketStreamsCommands, handle_margin_trading_ws_streams_command,
+};
 use crate::mining::{MiningCommands, handle_mining_command};
 use crate::pay::{PayCommands, handle_pay_command};
 use crate::rebate::{RebateCommands, handle_rebate_command};
 use crate::simple_earn::{SimpleEarnCommands, handle_simple_earn_command};
 use crate::spot::{SpotCommands, handle_spot_command};
+use crate::spot_ws_streams::{SpotWebsocketStreamsCommands, handle_spot_ws_streams_command};
 use crate::staking::{StakingCommands, handle_staking_command};
 use crate::sub_account::{SubAccountCommands, handle_sub_account_command};
 use crate::vip_loan::{VIPLoanCommands, handle_vip_loan_command};
@@ -70,6 +105,8 @@ use clap_complete::{Shell, generate};
 #[derive(Parser)]
 #[command(
     name = "binance-cli",
+    next_line_help = false,
+    term_width = 150,
     after_help = "Environment Variables:\n  BINANCE_API_KEY\n  BINANCE_SECRET_KEY\n  BINANCE_API_ENV                   API Environment (prod | testnet | demo)\n  BINANCE_<PRODUCT>_BASE_PATH       Base path of the product (e.g. \"https://api.binance.com\" for Spot)"
 )]
 #[command(version)]
@@ -91,6 +128,11 @@ enum Commands {
     Alpha {
         #[command(subcommand)]
         command: AlphaCommands,
+    },
+    #[command(about = "Binance Alpha Websocket Streams")]
+    AlphaStreams {
+        #[command(subcommand)]
+        command: AlphaWebsocketStreamsCommands,
     },
     #[command(about = "Binance C2C REST API")]
     C2C {
@@ -117,34 +159,60 @@ enum Commands {
         #[command(subcommand)]
         command: DerivativesTradingOptionsCommands,
     },
+    #[command(about = "Binance Derivatives Trading Options Websocket Streams")]
+    DerivativesTradingOptionsStreams {
+        #[command(subcommand)]
+        command: DerivativesTradingOptionsWebsocketStreamsCommands,
+    },
     #[command(about = "Binance Derivatives Trading Portfolio Margin REST API")]
     DerivativesTradingPortfolioMargin {
         #[command(subcommand)]
         command: DerivativesTradingPortfolioMarginCommands,
+    },
+    #[command(about = "Binance Derivatives Trading Portfolio Margin Websocket Streams")]
+    DerivativesTradingPortfolioMarginStreams {
+        #[command(subcommand)]
+        command: DerivativesTradingPortfolioMarginWebsocketStreamsCommands,
     },
     #[command(about = "Binance Derivatives Trading Portfolio Margin Pro REST API")]
     DerivativesTradingPortfolioMarginPro {
         #[command(subcommand)]
         command: DerivativesTradingPortfolioMarginProCommands,
     },
+    #[command(about = "Binance Derivatives Trading Portfolio Margin Pro Websocket Streams")]
+    DerivativesTradingPortfolioMarginProStreams {
+        #[command(subcommand)]
+        command: DerivativesTradingPortfolioMarginProWebsocketStreamsCommands,
+    },
     #[command(about = "Binance Dual Investment REST API")]
     DualInvestment {
         #[command(subcommand)]
         command: DualInvestmentCommands,
     },
-    // Fiat {
-    //     #[command(subcommand)]
-    //     command: FiatCommands,
-    // },
+    #[command(about = "Binance Fiat REST API")]
+    Fiat {
+        #[command(subcommand)]
+        command: FiatCommands,
+    },
     #[command(about = "Binance Derivatives Trading COIN Futures REST API")]
     FuturesCoin {
         #[command(subcommand)]
         command: DerivativesTradingCoinFuturesCommands,
     },
+    #[command(about = "Binance Derivatives Trading COIN Futures Websocket Streams")]
+    FuturesCoinStreams {
+        #[command(subcommand)]
+        command: DerivativesTradingCoinFuturesWebsocketStreamsCommands,
+    },
     #[command(about = "Binance Derivatives Trading USDS Futures REST API")]
     FuturesUsds {
         #[command(subcommand)]
         command: DerivativesTradingUsdsFuturesCommands,
+    },
+    #[command(about = "Binance Derivatives Trading USDS Futures Websocket Streams")]
+    FuturesUsdsStreams {
+        #[command(subcommand)]
+        command: DerivativesTradingUsdsFuturesWebsocketStreamsCommands,
     },
     #[command(about = "Binance Gift Card REST API")]
     GiftCard {
@@ -155,6 +223,11 @@ enum Commands {
     MarginTrading {
         #[command(subcommand)]
         command: MarginTradingCommands,
+    },
+    #[command(about = "Binance Margin Trading Websocket Streams")]
+    MarginTradingStreams {
+        #[command(subcommand)]
+        command: MarginTradingWebsocketStreamsCommands,
     },
     #[command(about = "Binance Mining REST API")]
     Mining {
@@ -180,6 +253,11 @@ enum Commands {
     Spot {
         #[command(subcommand)]
         command: SpotCommands,
+    },
+    #[command(about = "Binance Spot Websocket Streams")]
+    SpotStreams {
+        #[command(subcommand)]
+        command: SpotWebsocketStreamsCommands,
     },
     #[command(about = "Binance Staking REST API")]
     Staking {
@@ -228,6 +306,9 @@ async fn main() -> anyhow::Result<()> {
         Commands::Alpha { command } => {
             handle_alpha_command(command).await?;
         }
+        Commands::AlphaStreams { command } => {
+            handle_alpha_ws_streams_command(command).await?;
+        }
         Commands::C2C { command } => {
             handle_c2c_command(command).await?;
         }
@@ -243,29 +324,47 @@ async fn main() -> anyhow::Result<()> {
         Commands::DerivativesTradingOptions { command } => {
             handle_derivatives_trading_options_command(command).await?;
         }
+        Commands::DerivativesTradingOptionsStreams { command } => {
+            handle_derivatives_trading_options_ws_streams_command(command).await?;
+        }
         Commands::DerivativesTradingPortfolioMargin { command } => {
             handle_derivatives_trading_portfolio_margin_command(command).await?;
+        }
+        Commands::DerivativesTradingPortfolioMarginStreams { command } => {
+            handle_derivatives_trading_portfolio_margin_ws_streams_command(command).await?;
         }
         Commands::DerivativesTradingPortfolioMarginPro { command } => {
             handle_derivatives_trading_portfolio_margin_pro_command(command).await?;
         }
+        Commands::DerivativesTradingPortfolioMarginProStreams { command } => {
+            handle_derivatives_trading_portfolio_margin_pro_ws_streams_command(command).await?;
+        }
         Commands::DualInvestment { command } => {
             handle_dual_investment_command(command).await?;
         }
-        // Commands::Fiat { command } => {
-        //     handle_fiat_command(command).await?;
-        // }
+        Commands::Fiat { command } => {
+            handle_fiat_command(command).await?;
+        }
         Commands::FuturesCoin { command } => {
             handle_derivatives_trading_coin_futures_command(command).await?;
         }
+        Commands::FuturesCoinStreams { command } => {
+            handle_derivatives_trading_coin_futures_ws_streams_command(command).await?;
+        }
         Commands::FuturesUsds { command } => {
             handle_derivatives_trading_usds_futures_command(command).await?;
+        }
+        Commands::FuturesUsdsStreams { command } => {
+            handle_derivatives_trading_usds_futures_ws_streams_command(command).await?;
         }
         Commands::GiftCard { command } => {
             handle_gift_card_command(command).await?;
         }
         Commands::MarginTrading { command } => {
             handle_margin_trading_command(command).await?;
+        }
+        Commands::MarginTradingStreams { command } => {
+            handle_margin_trading_ws_streams_command(command).await?;
         }
         Commands::Mining { command } => {
             handle_mining_command(command).await?;
@@ -281,6 +380,9 @@ async fn main() -> anyhow::Result<()> {
         }
         Commands::Spot { command } => {
             handle_spot_command(command).await?;
+        }
+        Commands::SpotStreams { command } => {
+            handle_spot_ws_streams_command(command).await?;
         }
         Commands::Staking { command } => {
             handle_staking_command(command).await?;

@@ -1,5 +1,5 @@
 use crate::utils::{
-    build_user_agent, decode_selected_entities, get_configuration_rest_api, read_json_as,
+    decode_selected_entities, get_client_configuration, init_user_agent, read_json_as,
     read_stdin_as,
 };
 use binance_sdk::config::{ConfigurationRestApi, PrivateKey};
@@ -13,38 +13,33 @@ use std::io;
 use std::io::{Error, ErrorKind};
 
 fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> {
-    unsafe {
-        env::set_var(
-            "BINANCE_CONNECTOR_RUST_USER_AGENT",
-            build_user_agent("crypto-loan"),
-        );
-    }
+    init_user_agent("crypto-loan");
 
-    let config_rest_api = get_configuration_rest_api(profile, "crypto-loan").unwrap();
+    let client_config = get_client_configuration(profile, "crypto-loan").unwrap();
     let api_env = env::var("BINANCE_API_ENV")
         .ok()
-        .or(config_rest_api.env)
+        .or(client_config.env)
         .unwrap_or_else(|| "prod".to_string());
 
-    let base_path = match api_env.as_str() {
-        "prod" => CRYPTO_LOAN_REST_API_PROD_URL,
+    let base_path = client_config.base_path.unwrap_or(match api_env.as_str() {
+        "prod" => CRYPTO_LOAN_REST_API_PROD_URL.to_string(),
         _ => {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
                 "invalid BINANCE_API_ENV",
             ));
         }
-    };
+    });
 
     let mut builder = ConfigurationRestApi::builder().base_path(base_path);
 
     if is_signed {
         builder = builder
-            .api_key(config_rest_api.api_key)
-            .api_secret(config_rest_api.api_secret);
+            .api_key(client_config.api_key)
+            .api_secret(client_config.api_secret);
 
-        if config_rest_api.private_key.is_some()  {
-            builder = builder.private_key(PrivateKey::File(config_rest_api.private_key.unwrap()));
+        if client_config.private_key.is_some() {
+            builder = builder.private_key(PrivateKey::File(client_config.private_key.unwrap()));
         }
     }
 
@@ -639,14 +634,14 @@ async fn check_collateral_repay_rate(mut args: CheckCollateralRepayRateArgs) -> 
                 if args.interactive {
                     if args.loan_coin.is_none() {
                         let loan_coin: String = Input::new()
-                            .with_prompt("Please enter the loan_coin name")
+                            .with_prompt("Input loan_coin:")
                             .interact_text()?;
 
                         args.loan_coin = Some(loan_coin);
                     }
                     if args.collateral_coin.is_none() {
                         let collateral_coin: String = Input::new()
-                            .with_prompt("Please enter the collateral_coin name")
+                            .with_prompt("Input collateral_coin:")
                             .interact_text()?;
 
                         args.collateral_coin = Some(collateral_coin);
@@ -685,21 +680,21 @@ async fn flexible_loan_adjust_ltv(mut args: FlexibleLoanAdjustLtvArgs) -> anyhow
                 if args.interactive {
                     if args.loan_coin.is_none() {
                         let loan_coin: String = Input::new()
-                            .with_prompt("Please enter the loan_coin name")
+                            .with_prompt("Input loan_coin:")
                             .interact_text()?;
 
                         args.loan_coin = Some(loan_coin);
                     }
                     if args.collateral_coin.is_none() {
                         let collateral_coin: String = Input::new()
-                            .with_prompt("Please enter the collateral_coin name")
+                            .with_prompt("Input collateral_coin:")
                             .interact_text()?;
 
                         args.collateral_coin = Some(collateral_coin);
                     }
                     if args.adjustment_amount.is_none() {
                         let adjustment_amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the adjustment_amount name")
+                            .with_prompt("Input adjustment_amount:")
                             .interact_text()?;
 
                         args.adjustment_amount = Some(adjustment_amount);
@@ -762,14 +757,14 @@ async fn flexible_loan_borrow(mut args: FlexibleLoanBorrowArgs) -> anyhow::Resul
                 if args.interactive {
                     if args.loan_coin.is_none() {
                         let loan_coin: String = Input::new()
-                            .with_prompt("Please enter the loan_coin name")
+                            .with_prompt("Input loan_coin:")
                             .interact_text()?;
 
                         args.loan_coin = Some(loan_coin);
                     }
                     if args.collateral_coin.is_none() {
                         let collateral_coin: String = Input::new()
-                            .with_prompt("Please enter the collateral_coin name")
+                            .with_prompt("Input collateral_coin:")
                             .interact_text()?;
 
                         args.collateral_coin = Some(collateral_coin);
@@ -810,21 +805,21 @@ async fn flexible_loan_repay(mut args: FlexibleLoanRepayArgs) -> anyhow::Result<
                 if args.interactive {
                     if args.loan_coin.is_none() {
                         let loan_coin: String = Input::new()
-                            .with_prompt("Please enter the loan_coin name")
+                            .with_prompt("Input loan_coin:")
                             .interact_text()?;
 
                         args.loan_coin = Some(loan_coin);
                     }
                     if args.collateral_coin.is_none() {
                         let collateral_coin: String = Input::new()
-                            .with_prompt("Please enter the collateral_coin name")
+                            .with_prompt("Input collateral_coin:")
                             .interact_text()?;
 
                         args.collateral_coin = Some(collateral_coin);
                     }
                     if args.repay_amount.is_none() {
                         let repay_amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the repay_amount name")
+                            .with_prompt("Input repay_amount:")
                             .interact_text()?;
 
                         args.repay_amount = Some(repay_amount);
@@ -855,9 +850,7 @@ async fn flexible_loan_repay(mut args: FlexibleLoanRepayArgs) -> anyhow::Result<
     Ok(())
 }
 
-async fn get_flexible_loan_assets_data(
-    args: GetFlexibleLoanAssetsDataArgs,
-) -> anyhow::Result<()> {
+async fn get_flexible_loan_assets_data(args: GetFlexibleLoanAssetsDataArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
     let params = match read_stdin_as::<GetFlexibleLoanAssetsDataParams>() {
@@ -960,15 +953,14 @@ async fn get_flexible_loan_interest_rate_history(
             None => {
                 if args.interactive {
                     if args.coin.is_none() {
-                        let coin: String = Input::new()
-                            .with_prompt("Please enter the coin name")
-                            .interact_text()?;
+                        let coin: String =
+                            Input::new().with_prompt("Input coin:").interact_text()?;
 
                         args.coin = Some(coin);
                     }
                     if args.recv_window.is_none() {
                         let recv_window: i64 = Input::new()
-                            .with_prompt("Please enter the recv_window name")
+                            .with_prompt("Input recv_window:")
                             .interact_text()?;
 
                         args.recv_window = Some(recv_window);

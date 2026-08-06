@@ -1,5 +1,5 @@
 use crate::utils::{
-    build_user_agent, decode_selected_entities, get_configuration_rest_api, read_json_as,
+    decode_selected_entities, get_client_configuration, init_user_agent, read_json_as,
     read_stdin_as,
 };
 use binance_sdk::config::{ConfigurationRestApi, PrivateKey};
@@ -13,38 +13,33 @@ use std::io;
 use std::io::{Error, ErrorKind};
 
 fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> {
-    unsafe {
-        env::set_var(
-            "BINANCE_CONNECTOR_RUST_USER_AGENT",
-            build_user_agent("gift-card"),
-        );
-    }
+    init_user_agent("gift-card");
 
-    let config_rest_api = get_configuration_rest_api(profile, "gift-card").unwrap();
+    let client_config = get_client_configuration(profile, "gift-card").unwrap();
     let api_env = env::var("BINANCE_API_ENV")
         .ok()
-        .or(config_rest_api.env)
+        .or(client_config.env)
         .unwrap_or_else(|| "prod".to_string());
 
-    let base_path = match api_env.as_str() {
-        "prod" => GIFT_CARD_REST_API_PROD_URL,
+    let base_path = client_config.base_path.unwrap_or(match api_env.as_str() {
+        "prod" => GIFT_CARD_REST_API_PROD_URL.to_string(),
         _ => {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
                 "invalid BINANCE_API_ENV",
             ));
         }
-    };
+    });
 
     let mut builder = ConfigurationRestApi::builder().base_path(base_path);
 
     if is_signed {
         builder = builder
-            .api_key(config_rest_api.api_key)
-            .api_secret(config_rest_api.api_secret);
+            .api_key(client_config.api_key)
+            .api_secret(client_config.api_secret);
 
-        if config_rest_api.private_key.is_some()  {
-            builder = builder.private_key(PrivateKey::File(config_rest_api.private_key.unwrap()));
+        if client_config.private_key.is_some() {
+            builder = builder.private_key(PrivateKey::File(client_config.private_key.unwrap()));
         }
     }
 
@@ -283,21 +278,21 @@ async fn create_a_dual_token_gift_card(
                 if args.interactive {
                     if args.base_token.is_none() {
                         let base_token: String = Input::new()
-                            .with_prompt("Please enter the base_token name")
+                            .with_prompt("Input base_token:")
                             .interact_text()?;
 
                         args.base_token = Some(base_token);
                     }
                     if args.face_token.is_none() {
                         let face_token: String = Input::new()
-                            .with_prompt("Please enter the face_token name")
+                            .with_prompt("Input face_token:")
                             .interact_text()?;
 
                         args.face_token = Some(face_token);
                     }
                     if args.base_token_amount.is_none() {
                         let base_token_amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the base_token_amount name")
+                            .with_prompt("Input base_token_amount:")
                             .interact_text()?;
 
                         args.base_token_amount = Some(base_token_amount);
@@ -341,16 +336,14 @@ async fn create_a_single_token_gift_card(
             None => {
                 if args.interactive {
                     if args.token.is_none() {
-                        let token: String = Input::new()
-                            .with_prompt("Please enter the token name")
-                            .interact_text()?;
+                        let token: String =
+                            Input::new().with_prompt("Input token:").interact_text()?;
 
                         args.token = Some(token);
                     }
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }
@@ -411,7 +404,7 @@ async fn fetch_token_limit(mut args: FetchTokenLimitArgs) -> anyhow::Result<()> 
                 if args.interactive {
                     if args.base_token.is_none() {
                         let base_token: String = Input::new()
-                            .with_prompt("Please enter the base_token name")
+                            .with_prompt("Input base_token:")
                             .interact_text()?;
 
                         args.base_token = Some(base_token);
@@ -447,9 +440,8 @@ async fn redeem_a_binance_gift_card(mut args: RedeemABinanceGiftCardArgs) -> any
             None => {
                 if args.interactive {
                     if args.code.is_none() {
-                        let code: String = Input::new()
-                            .with_prompt("Please enter the code name")
-                            .interact_text()?;
+                        let code: String =
+                            Input::new().with_prompt("Input code:").interact_text()?;
 
                         args.code = Some(code);
                     }
@@ -489,7 +481,7 @@ async fn verify_binance_gift_card_by_gift_card_number(
                 if args.interactive {
                     if args.reference_no.is_none() {
                         let reference_no: String = Input::new()
-                            .with_prompt("Please enter the reference_no name")
+                            .with_prompt("Input reference_no:")
                             .interact_text()?;
 
                         args.reference_no = Some(reference_no);

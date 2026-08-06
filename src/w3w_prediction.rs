@@ -1,5 +1,5 @@
 use crate::utils::{
-    build_user_agent, decode_selected_entities, get_configuration_rest_api, read_json_as,
+    decode_selected_entities, get_client_configuration, init_user_agent, read_json_as,
     read_stdin_as,
 };
 use binance_sdk::config::{ConfigurationRestApi, PrivateKey};
@@ -13,38 +13,33 @@ use std::io;
 use std::io::{Error, ErrorKind};
 
 fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> {
-    unsafe {
-        env::set_var(
-            "BINANCE_CONNECTOR_RUST_USER_AGENT",
-            build_user_agent("w3w-prediction"),
-        );
-    }
+    init_user_agent("w3w-prediction");
 
-    let config_rest_api = get_configuration_rest_api(profile, "w3w-prediction").unwrap();
+    let client_config = get_client_configuration(profile, "w3w-prediction").unwrap();
     let api_env = env::var("BINANCE_API_ENV")
         .ok()
-        .or(config_rest_api.env)
+        .or(client_config.env)
         .unwrap_or_else(|| "prod".to_string());
 
-    let base_path = match api_env.as_str() {
-        "prod" => W3W_PREDICTION_REST_API_PROD_URL,
+    let base_path = client_config.base_path.unwrap_or(match api_env.as_str() {
+        "prod" => W3W_PREDICTION_REST_API_PROD_URL.to_string(),
         _ => {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
                 "invalid BINANCE_API_ENV",
             ));
         }
-    };
+    });
 
     let mut builder = ConfigurationRestApi::builder().base_path(base_path);
 
     if is_signed {
         builder = builder
-            .api_key(config_rest_api.api_key)
-            .api_secret(config_rest_api.api_secret);
+            .api_key(client_config.api_key)
+            .api_secret(client_config.api_secret);
 
-        if config_rest_api.private_key.is_some()  {
-            builder = builder.private_key(PrivateKey::File(config_rest_api.private_key.unwrap()));
+        if client_config.private_key.is_some() {
+            builder = builder.private_key(PrivateKey::File(client_config.private_key.unwrap()));
         }
     }
 
@@ -899,7 +894,7 @@ async fn get_market_detail(mut args: GetMarketDetailArgs) -> anyhow::Result<()> 
                 if args.interactive {
                     if args.market_topic_id.is_none() {
                         let market_topic_id: i64 = Input::new()
-                            .with_prompt("Please enter the market_topic_id name")
+                            .with_prompt("Input market_topic_id:")
                             .interact_text()?;
 
                         args.market_topic_id = Some(market_topic_id);
@@ -973,9 +968,8 @@ async fn market_search(mut args: MarketSearchArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.query.is_none() {
-                        let query: String = Input::new()
-                            .with_prompt("Please enter the query name")
-                            .interact_text()?;
+                        let query: String =
+                            Input::new().with_prompt("Input query:").interact_text()?;
 
                         args.query = Some(query);
                     }
@@ -1011,7 +1005,7 @@ async fn query_last_trade_price(mut args: QueryLastTradePriceArgs) -> anyhow::Re
                 if args.interactive {
                     if args.market_id.is_none() {
                         let market_id: i64 = Input::new()
-                            .with_prompt("Please enter the market_id name")
+                            .with_prompt("Input market_id:")
                             .interact_text()?;
 
                         args.market_id = Some(market_id);
@@ -1046,22 +1040,21 @@ async fn query_order_book(mut args: QueryOrderBookArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.vendor.is_none() {
-                        let vendor: String = Input::new()
-                            .with_prompt("Please enter the vendor name")
-                            .interact_text()?;
+                        let vendor: String =
+                            Input::new().with_prompt("Input vendor:").interact_text()?;
 
                         args.vendor = Some(vendor);
                     }
                     if args.market_id.is_none() {
                         let market_id: i64 = Input::new()
-                            .with_prompt("Please enter the market_id name")
+                            .with_prompt("Input market_id:")
                             .interact_text()?;
 
                         args.market_id = Some(market_id);
                     }
                     if args.token_id.is_none() {
                         let token_id: String = Input::new()
-                            .with_prompt("Please enter the token_id name")
+                            .with_prompt("Input token_id:")
                             .interact_text()?;
 
                         args.token_id = Some(token_id);
@@ -1101,14 +1094,14 @@ async fn get_position_by_token(mut args: GetPositionByTokenArgs) -> anyhow::Resu
                 if args.interactive {
                     if args.wallet_address.is_none() {
                         let wallet_address: String = Input::new()
-                            .with_prompt("Please enter the wallet_address name")
+                            .with_prompt("Input wallet_address:")
                             .interact_text()?;
 
                         args.wallet_address = Some(wallet_address);
                     }
                     if args.token_id.is_none() {
                         let token_id: String = Input::new()
-                            .with_prompt("Please enter the token_id name")
+                            .with_prompt("Input token_id:")
                             .interact_text()?;
 
                         args.token_id = Some(token_id);
@@ -1147,7 +1140,7 @@ async fn query_pn_l(mut args: QueryPnLArgs) -> anyhow::Result<()> {
                 if args.interactive {
                     if args.wallet_address.is_none() {
                         let wallet_address: String = Input::new()
-                            .with_prompt("Please enter the wallet_address name")
+                            .with_prompt("Input wallet_address:")
                             .interact_text()?;
 
                         args.wallet_address = Some(wallet_address);
@@ -1188,7 +1181,7 @@ async fn query_positions(mut args: QueryPositionsArgs) -> anyhow::Result<()> {
                 if args.interactive {
                     if args.wallet_address.is_none() {
                         let wallet_address: String = Input::new()
-                            .with_prompt("Please enter the wallet_address name")
+                            .with_prompt("Input wallet_address:")
                             .interact_text()?;
 
                         args.wallet_address = Some(wallet_address);
@@ -1257,7 +1250,7 @@ async fn query_settled_position_history(
                 if args.interactive {
                     if args.wallet_address.is_none() {
                         let wallet_address: String = Input::new()
-                            .with_prompt("Please enter the wallet_address name")
+                            .with_prompt("Input wallet_address:")
                             .interact_text()?;
 
                         args.wallet_address = Some(wallet_address);
@@ -1300,21 +1293,21 @@ async fn batch_redeem(mut args: BatchRedeemArgs) -> anyhow::Result<()> {
                 if args.interactive {
                     if args.wallet_address.is_none() {
                         let wallet_address: String = Input::new()
-                            .with_prompt("Please enter the wallet_address name")
+                            .with_prompt("Input wallet_address:")
                             .interact_text()?;
 
                         args.wallet_address = Some(wallet_address);
                     }
                     if args.wallet_id.is_none() {
                         let wallet_id: String = Input::new()
-                            .with_prompt("Please enter the wallet_id name")
+                            .with_prompt("Input wallet_id:")
                             .interact_text()?;
 
                         args.wallet_id = Some(wallet_id);
                     }
                     if args.token_ids.is_none() {
                         let token_ids: String = Input::new()
-                            .with_prompt("Please enter the token_ids name")
+                            .with_prompt("Input token_ids:")
                             .interact_text()?;
 
                         args.token_ids = Some(token_ids);
@@ -1358,15 +1351,14 @@ async fn get_redeem_status(mut args: GetRedeemStatusArgs) -> anyhow::Result<()> 
                 if args.interactive {
                     if args.wallet_address.is_none() {
                         let wallet_address: String = Input::new()
-                            .with_prompt("Please enter the wallet_address name")
+                            .with_prompt("Input wallet_address:")
                             .interact_text()?;
 
                         args.wallet_address = Some(wallet_address);
                     }
                     if args.tx_hash.is_none() {
-                        let tx_hash: String = Input::new()
-                            .with_prompt("Please enter the tx_hash name")
-                            .interact_text()?;
+                        let tx_hash: String =
+                            Input::new().with_prompt("Input tx_hash:").interact_text()?;
 
                         args.tx_hash = Some(tx_hash);
                     }
@@ -1404,14 +1396,14 @@ async fn batch_cancel_orders(mut args: BatchCancelOrdersArgs) -> anyhow::Result<
                 if args.interactive {
                     if args.wallet_address.is_none() {
                         let wallet_address: String = Input::new()
-                            .with_prompt("Please enter the wallet_address name")
+                            .with_prompt("Input wallet_address:")
                             .interact_text()?;
 
                         args.wallet_address = Some(wallet_address);
                     }
                     if args.wallet_id.is_none() {
                         let wallet_id: String = Input::new()
-                            .with_prompt("Please enter the wallet_id name")
+                            .with_prompt("Input wallet_id:")
                             .interact_text()?;
 
                         args.wallet_id = Some(wallet_id);
@@ -1456,14 +1448,14 @@ async fn get_quote(mut args: GetQuoteArgs) -> anyhow::Result<()> {
                 if args.interactive {
                     if args.wallet_address.is_none() {
                         let wallet_address: String = Input::new()
-                            .with_prompt("Please enter the wallet_address name")
+                            .with_prompt("Input wallet_address:")
                             .interact_text()?;
 
                         args.wallet_address = Some(wallet_address);
                     }
                     if args.token_id.is_none() {
                         let token_id: String = Input::new()
-                            .with_prompt("Please enter the token_id name")
+                            .with_prompt("Input token_id:")
                             .interact_text()?;
 
                         args.token_id = Some(token_id);
@@ -1490,7 +1482,7 @@ async fn get_quote(mut args: GetQuoteArgs) -> anyhow::Result<()> {
                     }
                     if args.amount_in.is_none() {
                         let amount_in: String = Input::new()
-                            .with_prompt("Please enter the amount_in name")
+                            .with_prompt("Input amount_in:")
                             .interact_text()?;
 
                         args.amount_in = Some(amount_in);
@@ -1517,7 +1509,7 @@ async fn get_quote(mut args: GetQuoteArgs) -> anyhow::Result<()> {
                     }
                     if args.slippage_bps.is_none() {
                         let slippage_bps: i32 = Input::new()
-                            .with_prompt("Please enter the slippage_bps name")
+                            .with_prompt("Input slippage_bps:")
                             .interact_text()?;
 
                         args.slippage_bps = Some(slippage_bps);
@@ -1568,28 +1560,28 @@ async fn place_order(mut args: PlaceOrderArgs) -> anyhow::Result<()> {
                 if args.interactive {
                     if args.wallet_address.is_none() {
                         let wallet_address: String = Input::new()
-                            .with_prompt("Please enter the wallet_address name")
+                            .with_prompt("Input wallet_address:")
                             .interact_text()?;
 
                         args.wallet_address = Some(wallet_address);
                     }
                     if args.wallet_id.is_none() {
                         let wallet_id: String = Input::new()
-                            .with_prompt("Please enter the wallet_id name")
+                            .with_prompt("Input wallet_id:")
                             .interact_text()?;
 
                         args.wallet_id = Some(wallet_id);
                     }
                     if args.quote_id.is_none() {
                         let quote_id: String = Input::new()
-                            .with_prompt("Please enter the quote_id name")
+                            .with_prompt("Input quote_id:")
                             .interact_text()?;
 
                         args.quote_id = Some(quote_id);
                     }
                     if args.time_in_force.is_none() {
                         let time_in_force: String = Input::new()
-                            .with_prompt("Please enter the time_in_force name")
+                            .with_prompt("Input time_in_force:")
                             .interact_text()?;
 
                         args.time_in_force = Some(time_in_force);
@@ -1636,7 +1628,7 @@ async fn place_order(mut args: PlaceOrderArgs) -> anyhow::Result<()> {
                     }
                     if args.slippage_bps.is_none() {
                         let slippage_bps: i32 = Input::new()
-                            .with_prompt("Please enter the slippage_bps name")
+                            .with_prompt("Input slippage_bps:")
                             .interact_text()?;
 
                         args.slippage_bps = Some(slippage_bps);
@@ -1687,7 +1679,7 @@ async fn query_active_orders(mut args: QueryActiveOrdersArgs) -> anyhow::Result<
                 if args.interactive {
                     if args.wallet_address.is_none() {
                         let wallet_address: String = Input::new()
-                            .with_prompt("Please enter the wallet_address name")
+                            .with_prompt("Input wallet_address:")
                             .interact_text()?;
 
                         args.wallet_address = Some(wallet_address);
@@ -1729,7 +1721,7 @@ async fn query_order_history(mut args: QueryOrderHistoryArgs) -> anyhow::Result<
                 if args.interactive {
                     if args.wallet_address.is_none() {
                         let wallet_address: String = Input::new()
-                            .with_prompt("Please enter the wallet_address name")
+                            .with_prompt("Input wallet_address:")
                             .interact_text()?;
 
                         args.wallet_address = Some(wallet_address);
@@ -1773,21 +1765,21 @@ async fn create_inbound_transfer(mut args: CreateInboundTransferArgs) -> anyhow:
                 if args.interactive {
                     if args.wallet_id.is_none() {
                         let wallet_id: String = Input::new()
-                            .with_prompt("Please enter the wallet_id name")
+                            .with_prompt("Input wallet_id:")
                             .interact_text()?;
 
                         args.wallet_id = Some(wallet_id);
                     }
                     if args.wallet_address.is_none() {
                         let wallet_address: String = Input::new()
-                            .with_prompt("Please enter the wallet_address name")
+                            .with_prompt("Input wallet_address:")
                             .interact_text()?;
 
                         args.wallet_address = Some(wallet_address);
                     }
                     if args.from_token_amount.is_none() {
                         let from_token_amount: String = Input::new()
-                            .with_prompt("Please enter the from_token_amount name")
+                            .with_prompt("Input from_token_amount:")
                             .interact_text()?;
 
                         args.from_token_amount = Some(from_token_amount);
@@ -1852,21 +1844,21 @@ async fn create_outbound_transfer(mut args: CreateOutboundTransferArgs) -> anyho
                 if args.interactive {
                     if args.wallet_id.is_none() {
                         let wallet_id: String = Input::new()
-                            .with_prompt("Please enter the wallet_id name")
+                            .with_prompt("Input wallet_id:")
                             .interact_text()?;
 
                         args.wallet_id = Some(wallet_id);
                     }
                     if args.wallet_address.is_none() {
                         let wallet_address: String = Input::new()
-                            .with_prompt("Please enter the wallet_address name")
+                            .with_prompt("Input wallet_address:")
                             .interact_text()?;
 
                         args.wallet_address = Some(wallet_address);
                     }
                     if args.from_token_amount.is_none() {
                         let from_token_amount: String = Input::new()
-                            .with_prompt("Please enter the from_token_amount name")
+                            .with_prompt("Input from_token_amount:")
                             .interact_text()?;
 
                         args.from_token_amount = Some(from_token_amount);
@@ -1959,21 +1951,21 @@ async fn query_transfer_list(mut args: QueryTransferListArgs) -> anyhow::Result<
                 if args.interactive {
                     if args.wallet_address.is_none() {
                         let wallet_address: String = Input::new()
-                            .with_prompt("Please enter the wallet_address name")
+                            .with_prompt("Input wallet_address:")
                             .interact_text()?;
 
                         args.wallet_address = Some(wallet_address);
                     }
                     if args.start_date.is_none() {
                         let start_date: String = Input::new()
-                            .with_prompt("Please enter the start_date name")
+                            .with_prompt("Input start_date:")
                             .interact_text()?;
 
                         args.start_date = Some(start_date);
                     }
                     if args.end_date.is_none() {
                         let end_date: String = Input::new()
-                            .with_prompt("Please enter the end_date name")
+                            .with_prompt("Input end_date:")
                             .interact_text()?;
 
                         args.end_date = Some(end_date);
@@ -2018,7 +2010,7 @@ async fn query_transfer_status(mut args: QueryTransferStatusArgs) -> anyhow::Res
                 if args.interactive {
                     if args.transfer_id.is_none() {
                         let transfer_id: String = Input::new()
-                            .with_prompt("Please enter the transfer_id name")
+                            .with_prompt("Input transfer_id:")
                             .interact_text()?;
 
                         args.transfer_id = Some(transfer_id);
@@ -2055,7 +2047,7 @@ async fn get_portfolio(mut args: GetPortfolioArgs) -> anyhow::Result<()> {
                 if args.interactive {
                     if args.wallet_address.is_none() {
                         let wallet_address: String = Input::new()
-                            .with_prompt("Please enter the wallet_address name")
+                            .with_prompt("Input wallet_address:")
                             .interact_text()?;
 
                         args.wallet_address = Some(wallet_address);
@@ -2129,9 +2121,7 @@ async fn list_prediction_wallets(args: ListPredictionWalletsArgs) -> anyhow::Res
     Ok(())
 }
 
-async fn query_payment_option_balances(
-    args: QueryPaymentOptionBalancesArgs,
-) -> anyhow::Result<()> {
+async fn query_payment_option_balances(args: QueryPaymentOptionBalancesArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
     let params = match read_stdin_as::<QueryPaymentOptionBalancesParams>() {

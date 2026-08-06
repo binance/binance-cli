@@ -1,5 +1,5 @@
 use crate::utils::{
-    build_user_agent, decode_selected_entities, get_configuration_rest_api, read_json_as,
+    decode_selected_entities, get_client_configuration, init_user_agent, read_json_as,
     read_stdin_as,
 };
 use binance_sdk::config::{ConfigurationRestApi, PrivateKey};
@@ -13,38 +13,33 @@ use std::io;
 use std::io::{Error, ErrorKind};
 
 fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> {
-    unsafe {
-        env::set_var(
-            "BINANCE_CONNECTOR_RUST_USER_AGENT",
-            build_user_agent("wallet"),
-        );
-    }
+    init_user_agent("wallet");
 
-    let config_rest_api = get_configuration_rest_api(profile, "wallet").unwrap();
+    let client_config = get_client_configuration(profile, "wallet").unwrap();
     let api_env = env::var("BINANCE_API_ENV")
         .ok()
-        .or(config_rest_api.env)
+        .or(client_config.env)
         .unwrap_or_else(|| "prod".to_string());
 
-    let base_path = match api_env.as_str() {
-        "prod" => WALLET_REST_API_PROD_URL,
+    let base_path = client_config.base_path.unwrap_or(match api_env.as_str() {
+        "prod" => WALLET_REST_API_PROD_URL.to_string(),
         _ => {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
                 "invalid BINANCE_API_ENV",
             ));
         }
-    };
+    });
 
     let mut builder = ConfigurationRestApi::builder().base_path(base_path);
 
     if is_signed {
         builder = builder
-            .api_key(config_rest_api.api_key)
-            .api_secret(config_rest_api.api_secret);
+            .api_key(client_config.api_key)
+            .api_secret(client_config.api_secret);
 
-        if config_rest_api.private_key.is_some()  {
-            builder = builder.private_key(PrivateKey::File(config_rest_api.private_key.unwrap()));
+        if client_config.private_key.is_some() {
+            builder = builder.private_key(PrivateKey::File(client_config.private_key.unwrap()));
         }
     }
 
@@ -1197,7 +1192,7 @@ Notes:
     #[command(
         about = decode_selected_entities(r#"User universal transfer
 
-Weight(UID): 900
+Weight(UID): 300
 
 Security Type: USER_DATA
 
@@ -1773,9 +1768,7 @@ async fn daily_account_snapshot(mut args: DailyAccountSnapshotArgs) -> anyhow::R
     Ok(())
 }
 
-async fn disable_fast_withdraw_switch(
-    args: DisableFastWithdrawSwitchArgs,
-) -> anyhow::Result<()> {
+async fn disable_fast_withdraw_switch(args: DisableFastWithdrawSwitchArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
     let params = match read_stdin_as::<DisableFastWithdrawSwitchParams>() {
@@ -1911,9 +1904,8 @@ async fn dust_convert(mut args: DustConvertArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.asset.is_none() {
-                        let asset: String = Input::new()
-                            .with_prompt("Please enter the asset name")
-                            .interact_text()?;
+                        let asset: String =
+                            Input::new().with_prompt("Input asset:").interact_text()?;
 
                         args.asset = Some(asset);
                     }
@@ -1953,7 +1945,7 @@ async fn dust_convertible_assets(mut args: DustConvertibleAssetsArgs) -> anyhow:
                 if args.interactive {
                     if args.target_asset.is_none() {
                         let target_asset: String = Input::new()
-                            .with_prompt("Please enter the target_asset name")
+                            .with_prompt("Input target_asset:")
                             .interact_text()?;
 
                         args.target_asset = Some(target_asset);
@@ -1990,9 +1982,8 @@ async fn dust_transfer(mut args: DustTransferArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.asset.is_none() {
-                        let asset: String = Input::new()
-                            .with_prompt("Please enter the asset name")
-                            .interact_text()?;
+                        let asset: String =
+                            Input::new().with_prompt("Input asset:").interact_text()?;
 
                         args.asset = Some(asset);
                     }
@@ -2112,14 +2103,14 @@ async fn get_cloud_mining_payment_and_refund_history(
                 if args.interactive {
                     if args.start_time.is_none() {
                         let start_time: i64 = Input::new()
-                            .with_prompt("Please enter the start_time name")
+                            .with_prompt("Input start_time:")
                             .interact_text()?;
 
                         args.start_time = Some(start_time);
                     }
                     if args.end_time.is_none() {
                         let end_time: i64 = Input::new()
-                            .with_prompt("Please enter the end_time name")
+                            .with_prompt("Input end_time:")
                             .interact_text()?;
 
                         args.end_time = Some(end_time);
@@ -2178,22 +2169,21 @@ async fn query_user_delegation_history(
             None => {
                 if args.interactive {
                     if args.email.is_none() {
-                        let email: String = Input::new()
-                            .with_prompt("Please enter the email name")
-                            .interact_text()?;
+                        let email: String =
+                            Input::new().with_prompt("Input email:").interact_text()?;
 
                         args.email = Some(email);
                     }
                     if args.start_time.is_none() {
                         let start_time: i64 = Input::new()
-                            .with_prompt("Please enter the start_time name")
+                            .with_prompt("Input start_time:")
                             .interact_text()?;
 
                         args.start_time = Some(start_time);
                     }
                     if args.end_time.is_none() {
                         let end_time: i64 = Input::new()
-                            .with_prompt("Please enter the end_time name")
+                            .with_prompt("Input end_time:")
                             .interact_text()?;
 
                         args.end_time = Some(end_time);
@@ -2240,9 +2230,8 @@ async fn query_user_universal_transfer_history(
             None => {
                 if args.interactive {
                     if args.r#type.is_none() {
-                        let r#type: String = Input::new()
-                            .with_prompt("Please enter the r#type name")
-                            .interact_text()?;
+                        let r#type: String =
+                            Input::new().with_prompt("Input r#type:").interact_text()?;
 
                         args.r#type = Some(r#type);
                     }
@@ -2494,16 +2483,14 @@ async fn user_universal_transfer(mut args: UserUniversalTransferArgs) -> anyhow:
                         args.r#type = Some(selected);
                     }
                     if args.asset.is_none() {
-                        let asset: String = Input::new()
-                            .with_prompt("Please enter the asset name")
-                            .interact_text()?;
+                        let asset: String =
+                            Input::new().with_prompt("Input asset:").interact_text()?;
 
                         args.asset = Some(asset);
                     }
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }
@@ -2567,9 +2554,8 @@ async fn deposit_address(mut args: DepositAddressArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.coin.is_none() {
-                        let coin: String = Input::new()
-                            .with_prompt("Please enter the coin name")
-                            .interact_text()?;
+                        let coin: String =
+                            Input::new().with_prompt("Input coin:").interact_text()?;
 
                         args.coin = Some(coin);
                     }
@@ -2640,9 +2626,8 @@ async fn fetch_deposit_address_list_with_network(
             None => {
                 if args.interactive {
                     if args.coin.is_none() {
-                        let coin: String = Input::new()
-                            .with_prompt("Please enter the coin name")
-                            .interact_text()?;
+                        let coin: String =
+                            Input::new().with_prompt("Input coin:").interact_text()?;
 
                         args.coin = Some(coin);
                     }
@@ -2731,23 +2716,20 @@ async fn withdraw(mut args: WithdrawArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.coin.is_none() {
-                        let coin: String = Input::new()
-                            .with_prompt("Please enter the coin name")
-                            .interact_text()?;
+                        let coin: String =
+                            Input::new().with_prompt("Input coin:").interact_text()?;
 
                         args.coin = Some(coin);
                     }
                     if args.address.is_none() {
-                        let address: String = Input::new()
-                            .with_prompt("Please enter the address name")
-                            .interact_text()?;
+                        let address: String =
+                            Input::new().with_prompt("Input address:").interact_text()?;
 
                         args.address = Some(address);
                     }
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }
@@ -2863,43 +2845,40 @@ async fn broker_withdraw(mut args: BrokerWithdrawArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.address.is_none() {
-                        let address: String = Input::new()
-                            .with_prompt("Please enter the address name")
-                            .interact_text()?;
+                        let address: String =
+                            Input::new().with_prompt("Input address:").interact_text()?;
 
                         args.address = Some(address);
                     }
                     if args.coin.is_none() {
-                        let coin: String = Input::new()
-                            .with_prompt("Please enter the coin name")
-                            .interact_text()?;
+                        let coin: String =
+                            Input::new().with_prompt("Input coin:").interact_text()?;
 
                         args.coin = Some(coin);
                     }
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }
                     if args.withdraw_order_id.is_none() {
                         let withdraw_order_id: String = Input::new()
-                            .with_prompt("Please enter the withdraw_order_id name")
+                            .with_prompt("Input withdraw_order_id:")
                             .interact_text()?;
 
                         args.withdraw_order_id = Some(withdraw_order_id);
                     }
                     if args.questionnaire.is_none() {
                         let questionnaire: String = Input::new()
-                            .with_prompt("Please enter the questionnaire name")
+                            .with_prompt("Input questionnaire:")
                             .interact_text()?;
 
                         args.questionnaire = Some(questionnaire);
                     }
                     if args.originator_pii.is_none() {
                         let originator_pii: String = Input::new()
-                            .with_prompt("Please enter the originator_pii name")
+                            .with_prompt("Input originator_pii:")
                             .interact_text()?;
 
                         args.originator_pii = Some(originator_pii);
@@ -3093,7 +3072,7 @@ async fn get_region_list(mut args: GetRegionListArgs) -> anyhow::Result<()> {
                 if args.interactive {
                     if args.country_code.is_none() {
                         let country_code: String = Input::new()
-                            .with_prompt("Please enter the country_code name")
+                            .with_prompt("Input country_code:")
                             .interact_text()?;
 
                         args.country_code = Some(country_code);
@@ -3134,28 +3113,28 @@ async fn submit_deposit_questionnaire(
                 if args.interactive {
                     if args.sub_account_id.is_none() {
                         let sub_account_id: String = Input::new()
-                            .with_prompt("Please enter the sub_account_id name")
+                            .with_prompt("Input sub_account_id:")
                             .interact_text()?;
 
                         args.sub_account_id = Some(sub_account_id);
                     }
                     if args.deposit_id.is_none() {
                         let deposit_id: i64 = Input::new()
-                            .with_prompt("Please enter the deposit_id name")
+                            .with_prompt("Input deposit_id:")
                             .interact_text()?;
 
                         args.deposit_id = Some(deposit_id);
                     }
                     if args.questionnaire.is_none() {
                         let questionnaire: String = Input::new()
-                            .with_prompt("Please enter the questionnaire name")
+                            .with_prompt("Input questionnaire:")
                             .interact_text()?;
 
                         args.questionnaire = Some(questionnaire);
                     }
                     if args.beneficiary_pii.is_none() {
                         let beneficiary_pii: String = Input::new()
-                            .with_prompt("Please enter the beneficiary_pii name")
+                            .with_prompt("Input beneficiary_pii:")
                             .interact_text()?;
 
                         args.beneficiary_pii = Some(beneficiary_pii);
@@ -3204,15 +3183,14 @@ async fn submit_deposit_questionnaire_travel_rule(
             None => {
                 if args.interactive {
                     if args.tran_id.is_none() {
-                        let tran_id: i64 = Input::new()
-                            .with_prompt("Please enter the tran_id name")
-                            .interact_text()?;
+                        let tran_id: i64 =
+                            Input::new().with_prompt("Input tran_id:").interact_text()?;
 
                         args.tran_id = Some(tran_id);
                     }
                     if args.questionnaire.is_none() {
                         let questionnaire: String = Input::new()
-                            .with_prompt("Please enter the questionnaire name")
+                            .with_prompt("Input questionnaire:")
                             .interact_text()?;
 
                         args.questionnaire = Some(questionnaire);
@@ -3256,14 +3234,14 @@ async fn submit_deposit_questionnaire_v2(
                 if args.interactive {
                     if args.deposit_id.is_none() {
                         let deposit_id: i64 = Input::new()
-                            .with_prompt("Please enter the deposit_id name")
+                            .with_prompt("Input deposit_id:")
                             .interact_text()?;
 
                         args.deposit_id = Some(deposit_id);
                     }
                     if args.questionnaire.is_none() {
                         let questionnaire: String = Input::new()
-                            .with_prompt("Please enter the questionnaire name")
+                            .with_prompt("Input questionnaire:")
                             .interact_text()?;
 
                         args.questionnaire = Some(questionnaire);
@@ -3389,29 +3367,26 @@ async fn withdraw_travel_rule(mut args: WithdrawTravelRuleArgs) -> anyhow::Resul
             None => {
                 if args.interactive {
                     if args.coin.is_none() {
-                        let coin: String = Input::new()
-                            .with_prompt("Please enter the coin name")
-                            .interact_text()?;
+                        let coin: String =
+                            Input::new().with_prompt("Input coin:").interact_text()?;
 
                         args.coin = Some(coin);
                     }
                     if args.address.is_none() {
-                        let address: String = Input::new()
-                            .with_prompt("Please enter the address name")
-                            .interact_text()?;
+                        let address: String =
+                            Input::new().with_prompt("Input address:").interact_text()?;
 
                         args.address = Some(address);
                     }
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }
                     if args.questionnaire.is_none() {
                         let questionnaire: String = Input::new()
-                            .with_prompt("Please enter the questionnaire name")
+                            .with_prompt("Input questionnaire:")
                             .interact_text()?;
 
                         args.questionnaire = Some(questionnaire);

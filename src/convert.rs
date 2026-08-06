@@ -1,5 +1,5 @@
 use crate::utils::{
-    build_user_agent, decode_selected_entities, get_configuration_rest_api, read_json_as,
+    decode_selected_entities, get_client_configuration, init_user_agent, read_json_as,
     read_stdin_as,
 };
 use binance_sdk::config::{ConfigurationRestApi, PrivateKey};
@@ -13,38 +13,33 @@ use std::io;
 use std::io::{Error, ErrorKind};
 
 fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> {
-    unsafe {
-        env::set_var(
-            "BINANCE_CONNECTOR_RUST_USER_AGENT",
-            build_user_agent("convert"),
-        );
-    }
+    init_user_agent("convert");
 
-    let config_rest_api = get_configuration_rest_api(profile, "convert").unwrap();
+    let client_config = get_client_configuration(profile, "convert").unwrap();
     let api_env = env::var("BINANCE_API_ENV")
         .ok()
-        .or(config_rest_api.env)
+        .or(client_config.env)
         .unwrap_or_else(|| "prod".to_string());
 
-    let base_path = match api_env.as_str() {
-        "prod" => CONVERT_REST_API_PROD_URL,
+    let base_path = client_config.base_path.unwrap_or(match api_env.as_str() {
+        "prod" => CONVERT_REST_API_PROD_URL.to_string(),
         _ => {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
                 "invalid BINANCE_API_ENV",
             ));
         }
-    };
+    });
 
     let mut builder = ConfigurationRestApi::builder().base_path(base_path);
 
     if is_signed {
         builder = builder
-            .api_key(config_rest_api.api_key)
-            .api_secret(config_rest_api.api_secret);
+            .api_key(client_config.api_key)
+            .api_secret(client_config.api_secret);
 
-        if config_rest_api.private_key.is_some()  {
-            builder = builder.private_key(PrivateKey::File(config_rest_api.private_key.unwrap()));
+        if client_config.private_key.is_some() {
+            builder = builder.private_key(PrivateKey::File(client_config.private_key.unwrap()));
         }
     }
 
@@ -407,7 +402,7 @@ async fn accept_quote(mut args: AcceptQuoteArgs) -> anyhow::Result<()> {
                 if args.interactive {
                     if args.quote_id.is_none() {
                         let quote_id: String = Input::new()
-                            .with_prompt("Please enter the quote_id name")
+                            .with_prompt("Input quote_id:")
                             .interact_text()?;
 
                         args.quote_id = Some(quote_id);
@@ -444,7 +439,7 @@ async fn cancel_limit_order(mut args: CancelLimitOrderArgs) -> anyhow::Result<()
                 if args.interactive {
                     if args.order_id.is_none() {
                         let order_id: i64 = Input::new()
-                            .with_prompt("Please enter the order_id name")
+                            .with_prompt("Input order_id:")
                             .interact_text()?;
 
                         args.order_id = Some(order_id);
@@ -481,14 +476,14 @@ async fn get_convert_trade_history(mut args: GetConvertTradeHistoryArgs) -> anyh
                 if args.interactive {
                     if args.start_time.is_none() {
                         let start_time: i64 = Input::new()
-                            .with_prompt("Please enter the start_time name")
+                            .with_prompt("Input start_time:")
                             .interact_text()?;
 
                         args.start_time = Some(start_time);
                     }
                     if args.end_time.is_none() {
                         let end_time: i64 = Input::new()
-                            .with_prompt("Please enter the end_time name")
+                            .with_prompt("Input end_time:")
                             .interact_text()?;
 
                         args.end_time = Some(end_time);
@@ -552,21 +547,21 @@ async fn place_limit_order(mut args: PlaceLimitOrderArgs) -> anyhow::Result<()> 
                 if args.interactive {
                     if args.base_asset.is_none() {
                         let base_asset: String = Input::new()
-                            .with_prompt("Please enter the base_asset name")
+                            .with_prompt("Input base_asset:")
                             .interact_text()?;
 
                         args.base_asset = Some(base_asset);
                     }
                     if args.quote_asset.is_none() {
                         let quote_asset: String = Input::new()
-                            .with_prompt("Please enter the quote_asset name")
+                            .with_prompt("Input quote_asset:")
                             .interact_text()?;
 
                         args.quote_asset = Some(quote_asset);
                     }
                     if args.limit_price.is_none() {
                         let limit_price: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the limit_price name")
+                            .with_prompt("Input limit_price:")
                             .interact_text()?;
 
                         args.limit_price = Some(limit_price);
@@ -679,14 +674,14 @@ async fn send_quote_request(mut args: SendQuoteRequestArgs) -> anyhow::Result<()
                 if args.interactive {
                     if args.from_asset.is_none() {
                         let from_asset: String = Input::new()
-                            .with_prompt("Please enter the from_asset name")
+                            .with_prompt("Input from_asset:")
                             .interact_text()?;
 
                         args.from_asset = Some(from_asset);
                     }
                     if args.to_asset.is_none() {
                         let to_asset: String = Input::new()
-                            .with_prompt("Please enter the to_asset name")
+                            .with_prompt("Input to_asset:")
                             .interact_text()?;
 
                         args.to_asset = Some(to_asset);

@@ -1,5 +1,5 @@
 use crate::utils::{
-    build_user_agent, decode_selected_entities, get_configuration_rest_api, read_json_as,
+    decode_selected_entities, get_client_configuration, init_user_agent, read_json_as,
     read_stdin_as,
 };
 use binance_sdk::config::{ConfigurationRestApi, PrivateKey};
@@ -15,40 +15,34 @@ use std::io;
 use std::io::{Error, ErrorKind};
 
 fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> {
-    unsafe {
-        env::set_var(
-            "BINANCE_CONNECTOR_RUST_USER_AGENT",
-            build_user_agent("derivatives-trading-options"),
-        );
-    }
+    init_user_agent("derivatives-trading-options");
 
-    let config_rest_api =
-        get_configuration_rest_api(profile, "derivatives-trading-options").unwrap();
+    let client_config = get_client_configuration(profile, "derivatives-trading-options").unwrap();
     let api_env = env::var("BINANCE_API_ENV")
         .ok()
-        .or(config_rest_api.env)
+        .or(client_config.env)
         .unwrap_or_else(|| "prod".to_string());
 
-    let base_path = match api_env.as_str() {
-        "testnet" | "demo" => DERIVATIVES_TRADING_OPTIONS_REST_API_TESTNET_URL,
-        "prod" => DERIVATIVES_TRADING_OPTIONS_REST_API_PROD_URL,
+    let base_path = client_config.base_path.unwrap_or(match api_env.as_str() {
+        "testnet" | "demo" => DERIVATIVES_TRADING_OPTIONS_REST_API_TESTNET_URL.to_string(),
+        "prod" => DERIVATIVES_TRADING_OPTIONS_REST_API_PROD_URL.to_string(),
         _ => {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
                 "invalid BINANCE_API_ENV",
             ));
         }
-    };
+    });
 
     let mut builder = ConfigurationRestApi::builder().base_path(base_path);
 
     if is_signed {
         builder = builder
-            .api_key(config_rest_api.api_key)
-            .api_secret(config_rest_api.api_secret);
+            .api_key(client_config.api_key)
+            .api_secret(client_config.api_secret);
 
-        if config_rest_api.private_key.is_some()  {
-            builder = builder.private_key(PrivateKey::File(config_rest_api.private_key.unwrap()));
+        if client_config.private_key.is_some() {
+            builder = builder.private_key(PrivateKey::File(client_config.private_key.unwrap()));
         }
     }
 
@@ -1353,9 +1347,7 @@ async fn exchange_information(args: ExchangeInformationArgs) -> anyhow::Result<(
     Ok(())
 }
 
-async fn historical_exercise_records(
-    args: HistoricalExerciseRecordsArgs,
-) -> anyhow::Result<()> {
+async fn historical_exercise_records(args: HistoricalExerciseRecordsArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), false)?;
 
     let params = match read_stdin_as::<HistoricalExerciseRecordsParams>() {
@@ -1396,7 +1388,7 @@ async fn index_price(mut args: IndexPriceArgs) -> anyhow::Result<()> {
                 if args.interactive {
                     if args.underlying.is_none() {
                         let underlying: String = Input::new()
-                            .with_prompt("Please enter the underlying name")
+                            .with_prompt("Input underlying:")
                             .interact_text()?;
 
                         args.underlying = Some(underlying);
@@ -1431,9 +1423,8 @@ async fn kline_candlestick_data(mut args: KlineCandlestickDataArgs) -> anyhow::R
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -1453,7 +1444,7 @@ async fn kline_candlestick_data(mut args: KlineCandlestickDataArgs) -> anyhow::R
                             ("1d", KlineCandlestickDataIntervalEnum::Interval1d),
                             ("3d", KlineCandlestickDataIntervalEnum::Interval3d),
                             ("1w", KlineCandlestickDataIntervalEnum::Interval1w),
-                            ("1M", KlineCandlestickDataIntervalEnum::Interval1m),
+                            ("1M", KlineCandlestickDataIntervalEnum::Interval1M),
                         ];
 
                         let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
@@ -1506,14 +1497,14 @@ async fn open_interest(mut args: OpenInterestArgs) -> anyhow::Result<()> {
                 if args.interactive {
                     if args.underlying_asset.is_none() {
                         let underlying_asset: String = Input::new()
-                            .with_prompt("Please enter the underlying_asset name")
+                            .with_prompt("Input underlying_asset:")
                             .interact_text()?;
 
                         args.underlying_asset = Some(underlying_asset);
                     }
                     if args.expiration.is_none() {
                         let expiration: String = Input::new()
-                            .with_prompt("Please enter the expiration name")
+                            .with_prompt("Input expiration:")
                             .interact_text()?;
 
                         args.expiration = Some(expiration);
@@ -1573,9 +1564,8 @@ async fn order_book(mut args: OrderBookArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -1634,9 +1624,8 @@ async fn recent_trades_list(mut args: RecentTradesListArgs) -> anyhow::Result<()
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -1712,7 +1701,7 @@ async fn accept_block_trade_order(mut args: AcceptBlockTradeOrderArgs) -> anyhow
                 if args.interactive {
                     if args.block_order_matching_key.is_none() {
                         let block_order_matching_key: String = Input::new()
-                            .with_prompt("Please enter the block_order_matching_key name")
+                            .with_prompt("Input block_order_matching_key:")
                             .interact_text()?;
 
                         args.block_order_matching_key = Some(block_order_matching_key);
@@ -1775,7 +1764,7 @@ async fn cancel_block_trade_order(mut args: CancelBlockTradeOrderArgs) -> anyhow
                 if args.interactive {
                     if args.block_order_matching_key.is_none() {
                         let block_order_matching_key: String = Input::new()
-                            .with_prompt("Please enter the block_order_matching_key name")
+                            .with_prompt("Input block_order_matching_key:")
                             .interact_text()?;
 
                         args.block_order_matching_key = Some(block_order_matching_key);
@@ -1812,7 +1801,7 @@ async fn extend_block_trade_order(mut args: ExtendBlockTradeOrderArgs) -> anyhow
                 if args.interactive {
                     if args.block_order_matching_key.is_none() {
                         let block_order_matching_key: String = Input::new()
-                            .with_prompt("Please enter the block_order_matching_key name")
+                            .with_prompt("Input block_order_matching_key:")
                             .interact_text()?;
 
                         args.block_order_matching_key = Some(block_order_matching_key);
@@ -1868,9 +1857,8 @@ async fn new_block_trade_order(mut args: NewBlockTradeOrderArgs) -> anyhow::Resu
                         args.liquidity = Some(selected);
                     }
                     if args.legs.is_none() {
-                        let legs: String = Input::new()
-                            .with_prompt("Please enter the legs name")
-                            .interact_text()?;
+                        let legs: String =
+                            Input::new().with_prompt("Input legs:").interact_text()?;
 
                         args.legs = Some(legs);
                     }
@@ -1911,7 +1899,7 @@ async fn query_block_trade_details(mut args: QueryBlockTradeDetailsArgs) -> anyh
                 if args.interactive {
                     if args.block_order_matching_key.is_none() {
                         let block_order_matching_key: String = Input::new()
-                            .with_prompt("Please enter the block_order_matching_key name")
+                            .with_prompt("Input block_order_matching_key:")
                             .interact_text()?;
 
                         args.block_order_matching_key = Some(block_order_matching_key);
@@ -1975,7 +1963,7 @@ async fn auto_cancel_all_open_orders(mut args: AutoCancelAllOpenOrdersArgs) -> a
                 if args.interactive {
                     if args.underlyings.is_none() {
                         let underlyings: String = Input::new()
-                            .with_prompt("Please enter the underlyings name")
+                            .with_prompt("Input underlyings:")
                             .interact_text()?;
 
                         args.underlyings = Some(underlyings);
@@ -2044,7 +2032,7 @@ async fn get_market_maker_protection_config(
                 if args.interactive {
                     if args.underlying.is_none() {
                         let underlying: String = Input::new()
-                            .with_prompt("Please enter the underlying name")
+                            .with_prompt("Input underlying:")
                             .interact_text()?;
 
                         args.underlying = Some(underlying);
@@ -2087,7 +2075,7 @@ async fn reset_market_maker_protection_config(
                 if args.interactive {
                     if args.underlying.is_none() {
                         let underlying: String = Input::new()
-                            .with_prompt("Please enter the underlying name")
+                            .with_prompt("Input underlying:")
                             .interact_text()?;
 
                         args.underlying = Some(underlying);
@@ -2130,14 +2118,14 @@ async fn set_auto_cancel_all_open_orders(
                 if args.interactive {
                     if args.underlying.is_none() {
                         let underlying: String = Input::new()
-                            .with_prompt("Please enter the underlying name")
+                            .with_prompt("Input underlying:")
                             .interact_text()?;
 
                         args.underlying = Some(underlying);
                     }
                     if args.countdown_time.is_none() {
                         let countdown_time: i64 = Input::new()
-                            .with_prompt("Please enter the countdown_time name")
+                            .with_prompt("Input countdown_time:")
                             .interact_text()?;
 
                         args.countdown_time = Some(countdown_time);
@@ -2180,35 +2168,35 @@ async fn set_market_maker_protection_config(
                 if args.interactive {
                     if args.underlying.is_none() {
                         let underlying: String = Input::new()
-                            .with_prompt("Please enter the underlying name")
+                            .with_prompt("Input underlying:")
                             .interact_text()?;
 
                         args.underlying = Some(underlying);
                     }
                     if args.window_time_in_milliseconds.is_none() {
                         let window_time_in_milliseconds: i64 = Input::new()
-                            .with_prompt("Please enter the window_time_in_milliseconds name")
+                            .with_prompt("Input window_time_in_milliseconds:")
                             .interact_text()?;
 
                         args.window_time_in_milliseconds = Some(window_time_in_milliseconds);
                     }
                     if args.frozen_time_in_milliseconds.is_none() {
                         let frozen_time_in_milliseconds: i64 = Input::new()
-                            .with_prompt("Please enter the frozen_time_in_milliseconds name")
+                            .with_prompt("Input frozen_time_in_milliseconds:")
                             .interact_text()?;
 
                         args.frozen_time_in_milliseconds = Some(frozen_time_in_milliseconds);
                     }
                     if args.qty_limit.is_none() {
                         let qty_limit: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the qty_limit name")
+                            .with_prompt("Input qty_limit:")
                             .interact_text()?;
 
                         args.qty_limit = Some(qty_limit);
                     }
                     if args.delta_limit.is_none() {
                         let delta_limit: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the delta_limit name")
+                            .with_prompt("Input delta_limit:")
                             .interact_text()?;
 
                         args.delta_limit = Some(delta_limit);
@@ -2256,9 +2244,8 @@ async fn account_trade_list(mut args: AccountTradeListArgs) -> anyhow::Result<()
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -2301,7 +2288,7 @@ async fn cancel_all_option_orders_by_underlying(
                 if args.interactive {
                     if args.underlying.is_none() {
                         let underlying: String = Input::new()
-                            .with_prompt("Please enter the underlying name")
+                            .with_prompt("Input underlying:")
                             .interact_text()?;
 
                         args.underlying = Some(underlying);
@@ -2342,9 +2329,8 @@ async fn cancel_all_option_orders_on_specific_symbol(
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -2385,9 +2371,8 @@ async fn cancel_multiple_option_orders(
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -2424,9 +2409,8 @@ async fn cancel_option_order(mut args: CancelOptionOrderArgs) -> anyhow::Result<
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -2463,9 +2447,8 @@ async fn new_order(mut args: NewOrderArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -2508,7 +2491,7 @@ async fn new_order(mut args: NewOrderArgs) -> anyhow::Result<()> {
                     }
                     if args.quantity.is_none() {
                         let quantity: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the quantity name")
+                            .with_prompt("Input quantity:")
                             .interact_text()?;
 
                         args.quantity = Some(quantity);
@@ -2546,9 +2529,7 @@ async fn new_order(mut args: NewOrderArgs) -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn option_position_information(
-    args: OptionPositionInformationArgs,
-) -> anyhow::Result<()> {
+async fn option_position_information(args: OptionPositionInformationArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
     let params = match read_stdin_as::<OptionPositionInformationParams>() {
@@ -2586,9 +2567,8 @@ async fn place_multiple_orders(mut args: PlaceMultipleOrdersArgs) -> anyhow::Res
             None => {
                 if args.interactive {
                     if args.orders.is_none() {
-                        let orders: String = Input::new()
-                            .with_prompt("Please enter the orders name")
-                            .interact_text()?;
+                        let orders: String =
+                            Input::new().with_prompt("Input orders:").interact_text()?;
 
                         args.orders = Some(orders);
                     }
@@ -2657,9 +2637,8 @@ async fn query_option_order_history(mut args: QueryOptionOrderHistoryArgs) -> an
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -2698,9 +2677,8 @@ async fn query_single_order(mut args: QuerySingleOrderArgs) -> anyhow::Result<()
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
