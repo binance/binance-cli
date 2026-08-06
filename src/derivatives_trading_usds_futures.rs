@@ -1,5 +1,5 @@
 use crate::utils::{
-    build_user_agent, decode_selected_entities, get_configuration_rest_api, read_json_as,
+    decode_selected_entities, get_client_configuration, init_user_agent, read_json_as,
     read_stdin_as,
 };
 use binance_sdk::config::{ConfigurationRestApi, PrivateKey};
@@ -17,41 +17,36 @@ use std::io;
 use std::io::{Error, ErrorKind};
 
 fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> {
-    unsafe {
-        env::set_var(
-            "BINANCE_CONNECTOR_RUST_USER_AGENT",
-            build_user_agent("derivatives-trading-usds-futures"),
-        );
-    }
+    init_user_agent("derivatives-trading-usds-futures");
 
-    let config_rest_api =
-        get_configuration_rest_api(profile, "derivatives-trading-usds-futures").unwrap();
+    let client_config =
+        get_client_configuration(profile, "derivatives-trading-usds-futures").unwrap();
     let api_env = env::var("BINANCE_API_ENV")
         .ok()
-        .or(config_rest_api.env)
+        .or(client_config.env)
         .unwrap_or_else(|| "prod".to_string());
 
-    let base_path = match api_env.as_str() {
-        "testnet" => DERIVATIVES_TRADING_USDS_FUTURES_REST_API_TESTNET_URL,
-        "demo" => DERIVATIVES_TRADING_USDS_FUTURES_REST_API_DEMO_URL,
-        "prod" => DERIVATIVES_TRADING_USDS_FUTURES_REST_API_PROD_URL,
+    let base_path = client_config.base_path.unwrap_or(match api_env.as_str() {
+        "testnet" => DERIVATIVES_TRADING_USDS_FUTURES_REST_API_TESTNET_URL.to_string(),
+        "demo" => DERIVATIVES_TRADING_USDS_FUTURES_REST_API_DEMO_URL.to_string(),
+        "prod" => DERIVATIVES_TRADING_USDS_FUTURES_REST_API_PROD_URL.to_string(),
         _ => {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
                 "invalid BINANCE_API_ENV",
             ));
         }
-    };
+    });
 
     let mut builder = ConfigurationRestApi::builder().base_path(base_path);
 
     if is_signed {
         builder = builder
-            .api_key(config_rest_api.api_key)
-            .api_secret(config_rest_api.api_secret);
+            .api_key(client_config.api_key)
+            .api_secret(client_config.api_secret);
 
-        if config_rest_api.private_key.is_some()  {
-            builder = builder.private_key(PrivateKey::File(config_rest_api.private_key.unwrap()));
+        if client_config.private_key.is_some() {
+            builder = builder.private_key(PrivateKey::File(client_config.private_key.unwrap()));
         }
     }
 
@@ -2037,7 +2032,7 @@ Notes:
     #[command(
         about = decode_selected_entities(r#"Get older market historical trades.
 
-Weight(IP): 20
+Weight(IP): 200
 
 Security Type: MARKET_DATA
 
@@ -3297,9 +3292,7 @@ async fn get_bnb_burn_status(args: GetBnbBurnStatusArgs) -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn get_current_multi_assets_mode(
-    args: GetCurrentMultiAssetsModeArgs,
-) -> anyhow::Result<()> {
+async fn get_current_multi_assets_mode(args: GetCurrentMultiAssetsModeArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
     let params = match read_stdin_as::<GetCurrentMultiAssetsModeParams>() {
@@ -3363,14 +3356,14 @@ async fn get_download_id_for_futures_order_history(
                 if args.interactive {
                     if args.start_time.is_none() {
                         let start_time: i64 = Input::new()
-                            .with_prompt("Please enter the start_time name")
+                            .with_prompt("Input start_time:")
                             .interact_text()?;
 
                         args.start_time = Some(start_time);
                     }
                     if args.end_time.is_none() {
                         let end_time: i64 = Input::new()
-                            .with_prompt("Please enter the end_time name")
+                            .with_prompt("Input end_time:")
                             .interact_text()?;
 
                         args.end_time = Some(end_time);
@@ -3414,14 +3407,14 @@ async fn get_download_id_for_futures_trade_history(
                 if args.interactive {
                     if args.start_time.is_none() {
                         let start_time: i64 = Input::new()
-                            .with_prompt("Please enter the start_time name")
+                            .with_prompt("Input start_time:")
                             .interact_text()?;
 
                         args.start_time = Some(start_time);
                     }
                     if args.end_time.is_none() {
                         let end_time: i64 = Input::new()
-                            .with_prompt("Please enter the end_time name")
+                            .with_prompt("Input end_time:")
                             .interact_text()?;
 
                         args.end_time = Some(end_time);
@@ -3465,14 +3458,14 @@ async fn get_download_id_for_futures_transaction_history(
                 if args.interactive {
                     if args.start_time.is_none() {
                         let start_time: i64 = Input::new()
-                            .with_prompt("Please enter the start_time name")
+                            .with_prompt("Input start_time:")
                             .interact_text()?;
 
                         args.start_time = Some(start_time);
                     }
                     if args.end_time.is_none() {
                         let end_time: i64 = Input::new()
-                            .with_prompt("Please enter the end_time name")
+                            .with_prompt("Input end_time:")
                             .interact_text()?;
 
                         args.end_time = Some(end_time);
@@ -3516,7 +3509,7 @@ async fn get_futures_order_history_download_link_by_id(
                 if args.interactive {
                     if args.download_id.is_none() {
                         let download_id: String = Input::new()
-                            .with_prompt("Please enter the download_id name")
+                            .with_prompt("Input download_id:")
                             .interact_text()?;
 
                         args.download_id = Some(download_id);
@@ -3559,7 +3552,7 @@ async fn get_futures_trade_download_link_by_id(
                 if args.interactive {
                     if args.download_id.is_none() {
                         let download_id: String = Input::new()
-                            .with_prompt("Please enter the download_id name")
+                            .with_prompt("Input download_id:")
                             .interact_text()?;
 
                         args.download_id = Some(download_id);
@@ -3601,7 +3594,7 @@ async fn get_futures_transaction_history_download_link_by_id(
                 if args.interactive {
                     if args.download_id.is_none() {
                         let download_id: String = Input::new()
-                            .with_prompt("Please enter the download_id name")
+                            .with_prompt("Input download_id:")
                             .interact_text()?;
 
                         args.download_id = Some(download_id);
@@ -3748,7 +3741,7 @@ async fn toggle_bnb_burn_on_futures_trade(
                 if args.interactive {
                     if args.fee_burn.is_none() {
                         let fee_burn: String = Input::new()
-                            .with_prompt("Please enter the fee_burn name")
+                            .with_prompt("Input fee_burn:")
                             .interact_text()?;
 
                         args.fee_burn = Some(fee_burn);
@@ -3784,9 +3777,8 @@ async fn user_commission_rate(mut args: UserCommissionRateArgs) -> anyhow::Resul
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -3822,7 +3814,7 @@ async fn accept_the_offered_quote(mut args: AcceptTheOfferedQuoteArgs) -> anyhow
                 if args.interactive {
                     if args.quote_id.is_none() {
                         let quote_id: String = Input::new()
-                            .with_prompt("Please enter the quote_id name")
+                            .with_prompt("Input quote_id:")
                             .interact_text()?;
 
                         args.quote_id = Some(quote_id);
@@ -3907,14 +3899,14 @@ async fn send_quote_request(mut args: SendQuoteRequestArgs) -> anyhow::Result<()
                 if args.interactive {
                     if args.from_asset.is_none() {
                         let from_asset: String = Input::new()
-                            .with_prompt("Please enter the from_asset name")
+                            .with_prompt("Input from_asset:")
                             .interact_text()?;
 
                         args.from_asset = Some(from_asset);
                     }
                     if args.to_asset.is_none() {
                         let to_asset: String = Input::new()
-                            .with_prompt("Please enter the to_asset name")
+                            .with_prompt("Input to_asset:")
                             .interact_text()?;
 
                         args.to_asset = Some(to_asset);
@@ -3997,9 +3989,8 @@ async fn basis(mut args: BasisArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.pair.is_none() {
-                        let pair: String = Input::new()
-                            .with_prompt("Please enter the pair name")
-                            .interact_text()?;
+                        let pair: String =
+                            Input::new().with_prompt("Input pair:").interact_text()?;
 
                         args.pair = Some(pair);
                     }
@@ -4132,9 +4123,8 @@ async fn compressed_aggregate_trades_list(
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -4176,9 +4166,8 @@ async fn continuous_contract_kline_candlestick_data(
                 None => {
                     if args.interactive {
                         if args.pair.is_none() {
-                            let pair: String = Input::new()
-                                .with_prompt("Please enter the pair name")
-                                .interact_text()?;
+                            let pair: String =
+                                Input::new().with_prompt("Input pair:").interact_text()?;
 
                             args.pair = Some(pair);
                         }
@@ -4221,7 +4210,7 @@ async fn continuous_contract_kline_candlestick_data(
                         ("1d", ContinuousContractKlineCandlestickDataIntervalEnum::Interval1d),
                         ("3d", ContinuousContractKlineCandlestickDataIntervalEnum::Interval3d),
                         ("1w", ContinuousContractKlineCandlestickDataIntervalEnum::Interval1w),
-                        ("1M", ContinuousContractKlineCandlestickDataIntervalEnum::Interval1m),
+                        ("1M", ContinuousContractKlineCandlestickDataIntervalEnum::Interval1M),
                     ];
 
                             let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
@@ -4330,9 +4319,8 @@ async fn index_price_kline_candlestick_data(
             None => {
                 if args.interactive {
                     if args.pair.is_none() {
-                        let pair: String = Input::new()
-                            .with_prompt("Please enter the pair name")
-                            .interact_text()?;
+                        let pair: String =
+                            Input::new().with_prompt("Input pair:").interact_text()?;
 
                         args.pair = Some(pair);
                     }
@@ -4361,7 +4349,7 @@ async fn index_price_kline_candlestick_data(
                             ("1d", IndexPriceKlineCandlestickDataIntervalEnum::Interval1d),
                             ("3d", IndexPriceKlineCandlestickDataIntervalEnum::Interval3d),
                             ("1w", IndexPriceKlineCandlestickDataIntervalEnum::Interval1w),
-                            ("1M", IndexPriceKlineCandlestickDataIntervalEnum::Interval1m),
+                            ("1M", IndexPriceKlineCandlestickDataIntervalEnum::Interval1M),
                         ];
 
                         let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
@@ -4415,9 +4403,8 @@ async fn kline_candlestick_data(mut args: KlineCandlestickDataArgs) -> anyhow::R
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -4437,7 +4424,7 @@ async fn kline_candlestick_data(mut args: KlineCandlestickDataArgs) -> anyhow::R
                             ("1d", KlineCandlestickDataIntervalEnum::Interval1d),
                             ("3d", KlineCandlestickDataIntervalEnum::Interval3d),
                             ("1w", KlineCandlestickDataIntervalEnum::Interval1w),
-                            ("1M", KlineCandlestickDataIntervalEnum::Interval1m),
+                            ("1M", KlineCandlestickDataIntervalEnum::Interval1M),
                         ];
 
                         let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
@@ -4489,9 +4476,8 @@ async fn long_short_ratio(mut args: LongShortRatioArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -4582,9 +4568,8 @@ async fn mark_price_kline_candlestick_data(
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -4613,7 +4598,7 @@ async fn mark_price_kline_candlestick_data(
                             ("1d", MarkPriceKlineCandlestickDataIntervalEnum::Interval1d),
                             ("3d", MarkPriceKlineCandlestickDataIntervalEnum::Interval3d),
                             ("1w", MarkPriceKlineCandlestickDataIntervalEnum::Interval1w),
-                            ("1M", MarkPriceKlineCandlestickDataIntervalEnum::Interval1m),
+                            ("1M", MarkPriceKlineCandlestickDataIntervalEnum::Interval1M),
                         ];
 
                         let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
@@ -4667,9 +4652,8 @@ async fn old_trades_lookup(mut args: OldTradesLookupArgs) -> anyhow::Result<()> 
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -4705,9 +4689,8 @@ async fn open_interest(mut args: OpenInterestArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -4741,9 +4724,8 @@ async fn open_interest_statistics(mut args: OpenInterestStatisticsArgs) -> anyho
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -4809,9 +4791,8 @@ async fn order_book(mut args: OrderBookArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -4846,9 +4827,8 @@ async fn premium_index_kline_data(mut args: PremiumIndexKlineDataArgs) -> anyhow
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -4868,7 +4848,7 @@ async fn premium_index_kline_data(mut args: PremiumIndexKlineDataArgs) -> anyhow
                             ("1d", PremiumIndexKlineDataIntervalEnum::Interval1d),
                             ("3d", PremiumIndexKlineDataIntervalEnum::Interval3d),
                             ("1w", PremiumIndexKlineDataIntervalEnum::Interval1w),
-                            ("1M", PremiumIndexKlineDataIntervalEnum::Interval1m),
+                            ("1M", PremiumIndexKlineDataIntervalEnum::Interval1M),
                         ];
 
                         let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
@@ -4924,9 +4904,8 @@ async fn quarterly_contract_settlement_price(
             None => {
                 if args.interactive {
                     if args.pair.is_none() {
-                        let pair: String = Input::new()
-                            .with_prompt("Please enter the pair name")
-                            .interact_text()?;
+                        let pair: String =
+                            Input::new().with_prompt("Input pair:").interact_text()?;
 
                         args.pair = Some(pair);
                     }
@@ -4966,9 +4945,8 @@ async fn query_index_price_constituents(
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -5030,9 +5008,8 @@ async fn recent_trades_list(mut args: RecentTradesListArgs) -> anyhow::Result<()
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -5067,9 +5044,8 @@ async fn rpi_order_book(mut args: RpiOrderBookArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -5173,9 +5149,8 @@ async fn taker_buy_sell_volume(mut args: TakerBuySellVolumeArgs) -> anyhow::Resu
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -5285,9 +5260,8 @@ async fn top_trader_long_short_ratio_accounts(
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -5359,9 +5333,8 @@ async fn top_trader_long_short_ratio_positions(
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -5443,9 +5416,8 @@ async fn classic_portfolio_margin_account_information(
             None => {
                 if args.interactive {
                     if args.asset.is_none() {
-                        let asset: String = Input::new()
-                            .with_prompt("Please enter the asset name")
-                            .interact_text()?;
+                        let asset: String =
+                            Input::new().with_prompt("Input asset:").interact_text()?;
 
                         args.asset = Some(asset);
                     }
@@ -5482,9 +5454,8 @@ async fn account_trade_list(mut args: AccountTradeListArgs) -> anyhow::Result<()
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -5524,9 +5495,8 @@ async fn all_orders(mut args: AllOrdersArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -5565,15 +5535,14 @@ async fn auto_cancel_all_open_orders(mut args: AutoCancelAllOpenOrdersArgs) -> a
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
                     if args.countdown_time.is_none() {
                         let countdown_time: i64 = Input::new()
-                            .with_prompt("Please enter the countdown_time name")
+                            .with_prompt("Input countdown_time:")
                             .interact_text()?;
 
                         args.countdown_time = Some(countdown_time);
@@ -5636,9 +5605,8 @@ async fn cancel_all_algo_open_orders(mut args: CancelAllAlgoOpenOrdersArgs) -> a
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -5673,9 +5641,8 @@ async fn cancel_all_open_orders(mut args: CancelAllOpenOrdersArgs) -> anyhow::Re
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -5710,9 +5677,8 @@ async fn cancel_multiple_orders(mut args: CancelMultipleOrdersArgs) -> anyhow::R
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -5749,9 +5715,8 @@ async fn cancel_order(mut args: CancelOrderArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -5788,15 +5753,14 @@ async fn change_initial_leverage(mut args: ChangeInitialLeverageArgs) -> anyhow:
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
                     if args.leverage.is_none() {
                         let leverage: i64 = Input::new()
-                            .with_prompt("Please enter the leverage name")
+                            .with_prompt("Input leverage:")
                             .interact_text()?;
 
                         args.leverage = Some(leverage);
@@ -5834,9 +5798,8 @@ async fn change_margin_type(mut args: ChangeMarginTypeArgs) -> anyhow::Result<()
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -5894,7 +5857,7 @@ async fn change_multi_assets_mode(mut args: ChangeMultiAssetsModeArgs) -> anyhow
                 if args.interactive {
                     if args.multi_assets_margin.is_none() {
                         let multi_assets_margin: String = Input::new()
-                            .with_prompt("Please enter the multi_assets_margin name")
+                            .with_prompt("Input multi_assets_margin:")
                             .interact_text()?;
 
                         args.multi_assets_margin = Some(multi_assets_margin);
@@ -5931,7 +5894,7 @@ async fn change_position_mode(mut args: ChangePositionModeArgs) -> anyhow::Resul
                 if args.interactive {
                     if args.dual_side_position.is_none() {
                         let dual_side_position: String = Input::new()
-                            .with_prompt("Please enter the dual_side_position name")
+                            .with_prompt("Input dual_side_position:")
                             .interact_text()?;
 
                         args.dual_side_position = Some(dual_side_position);
@@ -5955,9 +5918,7 @@ async fn change_position_mode(mut args: ChangePositionModeArgs) -> anyhow::Resul
     Ok(())
 }
 
-async fn current_all_algo_open_orders(
-    args: CurrentAllAlgoOpenOrdersArgs,
-) -> anyhow::Result<()> {
+async fn current_all_algo_open_orders(args: CurrentAllAlgoOpenOrdersArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
     let params = match read_stdin_as::<CurrentAllAlgoOpenOrdersParams>() {
@@ -6009,9 +5970,7 @@ async fn current_all_open_orders(args: CurrentAllOpenOrdersArgs) -> anyhow::Resu
     Ok(())
 }
 
-async fn futures_tradfi_perps_contract(
-    args: FuturesTradfiPerpsContractArgs,
-) -> anyhow::Result<()> {
+async fn futures_tradfi_perps_contract(args: FuturesTradfiPerpsContractArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
     let params = match read_stdin_as::<FuturesTradfiPerpsContractParams>() {
@@ -6048,9 +6007,8 @@ async fn get_order_modify_history(mut args: GetOrderModifyHistoryArgs) -> anyhow
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -6094,9 +6052,8 @@ async fn get_position_margin_change_history(
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -6141,23 +6098,20 @@ async fn modify_isolated_position_margin(
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }
                     if args.r#type.is_none() {
-                        let r#type: i32 = Input::new()
-                            .with_prompt("Please enter the r#type name")
-                            .interact_text()?;
+                        let r#type: i32 =
+                            Input::new().with_prompt("Input r#type:").interact_text()?;
 
                         args.r#type = Some(r#type);
                     }
@@ -6198,7 +6152,7 @@ async fn modify_multiple_orders(mut args: ModifyMultipleOrdersArgs) -> anyhow::R
                 if args.interactive {
                     if args.batch_orders.is_none() {
                         let batch_orders: String = Input::new()
-                            .with_prompt("Please enter the batch_orders name")
+                            .with_prompt("Input batch_orders:")
                             .interact_text()?;
 
                         args.batch_orders = Some(batch_orders);
@@ -6237,9 +6191,8 @@ async fn modify_order(mut args: ModifyOrderArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -6265,15 +6218,14 @@ async fn modify_order(mut args: ModifyOrderArgs) -> anyhow::Result<()> {
                     }
                     if args.quantity.is_none() {
                         let quantity: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the quantity name")
+                            .with_prompt("Input quantity:")
                             .interact_text()?;
 
                         args.quantity = Some(quantity);
                     }
                     if args.price.is_none() {
-                        let price: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the price name")
-                            .interact_text()?;
+                        let price: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input price:").interact_text()?;
 
                         args.price = Some(price);
                     }
@@ -6335,9 +6287,8 @@ async fn new_algo_order(mut args: NewAlgoOrderArgs) -> anyhow::Result<()> {
                         args.algo_type = Some(selected);
                     }
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -6442,9 +6393,8 @@ async fn new_order(mut args: NewOrderArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -6539,7 +6489,7 @@ async fn place_multiple_orders(mut args: PlaceMultipleOrdersArgs) -> anyhow::Res
                 if args.interactive {
                     if args.batch_orders.is_none() {
                         let batch_orders: String = Input::new()
-                            .with_prompt("Please enter the batch_orders name")
+                            .with_prompt("Input batch_orders:")
                             .interact_text()?;
 
                         args.batch_orders = Some(batch_orders);
@@ -6679,9 +6629,8 @@ async fn query_all_algo_orders(mut args: QueryAllAlgoOrdersArgs) -> anyhow::Resu
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -6720,9 +6669,8 @@ async fn query_current_open_order(mut args: QueryCurrentOpenOrderArgs) -> anyhow
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -6759,9 +6707,8 @@ async fn query_order(mut args: QueryOrderArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -6798,9 +6745,8 @@ async fn test_order(mut args: TestOrderArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }

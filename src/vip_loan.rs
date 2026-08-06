@@ -1,5 +1,5 @@
 use crate::utils::{
-    build_user_agent, decode_selected_entities, get_configuration_rest_api, read_json_as,
+    decode_selected_entities, get_client_configuration, init_user_agent, read_json_as,
     read_stdin_as,
 };
 use binance_sdk::config::{ConfigurationRestApi, PrivateKey};
@@ -13,38 +13,33 @@ use std::io;
 use std::io::{Error, ErrorKind};
 
 fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> {
-    unsafe {
-        env::set_var(
-            "BINANCE_CONNECTOR_RUST_USER_AGENT",
-            build_user_agent("vip-loan"),
-        );
-    }
+    init_user_agent("vip-loan");
 
-    let config_rest_api = get_configuration_rest_api(profile, "vip-loan").unwrap();
+    let client_config = get_client_configuration(profile, "vip-loan").unwrap();
     let api_env = env::var("BINANCE_API_ENV")
         .ok()
-        .or(config_rest_api.env)
+        .or(client_config.env)
         .unwrap_or_else(|| "prod".to_string());
 
-    let base_path = match api_env.as_str() {
-        "prod" => VIP_LOAN_REST_API_PROD_URL,
+    let base_path = client_config.base_path.unwrap_or(match api_env.as_str() {
+        "prod" => VIP_LOAN_REST_API_PROD_URL.to_string(),
         _ => {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
                 "invalid BINANCE_API_ENV",
             ));
         }
-    };
+    });
 
     let mut builder = ConfigurationRestApi::builder().base_path(base_path);
 
     if is_signed {
         builder = builder
-            .api_key(config_rest_api.api_key)
-            .api_secret(config_rest_api.api_secret);
+            .api_key(client_config.api_key)
+            .api_secret(client_config.api_secret);
 
-        if config_rest_api.private_key.is_some()  {
-            builder = builder.private_key(PrivateKey::File(config_rest_api.private_key.unwrap()));
+        if client_config.private_key.is_some() {
+            builder = builder.private_key(PrivateKey::File(client_config.private_key.unwrap()));
         }
     }
 
@@ -541,7 +536,7 @@ async fn get_borrow_interest_rate(mut args: GetBorrowInterestRateArgs) -> anyhow
                 if args.interactive {
                     if args.loan_coin.is_none() {
                         let loan_coin: String = Input::new()
-                            .with_prompt("Please enter the loan_coin name")
+                            .with_prompt("Input loan_coin:")
                             .interact_text()?;
 
                         args.loan_coin = Some(loan_coin);
@@ -630,15 +625,14 @@ async fn get_vip_loan_interest_rate_history(
             None => {
                 if args.interactive {
                     if args.coin.is_none() {
-                        let coin: String = Input::new()
-                            .with_prompt("Please enter the coin name")
-                            .interact_text()?;
+                        let coin: String =
+                            Input::new().with_prompt("Input coin:").interact_text()?;
 
                         args.coin = Some(coin);
                     }
                     if args.recv_window.is_none() {
                         let recv_window: i64 = Input::new()
-                            .with_prompt("Please enter the recv_window name")
+                            .with_prompt("Input recv_window:")
                             .interact_text()?;
 
                         args.recv_window = Some(recv_window);
@@ -686,7 +680,7 @@ async fn query_vip_loan_fixed_rate_market(
                 if args.interactive {
                     if args.loan_coin.is_none() {
                         let loan_coin: String = Input::new()
-                            .with_prompt("Please enter the loan_coin name")
+                            .with_prompt("Input loan_coin:")
                             .interact_text()?;
 
                         args.loan_coin = Some(loan_coin);
@@ -726,42 +720,42 @@ async fn vip_loan_borrow(mut args: VipLoanBorrowArgs) -> anyhow::Result<()> {
                 if args.interactive {
                     if args.loan_account_id.is_none() {
                         let loan_account_id: i64 = Input::new()
-                            .with_prompt("Please enter the loan_account_id name")
+                            .with_prompt("Input loan_account_id:")
                             .interact_text()?;
 
                         args.loan_account_id = Some(loan_account_id);
                     }
                     if args.loan_coin.is_none() {
                         let loan_coin: String = Input::new()
-                            .with_prompt("Please enter the loan_coin name")
+                            .with_prompt("Input loan_coin:")
                             .interact_text()?;
 
                         args.loan_coin = Some(loan_coin);
                     }
                     if args.loan_amount.is_none() {
                         let loan_amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the loan_amount name")
+                            .with_prompt("Input loan_amount:")
                             .interact_text()?;
 
                         args.loan_amount = Some(loan_amount);
                     }
                     if args.collateral_account_id.is_none() {
                         let collateral_account_id: String = Input::new()
-                            .with_prompt("Please enter the collateral_account_id name")
+                            .with_prompt("Input collateral_account_id:")
                             .interact_text()?;
 
                         args.collateral_account_id = Some(collateral_account_id);
                     }
                     if args.collateral_coin.is_none() {
                         let collateral_coin: String = Input::new()
-                            .with_prompt("Please enter the collateral_coin name")
+                            .with_prompt("Input collateral_coin:")
                             .interact_text()?;
 
                         args.collateral_coin = Some(collateral_coin);
                     }
                     if args.is_flexible_rate.is_none() {
                         let is_flexible_rate: bool = Input::new()
-                            .with_prompt("Please enter the is_flexible_rate name")
+                            .with_prompt("Input is_flexible_rate:")
                             .interact_text()?;
 
                         args.is_flexible_rate = Some(is_flexible_rate);
@@ -809,42 +803,42 @@ async fn vip_loan_fixed_rate_borrow(mut args: VipLoanFixedRateBorrowArgs) -> any
                 if args.interactive {
                     if args.supply_request.is_none() {
                         let supply_request: String = Input::new()
-                            .with_prompt("Please enter the supply_request name")
+                            .with_prompt("Input supply_request:")
                             .interact_text()?;
 
                         args.supply_request = Some(supply_request);
                     }
                     if args.borrow_coin.is_none() {
                         let borrow_coin: String = Input::new()
-                            .with_prompt("Please enter the borrow_coin name")
+                            .with_prompt("Input borrow_coin:")
                             .interact_text()?;
 
                         args.borrow_coin = Some(borrow_coin);
                     }
                     if args.loan_term.is_none() {
                         let loan_term: i64 = Input::new()
-                            .with_prompt("Please enter the loan_term name")
+                            .with_prompt("Input loan_term:")
                             .interact_text()?;
 
                         args.loan_term = Some(loan_term);
                     }
                     if args.borrow_uid.is_none() {
                         let borrow_uid: i64 = Input::new()
-                            .with_prompt("Please enter the borrow_uid name")
+                            .with_prompt("Input borrow_uid:")
                             .interact_text()?;
 
                         args.borrow_uid = Some(borrow_uid);
                     }
                     if args.collateral_coin.is_none() {
                         let collateral_coin: String = Input::new()
-                            .with_prompt("Please enter the collateral_coin name")
+                            .with_prompt("Input collateral_coin:")
                             .interact_text()?;
 
                         args.collateral_coin = Some(collateral_coin);
                     }
                     if args.collateral_account_id.is_none() {
                         let collateral_account_id: String = Input::new()
-                            .with_prompt("Please enter the collateral_account_id name")
+                            .with_prompt("Input collateral_account_id:")
                             .interact_text()?;
 
                         args.collateral_account_id = Some(collateral_account_id);
@@ -892,14 +886,14 @@ async fn vip_loan_renew(mut args: VipLoanRenewArgs) -> anyhow::Result<()> {
                 if args.interactive {
                     if args.order_id.is_none() {
                         let order_id: i64 = Input::new()
-                            .with_prompt("Please enter the order_id name")
+                            .with_prompt("Input order_id:")
                             .interact_text()?;
 
                         args.order_id = Some(order_id);
                     }
                     if args.loan_term.is_none() {
                         let loan_term: i64 = Input::new()
-                            .with_prompt("Please enter the loan_term name")
+                            .with_prompt("Input loan_term:")
                             .interact_text()?;
 
                         args.loan_term = Some(loan_term);
@@ -938,15 +932,14 @@ async fn vip_loan_repay(mut args: VipLoanRepayArgs) -> anyhow::Result<()> {
                 if args.interactive {
                     if args.order_id.is_none() {
                         let order_id: i64 = Input::new()
-                            .with_prompt("Please enter the order_id name")
+                            .with_prompt("Input order_id:")
                             .interact_text()?;
 
                         args.order_id = Some(order_id);
                     }
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }
@@ -1002,9 +995,7 @@ async fn check_vip_loan_collateral_account(
     Ok(())
 }
 
-async fn get_vip_loan_accrued_interest(
-    args: GetVipLoanAccruedInterestArgs,
-) -> anyhow::Result<()> {
+async fn get_vip_loan_accrued_interest(args: GetVipLoanAccruedInterestArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
     let params = match read_stdin_as::<GetVipLoanAccruedInterestParams>() {

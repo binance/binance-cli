@@ -1,5 +1,5 @@
 use crate::utils::{
-    build_user_agent, decode_selected_entities, get_configuration_rest_api, read_json_as,
+    decode_selected_entities, get_client_configuration, init_user_agent, read_json_as,
     read_stdin_as,
 };
 use binance_sdk::config::{ConfigurationRestApi, PrivateKey};
@@ -13,38 +13,33 @@ use std::io;
 use std::io::{Error, ErrorKind};
 
 fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> {
-    unsafe {
-        env::set_var(
-            "BINANCE_CONNECTOR_RUST_USER_AGENT",
-            build_user_agent("dual-investment"),
-        );
-    }
+    init_user_agent("dual-investment");
 
-    let config_rest_api = get_configuration_rest_api(profile, "dual-investment").unwrap();
+    let client_config = get_client_configuration(profile, "dual-investment").unwrap();
     let api_env = env::var("BINANCE_API_ENV")
         .ok()
-        .or(config_rest_api.env)
+        .or(client_config.env)
         .unwrap_or_else(|| "prod".to_string());
 
-    let base_path = match api_env.as_str() {
-        "prod" => DUAL_INVESTMENT_REST_API_PROD_URL,
+    let base_path = client_config.base_path.unwrap_or(match api_env.as_str() {
+        "prod" => DUAL_INVESTMENT_REST_API_PROD_URL.to_string(),
         _ => {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
                 "invalid BINANCE_API_ENV",
             ));
         }
-    };
+    });
 
     let mut builder = ConfigurationRestApi::builder().base_path(base_path);
 
     if is_signed {
         builder = builder
-            .api_key(config_rest_api.api_key)
-            .api_secret(config_rest_api.api_secret);
+            .api_key(client_config.api_key)
+            .api_secret(client_config.api_secret);
 
-        if config_rest_api.private_key.is_some()  {
-            builder = builder.private_key(PrivateKey::File(config_rest_api.private_key.unwrap()));
+        if client_config.private_key.is_some() {
+            builder = builder.private_key(PrivateKey::File(client_config.private_key.unwrap()));
         }
     }
 
@@ -272,14 +267,14 @@ async fn get_dual_investment_product_list(
                     }
                     if args.exercised_coin.is_none() {
                         let exercised_coin: String = Input::new()
-                            .with_prompt("Please enter the exercised_coin name")
+                            .with_prompt("Input exercised_coin:")
                             .interact_text()?;
 
                         args.exercised_coin = Some(exercised_coin);
                     }
                     if args.invest_coin.is_none() {
                         let invest_coin: String = Input::new()
-                            .with_prompt("Please enter the invest_coin name")
+                            .with_prompt("Input invest_coin:")
                             .interact_text()?;
 
                         args.invest_coin = Some(invest_coin);
@@ -324,7 +319,7 @@ async fn change_auto_compound_status(mut args: ChangeAutoCompoundStatusArgs) -> 
                 if args.interactive {
                     if args.position_id.is_none() {
                         let position_id: String = Input::new()
-                            .with_prompt("Please enter the position_id name")
+                            .with_prompt("Input position_id:")
                             .interact_text()?;
 
                         args.position_id = Some(position_id);
@@ -404,9 +399,7 @@ async fn check_dual_investment_accounts(
     Ok(())
 }
 
-async fn get_dual_investment_positions(
-    args: GetDualInvestmentPositionsArgs,
-) -> anyhow::Result<()> {
+async fn get_dual_investment_positions(args: GetDualInvestmentPositionsArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
     let params = match read_stdin_as::<GetDualInvestmentPositionsParams>() {
@@ -450,22 +443,21 @@ async fn subscribe_dual_investment_products(
                 None => {
                     if args.interactive {
                         if args.id.is_none() {
-                            let id: String = Input::new()
-                                .with_prompt("Please enter the id name")
-                                .interact_text()?;
+                            let id: String =
+                                Input::new().with_prompt("Input id:").interact_text()?;
 
                             args.id = Some(id);
                         }
                         if args.order_id.is_none() {
                             let order_id: String = Input::new()
-                                .with_prompt("Please enter the order_id name")
+                                .with_prompt("Input order_id:")
                                 .interact_text()?;
 
                             args.order_id = Some(order_id);
                         }
                         if args.deposit_amount.is_none() {
                             let deposit_amount: rust_decimal::Decimal = Input::new()
-                                .with_prompt("Please enter the deposit_amount name")
+                                .with_prompt("Input deposit_amount:")
                                 .interact_text()?;
 
                             args.deposit_amount = Some(deposit_amount);

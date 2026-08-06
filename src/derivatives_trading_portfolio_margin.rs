@@ -1,5 +1,5 @@
 use crate::utils::{
-    build_user_agent, decode_selected_entities, get_configuration_rest_api, read_json_as,
+    decode_selected_entities, get_client_configuration, init_user_agent, read_json_as,
     read_stdin_as,
 };
 use binance_sdk::config::{ConfigurationRestApi, PrivateKey};
@@ -16,40 +16,35 @@ use std::io;
 use std::io::{Error, ErrorKind};
 
 fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> {
-    unsafe {
-        env::set_var(
-            "BINANCE_CONNECTOR_RUST_USER_AGENT",
-            build_user_agent("derivatives-trading-portfolio-margin"),
-        );
-    }
+    init_user_agent("derivatives-trading-portfolio-margin");
 
-    let config_rest_api =
-        get_configuration_rest_api(profile, "derivatives-trading-portfolio-margin").unwrap();
+    let client_config =
+        get_client_configuration(profile, "derivatives-trading-portfolio-margin").unwrap();
     let api_env = env::var("BINANCE_API_ENV")
         .ok()
-        .or(config_rest_api.env)
+        .or(client_config.env)
         .unwrap_or_else(|| "prod".to_string());
 
-    let base_path = match api_env.as_str() {
-        "testnet" | "demo" => DERIVATIVES_TRADING_PORTFOLIO_MARGIN_REST_API_TESTNET_URL,
-        "prod" => DERIVATIVES_TRADING_PORTFOLIO_MARGIN_REST_API_PROD_URL,
+    let base_path = client_config.base_path.unwrap_or(match api_env.as_str() {
+        "testnet" | "demo" => DERIVATIVES_TRADING_PORTFOLIO_MARGIN_REST_API_TESTNET_URL.to_string(),
+        "prod" => DERIVATIVES_TRADING_PORTFOLIO_MARGIN_REST_API_PROD_URL.to_string(),
         _ => {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
                 "invalid BINANCE_API_ENV",
             ));
         }
-    };
+    });
 
     let mut builder = ConfigurationRestApi::builder().base_path(base_path);
 
     if is_signed {
         builder = builder
-            .api_key(config_rest_api.api_key)
-            .api_secret(config_rest_api.api_secret);
+            .api_key(client_config.api_key)
+            .api_secret(client_config.api_secret);
 
-        if config_rest_api.private_key.is_some()  {
-            builder = builder.private_key(PrivateKey::File(config_rest_api.private_key.unwrap()));
+        if client_config.private_key.is_some() {
+            builder = builder.private_key(PrivateKey::File(client_config.private_key.unwrap()));
         }
     }
 
@@ -2758,7 +2753,8 @@ Notes:
 - Both `quantity` and `price` must be sent
 - When the new `quantity` or `price` doesn't satisfy PRICE_FILTER / PERCENT_FILTER / LOT_SIZE, amendment will be rejected and the order will stay as it is.
 - However the order will be cancelled by the amendment in the following situations:
-  - when the order is in partially filled status and the new `quantity`  * When the order is `GTX` and the new price will cause it to be executed immediately"#, false),
+  - when the order is in partially filled status and the new `quantity` <= `executedQty`
+  - When the order is `GTX` and the new price will cause it to be executed immediately"#, false),
     )]
     ModifyCmOrder(ModifyCmOrderArgs),
     #[command(
@@ -2773,7 +2769,9 @@ Notes:
 - Both quantity and price must be sent
 - When the new quantity or price doesn't satisfy PRICE_FILTER / PERCENT_FILTER / LOT_SIZE, amendment will be rejected and the order will stay as it is.
 - However the order will be cancelled by the amendment in the following situations:
-  - when the order is in partially filled status and the new quantity  * When the order is GTX and the new price will cause it to be executed immediately"#, false),
+  - when the order is in partially filled status and the new quantity <= executedQty
+  - When the order is GTX and the new price will cause it to be executed immediately
+- The amendment keeps the order's original selfTradePreventionMode."#, false),
     )]
     ModifyUmOrder(ModifyUmOrderArgs),
     #[command(
@@ -3593,9 +3591,8 @@ async fn bnb_transfer(mut args: BnbTransferArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }
@@ -3706,15 +3703,14 @@ async fn change_cm_initial_leverage(mut args: ChangeCmInitialLeverageArgs) -> an
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
                     if args.leverage.is_none() {
                         let leverage: i64 = Input::new()
-                            .with_prompt("Please enter the leverage name")
+                            .with_prompt("Input leverage:")
                             .interact_text()?;
 
                         args.leverage = Some(leverage);
@@ -3802,15 +3798,14 @@ async fn change_um_initial_leverage(mut args: ChangeUmInitialLeverageArgs) -> an
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
                     if args.leverage.is_none() {
                         let leverage: i64 = Input::new()
-                            .with_prompt("Please enter the leverage name")
+                            .with_prompt("Input leverage:")
                             .interact_text()?;
 
                         args.leverage = Some(leverage);
@@ -3951,9 +3946,8 @@ async fn fund_collection_by_asset(mut args: FundCollectionByAssetArgs) -> anyhow
             None => {
                 if args.interactive {
                     if args.asset.is_none() {
-                        let asset: String = Input::new()
-                            .with_prompt("Please enter the asset name")
-                            .interact_text()?;
+                        let asset: String =
+                            Input::new().with_prompt("Input asset:").interact_text()?;
 
                         args.asset = Some(asset);
                     }
@@ -3976,9 +3970,7 @@ async fn fund_collection_by_asset(mut args: FundCollectionByAssetArgs) -> anyhow
     Ok(())
 }
 
-async fn get_auto_repay_futures_status(
-    args: GetAutoRepayFuturesStatusArgs,
-) -> anyhow::Result<()> {
+async fn get_auto_repay_futures_status(args: GetAutoRepayFuturesStatusArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
     let params = match read_stdin_as::<GetAutoRepayFuturesStatusParams>() {
@@ -4026,9 +4018,7 @@ async fn get_cm_account_detail(args: GetCmAccountDetailArgs) -> anyhow::Result<(
     Ok(())
 }
 
-async fn get_cm_current_position_mode(
-    args: GetCmCurrentPositionModeArgs,
-) -> anyhow::Result<()> {
+async fn get_cm_current_position_mode(args: GetCmCurrentPositionModeArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
     let params = match read_stdin_as::<GetCmCurrentPositionModeParams>() {
@@ -4098,14 +4088,14 @@ async fn get_download_id_for_um_futures_order_history(
                 if args.interactive {
                     if args.start_time.is_none() {
                         let start_time: i64 = Input::new()
-                            .with_prompt("Please enter the start_time name")
+                            .with_prompt("Input start_time:")
                             .interact_text()?;
 
                         args.start_time = Some(start_time);
                     }
                     if args.end_time.is_none() {
                         let end_time: i64 = Input::new()
-                            .with_prompt("Please enter the end_time name")
+                            .with_prompt("Input end_time:")
                             .interact_text()?;
 
                         args.end_time = Some(end_time);
@@ -4149,14 +4139,14 @@ async fn get_download_id_for_um_futures_trade_history(
                 if args.interactive {
                     if args.start_time.is_none() {
                         let start_time: i64 = Input::new()
-                            .with_prompt("Please enter the start_time name")
+                            .with_prompt("Input start_time:")
                             .interact_text()?;
 
                         args.start_time = Some(start_time);
                     }
                     if args.end_time.is_none() {
                         let end_time: i64 = Input::new()
-                            .with_prompt("Please enter the end_time name")
+                            .with_prompt("Input end_time:")
                             .interact_text()?;
 
                         args.end_time = Some(end_time);
@@ -4200,14 +4190,14 @@ async fn get_download_id_for_um_futures_transaction_history(
                 if args.interactive {
                     if args.start_time.is_none() {
                         let start_time: i64 = Input::new()
-                            .with_prompt("Please enter the start_time name")
+                            .with_prompt("Input start_time:")
                             .interact_text()?;
 
                         args.start_time = Some(start_time);
                     }
                     if args.end_time.is_none() {
                         let end_time: i64 = Input::new()
-                            .with_prompt("Please enter the end_time name")
+                            .with_prompt("Input end_time:")
                             .interact_text()?;
 
                         args.end_time = Some(end_time);
@@ -4315,9 +4305,7 @@ async fn get_um_account_detail_v2(args: GetUmAccountDetailV2Args) -> anyhow::Res
     Ok(())
 }
 
-async fn get_um_current_position_mode(
-    args: GetUmCurrentPositionModeArgs,
-) -> anyhow::Result<()> {
+async fn get_um_current_position_mode(args: GetUmCurrentPositionModeArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
     let params = match read_stdin_as::<GetUmCurrentPositionModeParams>() {
@@ -4358,7 +4346,7 @@ async fn get_um_futures_order_download_link_by_id(
                 if args.interactive {
                     if args.download_id.is_none() {
                         let download_id: String = Input::new()
-                            .with_prompt("Please enter the download_id name")
+                            .with_prompt("Input download_id:")
                             .interact_text()?;
 
                         args.download_id = Some(download_id);
@@ -4400,7 +4388,7 @@ async fn get_um_futures_trade_download_link_by_id(
                 if args.interactive {
                     if args.download_id.is_none() {
                         let download_id: String = Input::new()
-                            .with_prompt("Please enter the download_id name")
+                            .with_prompt("Input download_id:")
                             .interact_text()?;
 
                         args.download_id = Some(download_id);
@@ -4442,7 +4430,7 @@ async fn get_um_futures_transaction_download_link_by_id(
                 if args.interactive {
                     if args.download_id.is_none() {
                         let download_id: String = Input::new()
-                            .with_prompt("Please enter the download_id name")
+                            .with_prompt("Input download_id:")
                             .interact_text()?;
 
                         args.download_id = Some(download_id);
@@ -4513,9 +4501,8 @@ async fn get_user_commission_rate_for_cm(
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -4554,9 +4541,8 @@ async fn get_user_commission_rate_for_um(
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -4591,9 +4577,8 @@ async fn margin_max_borrow(mut args: MarginMaxBorrowArgs) -> anyhow::Result<()> 
             None => {
                 if args.interactive {
                     if args.asset.is_none() {
-                        let asset: String = Input::new()
-                            .with_prompt("Please enter the asset name")
-                            .interact_text()?;
+                        let asset: String =
+                            Input::new().with_prompt("Input asset:").interact_text()?;
 
                         args.asset = Some(asset);
                     }
@@ -4648,9 +4633,7 @@ async fn portfolio_margin_um_trading_quantitative_rules_indicators(
     Ok(())
 }
 
-async fn query_cm_position_information(
-    args: QueryCmPositionInformationArgs,
-) -> anyhow::Result<()> {
+async fn query_cm_position_information(args: QueryCmPositionInformationArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
     let params = match read_stdin_as::<QueryCmPositionInformationParams>() {
@@ -4689,9 +4672,8 @@ async fn query_margin_loan_record(mut args: QueryMarginLoanRecordArgs) -> anyhow
             None => {
                 if args.interactive {
                     if args.asset.is_none() {
-                        let asset: String = Input::new()
-                            .with_prompt("Please enter the asset name")
-                            .interact_text()?;
+                        let asset: String =
+                            Input::new().with_prompt("Input asset:").interact_text()?;
 
                         args.asset = Some(asset);
                     }
@@ -4732,9 +4714,8 @@ async fn query_margin_max_withdraw(mut args: QueryMarginMaxWithdrawArgs) -> anyh
             None => {
                 if args.interactive {
                     if args.asset.is_none() {
-                        let asset: String = Input::new()
-                            .with_prompt("Please enter the asset name")
-                            .interact_text()?;
+                        let asset: String =
+                            Input::new().with_prompt("Input asset:").interact_text()?;
 
                         args.asset = Some(asset);
                     }
@@ -4769,9 +4750,8 @@ async fn query_margin_repay_record(mut args: QueryMarginRepayRecordArgs) -> anyh
             None => {
                 if args.interactive {
                     if args.asset.is_none() {
-                        let asset: String = Input::new()
-                            .with_prompt("Please enter the asset name")
-                            .interact_text()?;
+                        let asset: String =
+                            Input::new().with_prompt("Input asset:").interact_text()?;
 
                         args.asset = Some(asset);
                     }
@@ -4834,9 +4814,7 @@ async fn query_portfolio_margin_negative_balance_interest_history(
     Ok(())
 }
 
-async fn query_um_position_information(
-    args: QueryUmPositionInformationArgs,
-) -> anyhow::Result<()> {
+async fn query_um_position_information(args: QueryUmPositionInformationArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
     let params = match read_stdin_as::<QueryUmPositionInformationParams>() {
@@ -4878,14 +4856,14 @@ async fn query_user_negative_balance_auto_exchange_record(
                 if args.interactive {
                     if args.start_time.is_none() {
                         let start_time: i64 = Input::new()
-                            .with_prompt("Please enter the start_time name")
+                            .with_prompt("Input start_time:")
                             .interact_text()?;
 
                         args.start_time = Some(start_time);
                     }
                     if args.end_time.is_none() {
                         let end_time: i64 = Input::new()
-                            .with_prompt("Please enter the end_time name")
+                            .with_prompt("Input end_time:")
                             .interact_text()?;
 
                         args.end_time = Some(end_time);
@@ -5075,9 +5053,8 @@ async fn cancel_all_cm_open_conditional_orders(
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -5114,9 +5091,8 @@ async fn cancel_all_cm_open_orders(mut args: CancelAllCmOpenOrdersArgs) -> anyho
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -5155,9 +5131,8 @@ async fn cancel_all_um_algo_open_orders(
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -5196,9 +5171,8 @@ async fn cancel_all_um_open_conditional_orders(
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -5235,9 +5209,8 @@ async fn cancel_all_um_open_orders(mut args: CancelAllUmOpenOrdersArgs) -> anyho
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -5274,9 +5247,8 @@ async fn cancel_cm_conditional_order(mut args: CancelCmConditionalOrderArgs) -> 
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -5313,9 +5285,8 @@ async fn cancel_cm_order(mut args: CancelCmOrderArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -5355,9 +5326,8 @@ async fn cancel_margin_account_all_open_orders_on_a_symbol(
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -5398,9 +5368,8 @@ async fn cancel_margin_account_oco_orders(
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -5440,9 +5409,8 @@ async fn cancel_margin_account_order(mut args: CancelMarginAccountOrderArgs) -> 
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -5507,9 +5475,8 @@ async fn cancel_um_conditional_order(mut args: CancelUmConditionalOrderArgs) -> 
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -5546,9 +5513,8 @@ async fn cancel_um_order(mut args: CancelUmOrderArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -5632,9 +5598,7 @@ async fn cm_position_adl_quantile_estimation(
     Ok(())
 }
 
-async fn futures_tradfi_perps_contract(
-    args: FuturesTradfiPerpsContractArgs,
-) -> anyhow::Result<()> {
+async fn futures_tradfi_perps_contract(args: FuturesTradfiPerpsContractArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
     let params = match read_stdin_as::<FuturesTradfiPerpsContractParams>() {
@@ -5659,9 +5623,7 @@ async fn futures_tradfi_perps_contract(
     Ok(())
 }
 
-async fn get_um_futures_bnb_burn_status(
-    args: GetUmFuturesBnbBurnStatusArgs,
-) -> anyhow::Result<()> {
+async fn get_um_futures_bnb_burn_status(args: GetUmFuturesBnbBurnStatusArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
     let params = match read_stdin_as::<GetUmFuturesBnbBurnStatusParams>() {
@@ -5698,16 +5660,14 @@ async fn margin_account_borrow(mut args: MarginAccountBorrowArgs) -> anyhow::Res
             None => {
                 if args.interactive {
                     if args.asset.is_none() {
-                        let asset: String = Input::new()
-                            .with_prompt("Please enter the asset name")
-                            .interact_text()?;
+                        let asset: String =
+                            Input::new().with_prompt("Input asset:").interact_text()?;
 
                         args.asset = Some(asset);
                     }
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }
@@ -5744,9 +5704,8 @@ async fn margin_account_new_oco(mut args: MarginAccountNewOcoArgs) -> anyhow::Re
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -5772,21 +5731,20 @@ async fn margin_account_new_oco(mut args: MarginAccountNewOcoArgs) -> anyhow::Re
                     }
                     if args.quantity.is_none() {
                         let quantity: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the quantity name")
+                            .with_prompt("Input quantity:")
                             .interact_text()?;
 
                         args.quantity = Some(quantity);
                     }
                     if args.price.is_none() {
-                        let price: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the price name")
-                            .interact_text()?;
+                        let price: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input price:").interact_text()?;
 
                         args.price = Some(price);
                     }
                     if args.stop_price.is_none() {
                         let stop_price: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the stop_price name")
+                            .with_prompt("Input stop_price:")
                             .interact_text()?;
 
                         args.stop_price = Some(stop_price);
@@ -5839,16 +5797,14 @@ async fn margin_account_repay(mut args: MarginAccountRepayArgs) -> anyhow::Resul
             None => {
                 if args.interactive {
                     if args.asset.is_none() {
-                        let asset: String = Input::new()
-                            .with_prompt("Please enter the asset name")
-                            .interact_text()?;
+                        let asset: String =
+                            Input::new().with_prompt("Input asset:").interact_text()?;
 
                         args.asset = Some(asset);
                     }
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }
@@ -5885,9 +5841,8 @@ async fn margin_account_repay_debt(mut args: MarginAccountRepayDebtArgs) -> anyh
             None => {
                 if args.interactive {
                     if args.asset.is_none() {
-                        let asset: String = Input::new()
-                            .with_prompt("Please enter the asset name")
-                            .interact_text()?;
+                        let asset: String =
+                            Input::new().with_prompt("Input asset:").interact_text()?;
 
                         args.asset = Some(asset);
                     }
@@ -5924,9 +5879,8 @@ async fn margin_account_trade_list(mut args: MarginAccountTradeListArgs) -> anyh
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -5966,9 +5920,8 @@ async fn modify_cm_order(mut args: ModifyCmOrderArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -5994,15 +5947,14 @@ async fn modify_cm_order(mut args: ModifyCmOrderArgs) -> anyhow::Result<()> {
                     }
                     if args.quantity.is_none() {
                         let quantity: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the quantity name")
+                            .with_prompt("Input quantity:")
                             .interact_text()?;
 
                         args.quantity = Some(quantity);
                     }
                     if args.price.is_none() {
-                        let price: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the price name")
-                            .interact_text()?;
+                        let price: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input price:").interact_text()?;
 
                         args.price = Some(price);
                     }
@@ -6047,9 +5999,8 @@ async fn modify_um_order(mut args: ModifyUmOrderArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -6075,15 +6026,14 @@ async fn modify_um_order(mut args: ModifyUmOrderArgs) -> anyhow::Result<()> {
                     }
                     if args.quantity.is_none() {
                         let quantity: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the quantity name")
+                            .with_prompt("Input quantity:")
                             .interact_text()?;
 
                         args.quantity = Some(quantity);
                     }
                     if args.price.is_none() {
-                        let price: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the price name")
-                            .interact_text()?;
+                        let price: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input price:").interact_text()?;
 
                         args.price = Some(price);
                     }
@@ -6128,9 +6078,8 @@ async fn new_cm_conditional_order(mut args: NewCmConditionalOrderArgs) -> anyhow
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -6235,9 +6184,8 @@ async fn new_cm_order(mut args: NewCmOrderArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -6324,9 +6272,8 @@ async fn new_margin_order(mut args: NewMarginOrderArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -6439,9 +6386,8 @@ async fn new_um_algo_order(mut args: NewUmAlgoOrderArgs) -> anyhow::Result<()> {
                         args.algo_type = Some(selected);
                     }
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -6496,7 +6442,7 @@ async fn new_um_algo_order(mut args: NewUmAlgoOrderArgs) -> anyhow::Result<()> {
                     }
                     if args.quantity.is_none() {
                         let quantity: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the quantity name")
+                            .with_prompt("Input quantity:")
                             .interact_text()?;
 
                         args.quantity = Some(quantity);
@@ -6554,9 +6500,8 @@ async fn new_um_conditional_order(mut args: NewUmConditionalOrderArgs) -> anyhow
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -6664,9 +6609,8 @@ async fn new_um_order(mut args: NewUmOrderArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -6967,9 +6911,8 @@ async fn query_all_margin_account_orders(
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -7040,9 +6983,8 @@ async fn query_all_um_orders(mut args: QueryAllUmOrdersArgs) -> anyhow::Result<(
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -7085,9 +7027,8 @@ async fn query_cm_conditional_order_history(
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -7130,9 +7071,8 @@ async fn query_cm_modify_order_history(
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -7172,9 +7112,8 @@ async fn query_cm_order(mut args: QueryCmOrderArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -7214,9 +7153,8 @@ async fn query_current_cm_open_conditional_order(
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -7255,9 +7193,8 @@ async fn query_current_cm_open_order(mut args: QueryCurrentCmOpenOrderArgs) -> a
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -7298,9 +7235,8 @@ async fn query_current_margin_open_order(
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -7367,9 +7303,8 @@ async fn query_current_um_open_conditional_order(
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -7408,9 +7343,8 @@ async fn query_current_um_open_order(mut args: QueryCurrentUmOpenOrderArgs) -> a
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -7447,9 +7381,8 @@ async fn query_margin_account_order(mut args: QueryMarginAccountOrderArgs) -> an
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -7474,9 +7407,7 @@ async fn query_margin_account_order(mut args: QueryMarginAccountOrderArgs) -> an
     Ok(())
 }
 
-async fn query_margin_accounts_all_oco(
-    args: QueryMarginAccountsAllOcoArgs,
-) -> anyhow::Result<()> {
+async fn query_margin_accounts_all_oco(args: QueryMarginAccountsAllOcoArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
     let params = match read_stdin_as::<QueryMarginAccountsAllOcoParams>() {
@@ -7569,9 +7500,8 @@ async fn query_um_algo_order_history(mut args: QueryUmAlgoOrderHistoryArgs) -> a
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -7614,9 +7544,8 @@ async fn query_um_conditional_order_history(
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -7659,9 +7588,8 @@ async fn query_um_modify_order_history(
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -7701,9 +7629,8 @@ async fn query_um_order(mut args: QueryUmOrderArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
@@ -7883,9 +7810,8 @@ async fn um_account_trade_list(mut args: UmAccountTradeListArgs) -> anyhow::Resu
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }

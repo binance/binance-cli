@@ -9,7 +9,7 @@ use std::collections::BTreeMap;
 use std::io::{self, IsTerminal, Read};
 use url::Url;
 
-use crate::utils::{CliConfiguration, get_configuration_rest_api};
+use crate::utils::{CliConfiguration, get_client_configuration};
 
 #[derive(Args, Debug)]
 pub struct CustomRequestCommand {
@@ -140,9 +140,8 @@ pub async fn handle_custom_request(cmd: CustomRequestCommand) -> Result<()> {
         request_params.extend(cli_params);
     }
 
-    let mut configuration = get_configuration_rest_api(cmd.profile.as_deref(), "custom")
-        .ok_or("Invalid Configuration")
-        .unwrap();
+    let mut configuration = get_client_configuration(cmd.profile.as_deref(), "custom")
+        .ok_or_else(|| anyhow!("Invalid Configuration: no profile found and no BINANCE_API_KEY/BINANCE_SECRET_KEY environment variables set"))?;
 
     configuration.base_path = Some(base_path);
 

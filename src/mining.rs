@@ -1,5 +1,5 @@
 use crate::utils::{
-    build_user_agent, decode_selected_entities, get_configuration_rest_api, read_json_as,
+    decode_selected_entities, get_client_configuration, init_user_agent, read_json_as,
     read_stdin_as,
 };
 use binance_sdk::config::{ConfigurationRestApi, PrivateKey};
@@ -13,38 +13,33 @@ use std::io;
 use std::io::{Error, ErrorKind};
 
 fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> {
-    unsafe {
-        env::set_var(
-            "BINANCE_CONNECTOR_RUST_USER_AGENT",
-            build_user_agent("mining"),
-        );
-    }
+    init_user_agent("mining");
 
-    let config_rest_api = get_configuration_rest_api(profile, "mining").unwrap();
+    let client_config = get_client_configuration(profile, "mining").unwrap();
     let api_env = env::var("BINANCE_API_ENV")
         .ok()
-        .or(config_rest_api.env)
+        .or(client_config.env)
         .unwrap_or_else(|| "prod".to_string());
 
-    let base_path = match api_env.as_str() {
-        "prod" => MINING_REST_API_PROD_URL,
+    let base_path = client_config.base_path.unwrap_or(match api_env.as_str() {
+        "prod" => MINING_REST_API_PROD_URL.to_string(),
         _ => {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
                 "invalid BINANCE_API_ENV",
             ));
         }
-    };
+    });
 
     let mut builder = ConfigurationRestApi::builder().base_path(base_path);
 
     if is_signed {
         builder = builder
-            .api_key(config_rest_api.api_key)
-            .api_secret(config_rest_api.api_secret);
+            .api_key(client_config.api_key)
+            .api_secret(client_config.api_secret);
 
-        if config_rest_api.private_key.is_some()  {
-            builder = builder.private_key(PrivateKey::File(config_rest_api.private_key.unwrap()));
+        if client_config.private_key.is_some() {
+            builder = builder.private_key(PrivateKey::File(client_config.private_key.unwrap()));
         }
     }
 
@@ -439,15 +434,14 @@ async fn account_list(mut args: AccountListArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.algo.is_none() {
-                        let algo: String = Input::new()
-                            .with_prompt("Please enter the algo name")
-                            .interact_text()?;
+                        let algo: String =
+                            Input::new().with_prompt("Input algo:").interact_text()?;
 
                         args.algo = Some(algo);
                     }
                     if args.user_name.is_none() {
                         let user_name: String = Input::new()
-                            .with_prompt("Please enter the user_name name")
+                            .with_prompt("Input user_name:")
                             .interact_text()?;
 
                         args.user_name = Some(user_name);
@@ -511,14 +505,14 @@ async fn cancel_hashrate_resale_configuration(
                 if args.interactive {
                     if args.config_id.is_none() {
                         let config_id: i64 = Input::new()
-                            .with_prompt("Please enter the config_id name")
+                            .with_prompt("Input config_id:")
                             .interact_text()?;
 
                         args.config_id = Some(config_id);
                     }
                     if args.user_name.is_none() {
                         let user_name: String = Input::new()
-                            .with_prompt("Please enter the user_name name")
+                            .with_prompt("Input user_name:")
                             .interact_text()?;
 
                         args.user_name = Some(user_name);
@@ -558,15 +552,14 @@ async fn earnings_list(mut args: EarningsListArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.algo.is_none() {
-                        let algo: String = Input::new()
-                            .with_prompt("Please enter the algo name")
-                            .interact_text()?;
+                        let algo: String =
+                            Input::new().with_prompt("Input algo:").interact_text()?;
 
                         args.algo = Some(algo);
                     }
                     if args.user_name.is_none() {
                         let user_name: String = Input::new()
-                            .with_prompt("Please enter the user_name name")
+                            .with_prompt("Input user_name:")
                             .interact_text()?;
 
                         args.user_name = Some(user_name);
@@ -609,15 +602,14 @@ async fn extra_bonus_list(mut args: ExtraBonusListArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.algo.is_none() {
-                        let algo: String = Input::new()
-                            .with_prompt("Please enter the algo name")
-                            .interact_text()?;
+                        let algo: String =
+                            Input::new().with_prompt("Input algo:").interact_text()?;
 
                         args.algo = Some(algo);
                     }
                     if args.user_name.is_none() {
                         let user_name: String = Input::new()
-                            .with_prompt("Please enter the user_name name")
+                            .with_prompt("Input user_name:")
                             .interact_text()?;
 
                         args.user_name = Some(user_name);
@@ -661,7 +653,7 @@ async fn hashrate_resale_detail(mut args: HashrateResaleDetailArgs) -> anyhow::R
                 if args.interactive {
                     if args.config_id.is_none() {
                         let config_id: i64 = Input::new()
-                            .with_prompt("Please enter the config_id name")
+                            .with_prompt("Input config_id:")
                             .interact_text()?;
 
                         args.config_id = Some(config_id);
@@ -725,42 +717,41 @@ async fn hashrate_resale_request(mut args: HashrateResaleRequestArgs) -> anyhow:
                 if args.interactive {
                     if args.user_name.is_none() {
                         let user_name: String = Input::new()
-                            .with_prompt("Please enter the user_name name")
+                            .with_prompt("Input user_name:")
                             .interact_text()?;
 
                         args.user_name = Some(user_name);
                     }
                     if args.algo.is_none() {
-                        let algo: String = Input::new()
-                            .with_prompt("Please enter the algo name")
-                            .interact_text()?;
+                        let algo: String =
+                            Input::new().with_prompt("Input algo:").interact_text()?;
 
                         args.algo = Some(algo);
                     }
                     if args.end_date.is_none() {
                         let end_date: i64 = Input::new()
-                            .with_prompt("Please enter the end_date name")
+                            .with_prompt("Input end_date:")
                             .interact_text()?;
 
                         args.end_date = Some(end_date);
                     }
                     if args.start_date.is_none() {
                         let start_date: i64 = Input::new()
-                            .with_prompt("Please enter the start_date name")
+                            .with_prompt("Input start_date:")
                             .interact_text()?;
 
                         args.start_date = Some(start_date);
                     }
                     if args.to_pool_user.is_none() {
                         let to_pool_user: String = Input::new()
-                            .with_prompt("Please enter the to_pool_user name")
+                            .with_prompt("Input to_pool_user:")
                             .interact_text()?;
 
                         args.to_pool_user = Some(to_pool_user);
                     }
                     if args.hash_rate.is_none() {
                         let hash_rate: i64 = Input::new()
-                            .with_prompt("Please enter the hash_rate name")
+                            .with_prompt("Input hash_rate:")
                             .interact_text()?;
 
                         args.hash_rate = Some(hash_rate);
@@ -806,9 +797,8 @@ async fn mining_account_earning(mut args: MiningAccountEarningArgs) -> anyhow::R
             None => {
                 if args.interactive {
                     if args.algo.is_none() {
-                        let algo: String = Input::new()
-                            .with_prompt("Please enter the algo name")
-                            .interact_text()?;
+                        let algo: String =
+                            Input::new().with_prompt("Input algo:").interact_text()?;
 
                         args.algo = Some(algo);
                     }
@@ -851,22 +841,21 @@ async fn request_for_detail_miner_list(
             None => {
                 if args.interactive {
                     if args.algo.is_none() {
-                        let algo: String = Input::new()
-                            .with_prompt("Please enter the algo name")
-                            .interact_text()?;
+                        let algo: String =
+                            Input::new().with_prompt("Input algo:").interact_text()?;
 
                         args.algo = Some(algo);
                     }
                     if args.user_name.is_none() {
                         let user_name: String = Input::new()
-                            .with_prompt("Please enter the user_name name")
+                            .with_prompt("Input user_name:")
                             .interact_text()?;
 
                         args.user_name = Some(user_name);
                     }
                     if args.worker_name.is_none() {
                         let worker_name: String = Input::new()
-                            .with_prompt("Please enter the worker_name name")
+                            .with_prompt("Input worker_name:")
                             .interact_text()?;
 
                         args.worker_name = Some(worker_name);
@@ -906,15 +895,14 @@ async fn request_for_miner_list(mut args: RequestForMinerListArgs) -> anyhow::Re
             None => {
                 if args.interactive {
                     if args.algo.is_none() {
-                        let algo: String = Input::new()
-                            .with_prompt("Please enter the algo name")
-                            .interact_text()?;
+                        let algo: String =
+                            Input::new().with_prompt("Input algo:").interact_text()?;
 
                         args.algo = Some(algo);
                     }
                     if args.user_name.is_none() {
                         let user_name: String = Input::new()
-                            .with_prompt("Please enter the user_name name")
+                            .with_prompt("Input user_name:")
                             .interact_text()?;
 
                         args.user_name = Some(user_name);
@@ -956,15 +944,14 @@ async fn statistic_list(mut args: StatisticListArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.algo.is_none() {
-                        let algo: String = Input::new()
-                            .with_prompt("Please enter the algo name")
-                            .interact_text()?;
+                        let algo: String =
+                            Input::new().with_prompt("Input algo:").interact_text()?;
 
                         args.algo = Some(algo);
                     }
                     if args.user_name.is_none() {
                         let user_name: String = Input::new()
-                            .with_prompt("Please enter the user_name name")
+                            .with_prompt("Input user_name:")
                             .interact_text()?;
 
                         args.user_name = Some(user_name);

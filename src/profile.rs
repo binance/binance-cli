@@ -3,6 +3,8 @@ use clap::{ArgAction, Args, Subcommand, ValueEnum};
 use dialoguer::{Confirm, Input, MultiSelect, Password, Select};
 use std::collections::HashMap;
 use std::fs;
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 
 #[derive(Args)]
@@ -362,6 +364,13 @@ fn create_profile(mut args: CreateArgs) -> Result<()> {
 
     if !dir.exists() {
         fs::create_dir_all(&dir)?;
+
+        #[cfg(unix)]
+        {
+            let mut perms = fs::metadata(&dir)?.permissions();
+            perms.set_mode(0o700);
+            fs::set_permissions(&dir, perms)?;
+        }
     }
 
     let escaped_api_secret = api_secret.replace('\n', "\\n");
@@ -381,8 +390,15 @@ fn create_profile(mut args: CreateArgs) -> Result<()> {
         && (args.select.unwrap_or(false) || !active_profile_path()?.exists());
 
     if should_select {
-        fs::write(active_profile_path()?, format!("name={}", name))?;
-        println!("Profile {} was selected successfully ✅", name);
+        let active_path = active_profile_path()?;
+        fs::write(&active_path, format!("name={}", name))?;
+
+        #[cfg(unix)]
+        {
+            let mut perms = fs::metadata(&active_path)?.permissions();
+            perms.set_mode(0o600);
+            fs::set_permissions(&active_path, perms)?;
+        }
     }
 
     Ok(())

@@ -1,5 +1,5 @@
 use crate::utils::{
-    build_user_agent, decode_selected_entities, get_configuration_rest_api, read_json_as,
+    decode_selected_entities, get_client_configuration, init_user_agent, read_json_as,
     read_stdin_as,
 };
 use binance_sdk::config::{ConfigurationRestApi, PrivateKey};
@@ -16,40 +16,37 @@ use std::io;
 use std::io::{Error, ErrorKind};
 
 fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> {
-    unsafe {
-        env::set_var(
-            "BINANCE_CONNECTOR_RUST_USER_AGENT",
-            build_user_agent("derivatives-trading-portfolio-margin-pro"),
-        );
-    }
+    init_user_agent("derivatives-trading-portfolio-margin-pro");
 
-    let config_rest_api =
-        get_configuration_rest_api(profile, "derivatives-trading-portfolio-margin-pro").unwrap();
+    let client_config =
+        get_client_configuration(profile, "derivatives-trading-portfolio-margin-pro").unwrap();
     let api_env = env::var("BINANCE_API_ENV")
         .ok()
-        .or(config_rest_api.env)
+        .or(client_config.env)
         .unwrap_or_else(|| "prod".to_string());
 
-    let base_path = match api_env.as_str() {
-        "testnet" | "demo" => DERIVATIVES_TRADING_PORTFOLIO_MARGIN_PRO_REST_API_TESTNET_URL,
-        "prod" => DERIVATIVES_TRADING_PORTFOLIO_MARGIN_PRO_REST_API_PROD_URL,
+    let base_path = client_config.base_path.unwrap_or(match api_env.as_str() {
+        "testnet" | "demo" => {
+            DERIVATIVES_TRADING_PORTFOLIO_MARGIN_PRO_REST_API_TESTNET_URL.to_string()
+        }
+        "prod" => DERIVATIVES_TRADING_PORTFOLIO_MARGIN_PRO_REST_API_PROD_URL.to_string(),
         _ => {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
                 "invalid BINANCE_API_ENV",
             ));
         }
-    };
+    });
 
     let mut builder = ConfigurationRestApi::builder().base_path(base_path);
 
     if is_signed {
         builder = builder
-            .api_key(config_rest_api.api_key)
-            .api_secret(config_rest_api.api_secret);
+            .api_key(client_config.api_key)
+            .api_secret(client_config.api_secret);
 
-        if config_rest_api.private_key.is_some()  {
-            builder = builder.private_key(PrivateKey::File(config_rest_api.private_key.unwrap()));
+        if client_config.private_key.is_some() {
+            builder = builder.private_key(PrivateKey::File(client_config.private_key.unwrap()));
         }
     }
 
@@ -658,9 +655,8 @@ async fn bnb_transfer(mut args: BnbTransferArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }
@@ -817,9 +813,8 @@ async fn fund_collection_by_asset(mut args: FundCollectionByAssetArgs) -> anyhow
             None => {
                 if args.interactive {
                     if args.asset.is_none() {
-                        let asset: String = Input::new()
-                            .with_prompt("Please enter the asset name")
-                            .interact_text()?;
+                        let asset: String =
+                            Input::new().with_prompt("Input asset:").interact_text()?;
 
                         args.asset = Some(asset);
                     }
@@ -842,9 +837,7 @@ async fn fund_collection_by_asset(mut args: FundCollectionByAssetArgs) -> anyhow
     Ok(())
 }
 
-async fn get_auto_repay_futures_status(
-    args: GetAutoRepayFuturesStatusArgs,
-) -> anyhow::Result<()> {
+async fn get_auto_repay_futures_status(args: GetAutoRepayFuturesStatusArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
     let params = match read_stdin_as::<GetAutoRepayFuturesStatusParams>() {
@@ -1018,9 +1011,8 @@ async fn get_transferable_earn_asset_balance_for_portfolio_margin(
             None => {
                 if args.interactive {
                     if args.asset.is_none() {
-                        let asset: String = Input::new()
-                            .with_prompt("Please enter the asset name")
-                            .interact_text()?;
+                        let asset: String =
+                            Input::new().with_prompt("Input asset:").interact_text()?;
 
                         args.asset = Some(asset);
                     }
@@ -1234,7 +1226,7 @@ async fn set_margin_call_level(mut args: SetMarginCallLevelArgs) -> anyhow::Resu
                 if args.interactive {
                     if args.margin_call_level.is_none() {
                         let margin_call_level: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the margin_call_level name")
+                            .with_prompt("Input margin_call_level:")
                             .interact_text()?;
 
                         args.margin_call_level = Some(margin_call_level);
@@ -1370,9 +1362,8 @@ async fn transfer_ldusdt_rwusd_for_portfolio_margin(
                             args.transfer_type = Some(selected);
                         }
                         if args.amount.is_none() {
-                            let amount: rust_decimal::Decimal = Input::new()
-                                .with_prompt("Please enter the amount name")
-                                .interact_text()?;
+                            let amount: rust_decimal::Decimal =
+                                Input::new().with_prompt("Input amount:").interact_text()?;
 
                             args.amount = Some(amount);
                         }

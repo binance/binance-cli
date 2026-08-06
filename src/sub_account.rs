@@ -1,5 +1,5 @@
 use crate::utils::{
-    build_user_agent, decode_selected_entities, get_configuration_rest_api, read_json_as,
+    decode_selected_entities, get_client_configuration, init_user_agent, read_json_as,
     read_stdin_as,
 };
 use binance_sdk::config::{ConfigurationRestApi, PrivateKey};
@@ -13,38 +13,33 @@ use std::io;
 use std::io::{Error, ErrorKind};
 
 fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> {
-    unsafe {
-        env::set_var(
-            "BINANCE_CONNECTOR_RUST_USER_AGENT",
-            build_user_agent("sub-account"),
-        );
-    }
+    init_user_agent("sub-account");
 
-    let config_rest_api = get_configuration_rest_api(profile, "sub-account").unwrap();
+    let client_config = get_client_configuration(profile, "sub-account").unwrap();
     let api_env = env::var("BINANCE_API_ENV")
         .ok()
-        .or(config_rest_api.env)
+        .or(client_config.env)
         .unwrap_or_else(|| "prod".to_string());
 
-    let base_path = match api_env.as_str() {
-        "prod" => SUB_ACCOUNT_REST_API_PROD_URL,
+    let base_path = client_config.base_path.unwrap_or(match api_env.as_str() {
+        "prod" => SUB_ACCOUNT_REST_API_PROD_URL.to_string(),
         _ => {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
                 "invalid BINANCE_API_ENV",
             ));
         }
-    };
+    });
 
     let mut builder = ConfigurationRestApi::builder().base_path(base_path);
 
     if is_signed {
         builder = builder
-            .api_key(config_rest_api.api_key)
-            .api_secret(config_rest_api.api_secret);
+            .api_key(client_config.api_key)
+            .api_secret(client_config.api_secret);
 
-        if config_rest_api.private_key.is_some()  {
-            builder = builder.private_key(PrivateKey::File(config_rest_api.private_key.unwrap()));
+        if client_config.private_key.is_some() {
+            builder = builder.private_key(PrivateKey::File(client_config.private_key.unwrap()));
         }
     }
 
@@ -1745,7 +1740,7 @@ async fn create_a_virtual_sub_account(
                 if args.interactive {
                     if args.sub_account_string.is_none() {
                         let sub_account_string: String = Input::new()
-                            .with_prompt("Please enter the sub_account_string name")
+                            .with_prompt("Input sub_account_string:")
                             .interact_text()?;
 
                         args.sub_account_string = Some(sub_account_string);
@@ -1785,9 +1780,8 @@ async fn enable_futures_for_sub_account(
             None => {
                 if args.interactive {
                     if args.email.is_none() {
-                        let email: String = Input::new()
-                            .with_prompt("Please enter the email name")
-                            .interact_text()?;
+                        let email: String =
+                            Input::new().with_prompt("Input email:").interact_text()?;
 
                         args.email = Some(email);
                     }
@@ -1826,9 +1820,8 @@ async fn enable_options_for_sub_account(
             None => {
                 if args.interactive {
                     if args.email.is_none() {
-                        let email: String = Input::new()
-                            .with_prompt("Please enter the email name")
-                            .interact_text()?;
+                        let email: String =
+                            Input::new().with_prompt("Input email:").interact_text()?;
 
                         args.email = Some(email);
                     }
@@ -1866,9 +1859,8 @@ async fn get_futures_position_risk_of_sub_account(
             None => {
                 if args.interactive {
                     if args.email.is_none() {
-                        let email: String = Input::new()
-                            .with_prompt("Please enter the email name")
-                            .interact_text()?;
+                        let email: String =
+                            Input::new().with_prompt("Input email:").interact_text()?;
 
                         args.email = Some(email);
                     }
@@ -1908,15 +1900,14 @@ async fn get_futures_position_risk_of_sub_account_v2(
             None => {
                 if args.interactive {
                     if args.email.is_none() {
-                        let email: String = Input::new()
-                            .with_prompt("Please enter the email name")
-                            .interact_text()?;
+                        let email: String =
+                            Input::new().with_prompt("Input email:").interact_text()?;
 
                         args.email = Some(email);
                     }
                     if args.futures_type.is_none() {
                         let futures_type: i64 = Input::new()
-                            .with_prompt("Please enter the futures_type name")
+                            .with_prompt("Input futures_type:")
                             .interact_text()?;
 
                         args.futures_type = Some(futures_type);
@@ -2044,23 +2035,21 @@ async fn add_ip_restriction_for_sub_account_api_key(
             None => {
                 if args.interactive {
                     if args.email.is_none() {
-                        let email: String = Input::new()
-                            .with_prompt("Please enter the email name")
-                            .interact_text()?;
+                        let email: String =
+                            Input::new().with_prompt("Input email:").interact_text()?;
 
                         args.email = Some(email);
                     }
                     if args.sub_account_api_key.is_none() {
                         let sub_account_api_key: String = Input::new()
-                            .with_prompt("Please enter the sub_account_api_key name")
+                            .with_prompt("Input sub_account_api_key:")
                             .interact_text()?;
 
                         args.sub_account_api_key = Some(sub_account_api_key);
                     }
                     if args.status.is_none() {
-                        let status: i64 = Input::new()
-                            .with_prompt("Please enter the status name")
-                            .interact_text()?;
+                        let status: i64 =
+                            Input::new().with_prompt("Input status:").interact_text()?;
 
                         args.status = Some(status);
                     }
@@ -2102,23 +2091,21 @@ async fn create_sub_account_api_key(mut args: CreateSubAccountApiKeyArgs) -> any
             None => {
                 if args.interactive {
                     if args.email.is_none() {
-                        let email: String = Input::new()
-                            .with_prompt("Please enter the email name")
-                            .interact_text()?;
+                        let email: String =
+                            Input::new().with_prompt("Input email:").interact_text()?;
 
                         args.email = Some(email);
                     }
                     if args.api_name.is_none() {
                         let api_name: String = Input::new()
-                            .with_prompt("Please enter the api_name name")
+                            .with_prompt("Input api_name:")
                             .interact_text()?;
 
                         args.api_name = Some(api_name);
                     }
                     if args.status.is_none() {
-                        let status: i64 = Input::new()
-                            .with_prompt("Please enter the status name")
-                            .interact_text()?;
+                        let status: i64 =
+                            Input::new().with_prompt("Input status:").interact_text()?;
 
                         args.status = Some(status);
                     }
@@ -2169,22 +2156,21 @@ async fn delete_ip_list_for_a_sub_account_api_key(
             None => {
                 if args.interactive {
                     if args.email.is_none() {
-                        let email: String = Input::new()
-                            .with_prompt("Please enter the email name")
-                            .interact_text()?;
+                        let email: String =
+                            Input::new().with_prompt("Input email:").interact_text()?;
 
                         args.email = Some(email);
                     }
                     if args.sub_account_api_key.is_none() {
                         let sub_account_api_key: String = Input::new()
-                            .with_prompt("Please enter the sub_account_api_key name")
+                            .with_prompt("Input sub_account_api_key:")
                             .interact_text()?;
 
                         args.sub_account_api_key = Some(sub_account_api_key);
                     }
                     if args.ip_address.is_none() {
                         let ip_address: String = Input::new()
-                            .with_prompt("Please enter the ip_address name")
+                            .with_prompt("Input ip_address:")
                             .interact_text()?;
 
                         args.ip_address = Some(ip_address);
@@ -2226,15 +2212,14 @@ async fn delete_sub_account_api_key(mut args: DeleteSubAccountApiKeyArgs) -> any
             None => {
                 if args.interactive {
                     if args.email.is_none() {
-                        let email: String = Input::new()
-                            .with_prompt("Please enter the email name")
-                            .interact_text()?;
+                        let email: String =
+                            Input::new().with_prompt("Input email:").interact_text()?;
 
                         args.email = Some(email);
                     }
                     if args.sub_account_api_key.is_none() {
                         let sub_account_api_key: String = Input::new()
-                            .with_prompt("Please enter the sub_account_api_key name")
+                            .with_prompt("Input sub_account_api_key:")
                             .interact_text()?;
 
                         args.sub_account_api_key = Some(sub_account_api_key);
@@ -2275,15 +2260,14 @@ async fn get_ip_restriction_for_a_sub_account_api_key(
             None => {
                 if args.interactive {
                     if args.email.is_none() {
-                        let email: String = Input::new()
-                            .with_prompt("Please enter the email name")
-                            .interact_text()?;
+                        let email: String =
+                            Input::new().with_prompt("Input email:").interact_text()?;
 
                         args.email = Some(email);
                     }
                     if args.sub_account_api_key.is_none() {
                         let sub_account_api_key: String = Input::new()
-                            .with_prompt("Please enter the sub_account_api_key name")
+                            .with_prompt("Input sub_account_api_key:")
                             .interact_text()?;
 
                         args.sub_account_api_key = Some(sub_account_api_key);
@@ -2327,15 +2311,14 @@ async fn modify_sub_account_api_key_permission(
             None => {
                 if args.interactive {
                     if args.email.is_none() {
-                        let email: String = Input::new()
-                            .with_prompt("Please enter the email name")
-                            .interact_text()?;
+                        let email: String =
+                            Input::new().with_prompt("Input email:").interact_text()?;
 
                         args.email = Some(email);
                     }
                     if args.sub_account_api_key.is_none() {
                         let sub_account_api_key: String = Input::new()
-                            .with_prompt("Please enter the sub_account_api_key name")
+                            .with_prompt("Input sub_account_api_key:")
                             .interact_text()?;
 
                         args.sub_account_api_key = Some(sub_account_api_key);
@@ -2380,9 +2363,8 @@ async fn query_sub_account_api_key(mut args: QuerySubAccountApiKeyArgs) -> anyho
             None => {
                 if args.interactive {
                     if args.email.is_none() {
-                        let email: String = Input::new()
-                            .with_prompt("Please enter the email name")
-                            .interact_text()?;
+                        let email: String =
+                            Input::new().with_prompt("Input email:").interact_text()?;
 
                         args.email = Some(email);
                     }
@@ -2424,30 +2406,26 @@ async fn futures_transfer_for_sub_account(
             None => {
                 if args.interactive {
                     if args.email.is_none() {
-                        let email: String = Input::new()
-                            .with_prompt("Please enter the email name")
-                            .interact_text()?;
+                        let email: String =
+                            Input::new().with_prompt("Input email:").interact_text()?;
 
                         args.email = Some(email);
                     }
                     if args.asset.is_none() {
-                        let asset: String = Input::new()
-                            .with_prompt("Please enter the asset name")
-                            .interact_text()?;
+                        let asset: String =
+                            Input::new().with_prompt("Input asset:").interact_text()?;
 
                         args.asset = Some(asset);
                     }
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }
                     if args.r#type.is_none() {
-                        let r#type: i64 = Input::new()
-                            .with_prompt("Please enter the r#type name")
-                            .interact_text()?;
+                        let r#type: i64 =
+                            Input::new().with_prompt("Input r#type:").interact_text()?;
 
                         args.r#type = Some(r#type);
                     }
@@ -2491,9 +2469,8 @@ async fn get_detail_on_sub_accounts_futures_account(
             None => {
                 if args.interactive {
                     if args.email.is_none() {
-                        let email: String = Input::new()
-                            .with_prompt("Please enter the email name")
-                            .interact_text()?;
+                        let email: String =
+                            Input::new().with_prompt("Input email:").interact_text()?;
 
                         args.email = Some(email);
                     }
@@ -2533,15 +2510,14 @@ async fn get_detail_on_sub_accounts_futures_account_v2(
             None => {
                 if args.interactive {
                     if args.email.is_none() {
-                        let email: String = Input::new()
-                            .with_prompt("Please enter the email name")
-                            .interact_text()?;
+                        let email: String =
+                            Input::new().with_prompt("Input email:").interact_text()?;
 
                         args.email = Some(email);
                     }
                     if args.futures_type.is_none() {
                         let futures_type: i64 = Input::new()
-                            .with_prompt("Please enter the futures_type name")
+                            .with_prompt("Input futures_type:")
                             .interact_text()?;
 
                         args.futures_type = Some(futures_type);
@@ -2584,9 +2560,8 @@ async fn get_detail_on_sub_accounts_margin_account(
             None => {
                 if args.interactive {
                     if args.email.is_none() {
-                        let email: String = Input::new()
-                            .with_prompt("Please enter the email name")
-                            .interact_text()?;
+                        let email: String =
+                            Input::new().with_prompt("Input email:").interact_text()?;
 
                         args.email = Some(email);
                     }
@@ -2626,23 +2601,18 @@ async fn get_move_position_history_for_sub_account(
             None => {
                 if args.interactive {
                     if args.symbol.is_none() {
-                        let symbol: String = Input::new()
-                            .with_prompt("Please enter the symbol name")
-                            .interact_text()?;
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
 
                         args.symbol = Some(symbol);
                     }
                     if args.page.is_none() {
-                        let page: i64 = Input::new()
-                            .with_prompt("Please enter the page name")
-                            .interact_text()?;
+                        let page: i64 = Input::new().with_prompt("Input page:").interact_text()?;
 
                         args.page = Some(page);
                     }
                     if args.rows.is_none() {
-                        let rows: i64 = Input::new()
-                            .with_prompt("Please enter the rows name")
-                            .interact_text()?;
+                        let rows: i64 = Input::new().with_prompt("Input rows:").interact_text()?;
 
                         args.rows = Some(rows);
                     }
@@ -2689,16 +2659,14 @@ async fn get_sub_account_deposit_address(
             None => {
                 if args.interactive {
                     if args.email.is_none() {
-                        let email: String = Input::new()
-                            .with_prompt("Please enter the email name")
-                            .interact_text()?;
+                        let email: String =
+                            Input::new().with_prompt("Input email:").interact_text()?;
 
                         args.email = Some(email);
                     }
                     if args.coin.is_none() {
-                        let coin: String = Input::new()
-                            .with_prompt("Please enter the coin name")
-                            .interact_text()?;
+                        let coin: String =
+                            Input::new().with_prompt("Input coin:").interact_text()?;
 
                         args.coin = Some(coin);
                     }
@@ -2741,9 +2709,8 @@ async fn get_sub_account_deposit_history(
             None => {
                 if args.interactive {
                     if args.email.is_none() {
-                        let email: String = Input::new()
-                            .with_prompt("Please enter the email name")
-                            .interact_text()?;
+                        let email: String =
+                            Input::new().with_prompt("Input email:").interact_text()?;
 
                         args.email = Some(email);
                     }
@@ -2789,16 +2756,13 @@ async fn get_summary_of_sub_accounts_futures_account(
             None => {
                 if args.interactive {
                     if args.page.is_none() {
-                        let page: i64 = Input::new()
-                            .with_prompt("Please enter the page name")
-                            .interact_text()?;
+                        let page: i64 = Input::new().with_prompt("Input page:").interact_text()?;
 
                         args.page = Some(page);
                     }
                     if args.limit.is_none() {
-                        let limit: i64 = Input::new()
-                            .with_prompt("Please enter the limit name")
-                            .interact_text()?;
+                        let limit: i64 =
+                            Input::new().with_prompt("Input limit:").interact_text()?;
 
                         args.limit = Some(limit);
                     }
@@ -2841,7 +2805,7 @@ async fn get_summary_of_sub_accounts_futures_account_v2(
                 if args.interactive {
                     if args.futures_type.is_none() {
                         let futures_type: i64 = Input::new()
-                            .with_prompt("Please enter the futures_type name")
+                            .with_prompt("Input futures_type:")
                             .interact_text()?;
 
                         args.futures_type = Some(futures_type);
@@ -2913,30 +2877,26 @@ async fn margin_transfer_for_sub_account(
             None => {
                 if args.interactive {
                     if args.email.is_none() {
-                        let email: String = Input::new()
-                            .with_prompt("Please enter the email name")
-                            .interact_text()?;
+                        let email: String =
+                            Input::new().with_prompt("Input email:").interact_text()?;
 
                         args.email = Some(email);
                     }
                     if args.asset.is_none() {
-                        let asset: String = Input::new()
-                            .with_prompt("Please enter the asset name")
-                            .interact_text()?;
+                        let asset: String =
+                            Input::new().with_prompt("Input asset:").interact_text()?;
 
                         args.asset = Some(asset);
                     }
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }
                     if args.r#type.is_none() {
-                        let r#type: i64 = Input::new()
-                            .with_prompt("Please enter the r#type name")
-                            .interact_text()?;
+                        let r#type: i64 =
+                            Input::new().with_prompt("Input r#type:").interact_text()?;
 
                         args.r#type = Some(r#type);
                     }
@@ -2982,14 +2942,14 @@ async fn move_position_for_sub_account(
                 if args.interactive {
                     if args.from_user_email.is_none() {
                         let from_user_email: String = Input::new()
-                            .with_prompt("Please enter the from_user_email name")
+                            .with_prompt("Input from_user_email:")
                             .interact_text()?;
 
                         args.from_user_email = Some(from_user_email);
                     }
                     if args.to_user_email.is_none() {
                         let to_user_email: String = Input::new()
-                            .with_prompt("Please enter the to_user_email name")
+                            .with_prompt("Input to_user_email:")
                             .interact_text()?;
 
                         args.to_user_email = Some(to_user_email);
@@ -3013,7 +2973,7 @@ async fn move_position_for_sub_account(
                     }
                     if args.order_args.is_none() {
                         let order_args: String = Input::new()
-                            .with_prompt("Please enter the order_args name")
+                            .with_prompt("Input order_args:")
                             .interact_text()?;
 
                         args.order_args = Some(order_args);
@@ -3060,9 +3020,8 @@ async fn query_sub_account_assets(mut args: QuerySubAccountAssetsArgs) -> anyhow
             None => {
                 if args.interactive {
                     if args.email.is_none() {
-                        let email: String = Input::new()
-                            .with_prompt("Please enter the email name")
-                            .interact_text()?;
+                        let email: String =
+                            Input::new().with_prompt("Input email:").interact_text()?;
 
                         args.email = Some(email);
                     }
@@ -3100,9 +3059,8 @@ async fn query_sub_account_assets_asset_management(
             None => {
                 if args.interactive {
                     if args.email.is_none() {
-                        let email: String = Input::new()
-                            .with_prompt("Please enter the email name")
-                            .interact_text()?;
+                        let email: String =
+                            Input::new().with_prompt("Input email:").interact_text()?;
 
                         args.email = Some(email);
                     }
@@ -3142,15 +3100,14 @@ async fn query_sub_account_futures_asset_transfer_history(
             None => {
                 if args.interactive {
                     if args.email.is_none() {
-                        let email: String = Input::new()
-                            .with_prompt("Please enter the email name")
-                            .interact_text()?;
+                        let email: String =
+                            Input::new().with_prompt("Input email:").interact_text()?;
 
                         args.email = Some(email);
                     }
                     if args.futures_type.is_none() {
                         let futures_type: i64 = Input::new()
-                            .with_prompt("Please enter the futures_type name")
+                            .with_prompt("Input futures_type:")
                             .interact_text()?;
 
                         args.futures_type = Some(futures_type);
@@ -3299,36 +3256,34 @@ async fn sub_account_futures_asset_transfer(
                 if args.interactive {
                     if args.from_email.is_none() {
                         let from_email: String = Input::new()
-                            .with_prompt("Please enter the from_email name")
+                            .with_prompt("Input from_email:")
                             .interact_text()?;
 
                         args.from_email = Some(from_email);
                     }
                     if args.to_email.is_none() {
                         let to_email: String = Input::new()
-                            .with_prompt("Please enter the to_email name")
+                            .with_prompt("Input to_email:")
                             .interact_text()?;
 
                         args.to_email = Some(to_email);
                     }
                     if args.futures_type.is_none() {
                         let futures_type: i64 = Input::new()
-                            .with_prompt("Please enter the futures_type name")
+                            .with_prompt("Input futures_type:")
                             .interact_text()?;
 
                         args.futures_type = Some(futures_type);
                     }
                     if args.asset.is_none() {
-                        let asset: String = Input::new()
-                            .with_prompt("Please enter the asset name")
-                            .interact_text()?;
+                        let asset: String =
+                            Input::new().with_prompt("Input asset:").interact_text()?;
 
                         args.asset = Some(asset);
                     }
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }
@@ -3361,9 +3316,7 @@ async fn sub_account_futures_asset_transfer(
     Ok(())
 }
 
-async fn sub_account_transfer_history(
-    args: SubAccountTransferHistoryArgs,
-) -> anyhow::Result<()> {
+async fn sub_account_transfer_history(args: SubAccountTransferHistoryArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
     let params = match read_stdin_as::<SubAccountTransferHistoryParams>() {
@@ -3406,16 +3359,14 @@ async fn transfer_to_master(mut args: TransferToMasterArgs) -> anyhow::Result<()
             None => {
                 if args.interactive {
                     if args.asset.is_none() {
-                        let asset: String = Input::new()
-                            .with_prompt("Please enter the asset name")
-                            .interact_text()?;
+                        let asset: String =
+                            Input::new().with_prompt("Input asset:").interact_text()?;
 
                         args.asset = Some(asset);
                     }
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }
@@ -3457,22 +3408,20 @@ async fn transfer_to_sub_account_of_same_master(
                 if args.interactive {
                     if args.to_email.is_none() {
                         let to_email: String = Input::new()
-                            .with_prompt("Please enter the to_email name")
+                            .with_prompt("Input to_email:")
                             .interact_text()?;
 
                         args.to_email = Some(to_email);
                     }
                     if args.asset.is_none() {
-                        let asset: String = Input::new()
-                            .with_prompt("Please enter the asset name")
-                            .interact_text()?;
+                        let asset: String =
+                            Input::new().with_prompt("Input asset:").interact_text()?;
 
                         args.asset = Some(asset);
                     }
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }
@@ -3577,16 +3526,14 @@ async fn universal_transfer(mut args: UniversalTransferArgs) -> anyhow::Result<(
                         args.to_account_type = Some(selected);
                     }
                     if args.asset.is_none() {
-                        let asset: String = Input::new()
-                            .with_prompt("Please enter the asset name")
-                            .interact_text()?;
+                        let asset: String =
+                            Input::new().with_prompt("Input asset:").interact_text()?;
 
                         args.asset = Some(asset);
                     }
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }
@@ -3635,22 +3582,20 @@ async fn deposit_assets_into_the_managed_sub_account(
                 if args.interactive {
                     if args.to_email.is_none() {
                         let to_email: String = Input::new()
-                            .with_prompt("Please enter the to_email name")
+                            .with_prompt("Input to_email:")
                             .interact_text()?;
 
                         args.to_email = Some(to_email);
                     }
                     if args.asset.is_none() {
-                        let asset: String = Input::new()
-                            .with_prompt("Please enter the asset name")
-                            .interact_text()?;
+                        let asset: String =
+                            Input::new().with_prompt("Input asset:").interact_text()?;
 
                         args.asset = Some(asset);
                     }
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }
@@ -3694,16 +3639,14 @@ async fn get_managed_sub_account_deposit_address(
             None => {
                 if args.interactive {
                     if args.email.is_none() {
-                        let email: String = Input::new()
-                            .with_prompt("Please enter the email name")
-                            .interact_text()?;
+                        let email: String =
+                            Input::new().with_prompt("Input email:").interact_text()?;
 
                         args.email = Some(email);
                     }
                     if args.coin.is_none() {
-                        let coin: String = Input::new()
-                            .with_prompt("Please enter the coin name")
-                            .interact_text()?;
+                        let coin: String =
+                            Input::new().with_prompt("Input coin:").interact_text()?;
 
                         args.coin = Some(coin);
                     }
@@ -3747,9 +3690,8 @@ async fn query_managed_sub_account_asset_details(
             None => {
                 if args.interactive {
                     if args.email.is_none() {
-                        let email: String = Input::new()
-                            .with_prompt("Please enter the email name")
-                            .interact_text()?;
+                        let email: String =
+                            Input::new().with_prompt("Input email:").interact_text()?;
 
                         args.email = Some(email);
                     }
@@ -3789,9 +3731,8 @@ async fn query_managed_sub_account_futures_asset_details(
             None => {
                 if args.interactive {
                     if args.email.is_none() {
-                        let email: String = Input::new()
-                            .with_prompt("Please enter the email name")
-                            .interact_text()?;
+                        let email: String =
+                            Input::new().with_prompt("Input email:").interact_text()?;
 
                         args.email = Some(email);
                     }
@@ -3861,9 +3802,8 @@ async fn query_managed_sub_account_margin_asset_details(
             None => {
                 if args.interactive {
                     if args.email.is_none() {
-                        let email: String = Input::new()
-                            .with_prompt("Please enter the email name")
-                            .interact_text()?;
+                        let email: String =
+                            Input::new().with_prompt("Input email:").interact_text()?;
 
                         args.email = Some(email);
                     }
@@ -3904,9 +3844,8 @@ async fn query_managed_sub_account_snapshot(
             None => {
                 if args.interactive {
                     if args.email.is_none() {
-                        let email: String = Input::new()
-                            .with_prompt("Please enter the email name")
-                            .interact_text()?;
+                        let email: String =
+                            Input::new().with_prompt("Input email:").interact_text()?;
 
                         args.email = Some(email);
                     }
@@ -3975,37 +3914,34 @@ async fn query_managed_sub_account_transfer_log_master_account_investor(
                 None => {
                     if args.interactive {
                         if args.email.is_none() {
-                            let email: String = Input::new()
-                                .with_prompt("Please enter the email name")
-                                .interact_text()?;
+                            let email: String =
+                                Input::new().with_prompt("Input email:").interact_text()?;
 
                             args.email = Some(email);
                         }
                         if args.start_time.is_none() {
                             let start_time: i64 = Input::new()
-                                .with_prompt("Please enter the start_time name")
+                                .with_prompt("Input start_time:")
                                 .interact_text()?;
 
                             args.start_time = Some(start_time);
                         }
                         if args.end_time.is_none() {
                             let end_time: i64 = Input::new()
-                                .with_prompt("Please enter the end_time name")
+                                .with_prompt("Input end_time:")
                                 .interact_text()?;
 
                             args.end_time = Some(end_time);
                         }
                         if args.page.is_none() {
-                            let page: i64 = Input::new()
-                                .with_prompt("Please enter the page name")
-                                .interact_text()?;
+                            let page: i64 =
+                                Input::new().with_prompt("Input page:").interact_text()?;
 
                             args.page = Some(page);
                         }
                         if args.limit.is_none() {
-                            let limit: i64 = Input::new()
-                                .with_prompt("Please enter the limit name")
-                                .interact_text()?;
+                            let limit: i64 =
+                                Input::new().with_prompt("Input limit:").interact_text()?;
 
                             args.limit = Some(limit);
                         }
@@ -4057,37 +3993,34 @@ async fn query_managed_sub_account_transfer_log_master_account_trading(
                 None => {
                     if args.interactive {
                         if args.email.is_none() {
-                            let email: String = Input::new()
-                                .with_prompt("Please enter the email name")
-                                .interact_text()?;
+                            let email: String =
+                                Input::new().with_prompt("Input email:").interact_text()?;
 
                             args.email = Some(email);
                         }
                         if args.start_time.is_none() {
                             let start_time: i64 = Input::new()
-                                .with_prompt("Please enter the start_time name")
+                                .with_prompt("Input start_time:")
                                 .interact_text()?;
 
                             args.start_time = Some(start_time);
                         }
                         if args.end_time.is_none() {
                             let end_time: i64 = Input::new()
-                                .with_prompt("Please enter the end_time name")
+                                .with_prompt("Input end_time:")
                                 .interact_text()?;
 
                             args.end_time = Some(end_time);
                         }
                         if args.page.is_none() {
-                            let page: i64 = Input::new()
-                                .with_prompt("Please enter the page name")
-                                .interact_text()?;
+                            let page: i64 =
+                                Input::new().with_prompt("Input page:").interact_text()?;
 
                             args.page = Some(page);
                         }
                         if args.limit.is_none() {
-                            let limit: i64 = Input::new()
-                                .with_prompt("Please enter the limit name")
-                                .interact_text()?;
+                            let limit: i64 =
+                                Input::new().with_prompt("Input limit:").interact_text()?;
 
                             args.limit = Some(limit);
                         }
@@ -4139,29 +4072,26 @@ async fn query_managed_sub_account_transfer_log_sub_account_trading(
                 if args.interactive {
                     if args.start_time.is_none() {
                         let start_time: i64 = Input::new()
-                            .with_prompt("Please enter the start_time name")
+                            .with_prompt("Input start_time:")
                             .interact_text()?;
 
                         args.start_time = Some(start_time);
                     }
                     if args.end_time.is_none() {
                         let end_time: i64 = Input::new()
-                            .with_prompt("Please enter the end_time name")
+                            .with_prompt("Input end_time:")
                             .interact_text()?;
 
                         args.end_time = Some(end_time);
                     }
                     if args.page.is_none() {
-                        let page: i64 = Input::new()
-                            .with_prompt("Please enter the page name")
-                            .interact_text()?;
+                        let page: i64 = Input::new().with_prompt("Input page:").interact_text()?;
 
                         args.page = Some(page);
                     }
                     if args.limit.is_none() {
-                        let limit: i64 = Input::new()
-                            .with_prompt("Please enter the limit name")
-                            .interact_text()?;
+                        let limit: i64 =
+                            Input::new().with_prompt("Input limit:").interact_text()?;
 
                         args.limit = Some(limit);
                     }
@@ -4210,22 +4140,20 @@ async fn withdrawl_assets_from_the_managed_sub_account(
                 if args.interactive {
                     if args.from_email.is_none() {
                         let from_email: String = Input::new()
-                            .with_prompt("Please enter the from_email name")
+                            .with_prompt("Input from_email:")
                             .interact_text()?;
 
                         args.from_email = Some(from_email);
                     }
                     if args.asset.is_none() {
-                        let asset: String = Input::new()
-                            .with_prompt("Please enter the asset name")
-                            .interact_text()?;
+                        let asset: String =
+                            Input::new().with_prompt("Input asset:").interact_text()?;
 
                         args.asset = Some(asset);
                     }
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }

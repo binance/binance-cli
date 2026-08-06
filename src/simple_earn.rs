@@ -1,5 +1,5 @@
 use crate::utils::{
-    build_user_agent, decode_selected_entities, get_configuration_rest_api, read_json_as,
+    decode_selected_entities, get_client_configuration, init_user_agent, read_json_as,
     read_stdin_as,
 };
 use binance_sdk::config::{ConfigurationRestApi, PrivateKey};
@@ -13,38 +13,33 @@ use std::io;
 use std::io::{Error, ErrorKind};
 
 fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> {
-    unsafe {
-        env::set_var(
-            "BINANCE_CONNECTOR_RUST_USER_AGENT",
-            build_user_agent("simple-earn"),
-        );
-    }
+    init_user_agent("simple-earn");
 
-    let config_rest_api = get_configuration_rest_api(profile, "simple-earn").unwrap();
+    let client_config = get_client_configuration(profile, "simple-earn").unwrap();
     let api_env = env::var("BINANCE_API_ENV")
         .ok()
-        .or(config_rest_api.env)
+        .or(client_config.env)
         .unwrap_or_else(|| "prod".to_string());
 
-    let base_path = match api_env.as_str() {
-        "prod" => SIMPLE_EARN_REST_API_PROD_URL,
+    let base_path = client_config.base_path.unwrap_or(match api_env.as_str() {
+        "prod" => SIMPLE_EARN_REST_API_PROD_URL.to_string(),
         _ => {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
                 "invalid BINANCE_API_ENV",
             ));
         }
-    };
+    });
 
     let mut builder = ConfigurationRestApi::builder().base_path(base_path);
 
     if is_signed {
         builder = builder
-            .api_key(config_rest_api.api_key)
-            .api_secret(config_rest_api.api_secret);
+            .api_key(client_config.api_key)
+            .api_secret(client_config.api_secret);
 
-        if config_rest_api.private_key.is_some()  {
-            builder = builder.private_key(PrivateKey::File(config_rest_api.private_key.unwrap()));
+        if client_config.private_key.is_some() {
+            builder = builder.private_key(PrivateKey::File(client_config.private_key.unwrap()));
         }
     }
 
@@ -1500,9 +1495,7 @@ async fn get_bfusd_rate_history(args: GetBfusdRateHistoryArgs) -> anyhow::Result
     Ok(())
 }
 
-async fn get_bfusd_redemption_history(
-    args: GetBfusdRedemptionHistoryArgs,
-) -> anyhow::Result<()> {
+async fn get_bfusd_redemption_history(args: GetBfusdRedemptionHistoryArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
     let params = match read_stdin_as::<GetBfusdRedemptionHistoryParams>() {
@@ -1602,9 +1595,8 @@ async fn redeem_bfusd(mut args: RedeemBfusdArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }
@@ -1661,16 +1653,14 @@ async fn subscribe_bfusd(mut args: SubscribeBfusdArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.asset.is_none() {
-                        let asset: String = Input::new()
-                            .with_prompt("Please enter the asset name")
-                            .interact_text()?;
+                        let asset: String =
+                            Input::new().with_prompt("Input asset:").interact_text()?;
 
                         args.asset = Some(asset);
                     }
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }
@@ -1740,7 +1730,7 @@ async fn get_flexible_personal_left_quota(
                 if args.interactive {
                     if args.product_id.is_none() {
                         let product_id: String = Input::new()
-                            .with_prompt("Please enter the product_id name")
+                            .with_prompt("Input product_id:")
                             .interact_text()?;
 
                         args.product_id = Some(product_id);
@@ -1764,9 +1754,7 @@ async fn get_flexible_personal_left_quota(
     Ok(())
 }
 
-async fn get_flexible_product_position(
-    args: GetFlexibleProductPositionArgs,
-) -> anyhow::Result<()> {
+async fn get_flexible_product_position(args: GetFlexibleProductPositionArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
     let params = match read_stdin_as::<GetFlexibleProductPositionParams>() {
@@ -1829,9 +1817,7 @@ async fn get_flexible_redemption_record(
     Ok(())
 }
 
-async fn get_flexible_rewards_history(
-    args: GetFlexibleRewardsHistoryArgs,
-) -> anyhow::Result<()> {
+async fn get_flexible_rewards_history(args: GetFlexibleRewardsHistoryArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
     let params = match read_stdin_as::<GetFlexibleRewardsHistoryParams>() {
@@ -1880,15 +1866,14 @@ async fn get_flexible_subscription_preview(
                 if args.interactive {
                     if args.product_id.is_none() {
                         let product_id: String = Input::new()
-                            .with_prompt("Please enter the product_id name")
+                            .with_prompt("Input product_id:")
                             .interact_text()?;
 
                         args.product_id = Some(product_id);
                     }
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }
@@ -1966,7 +1951,7 @@ async fn get_locked_personal_left_quota(
                 if args.interactive {
                     if args.project_id.is_none() {
                         let project_id: String = Input::new()
-                            .with_prompt("Please enter the project_id name")
+                            .with_prompt("Input project_id:")
                             .interact_text()?;
 
                         args.project_id = Some(project_id);
@@ -2020,9 +2005,7 @@ async fn get_locked_product_position(args: GetLockedProductPositionArgs) -> anyh
     Ok(())
 }
 
-async fn get_locked_redemption_record(
-    args: GetLockedRedemptionRecordArgs,
-) -> anyhow::Result<()> {
+async fn get_locked_redemption_record(args: GetLockedRedemptionRecordArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
     let params = match read_stdin_as::<GetLockedRedemptionRecordParams>() {
@@ -2100,15 +2083,14 @@ async fn get_locked_subscription_preview(
                 if args.interactive {
                     if args.project_id.is_none() {
                         let project_id: String = Input::new()
-                            .with_prompt("Please enter the project_id name")
+                            .with_prompt("Input project_id:")
                             .interact_text()?;
 
                         args.project_id = Some(project_id);
                     }
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }
@@ -2180,7 +2162,7 @@ async fn get_rate_history(mut args: GetRateHistoryArgs) -> anyhow::Result<()> {
                 if args.interactive {
                     if args.product_id.is_none() {
                         let product_id: String = Input::new()
-                            .with_prompt("Please enter the product_id name")
+                            .with_prompt("Input product_id:")
                             .interact_text()?;
 
                         args.product_id = Some(product_id);
@@ -2286,7 +2268,7 @@ async fn redeem_flexible_product(mut args: RedeemFlexibleProductArgs) -> anyhow:
                 if args.interactive {
                     if args.product_id.is_none() {
                         let product_id: String = Input::new()
-                            .with_prompt("Please enter the product_id name")
+                            .with_prompt("Input product_id:")
                             .interact_text()?;
 
                         args.product_id = Some(product_id);
@@ -2326,7 +2308,7 @@ async fn redeem_locked_product(mut args: RedeemLockedProductArgs) -> anyhow::Res
                 if args.interactive {
                     if args.position_id.is_none() {
                         let position_id: String = Input::new()
-                            .with_prompt("Please enter the position_id name")
+                            .with_prompt("Input position_id:")
                             .interact_text()?;
 
                         args.position_id = Some(position_id);
@@ -2365,14 +2347,14 @@ async fn set_flexible_auto_subscribe(mut args: SetFlexibleAutoSubscribeArgs) -> 
                 if args.interactive {
                     if args.product_id.is_none() {
                         let product_id: String = Input::new()
-                            .with_prompt("Please enter the product_id name")
+                            .with_prompt("Input product_id:")
                             .interact_text()?;
 
                         args.product_id = Some(product_id);
                     }
                     if args.auto_subscribe.is_none() {
                         let auto_subscribe: bool = Input::new()
-                            .with_prompt("Please enter the auto_subscribe name")
+                            .with_prompt("Input auto_subscribe:")
                             .interact_text()?;
 
                         args.auto_subscribe = Some(auto_subscribe);
@@ -2411,14 +2393,14 @@ async fn set_locked_auto_subscribe(mut args: SetLockedAutoSubscribeArgs) -> anyh
                 if args.interactive {
                     if args.position_id.is_none() {
                         let position_id: String = Input::new()
-                            .with_prompt("Please enter the position_id name")
+                            .with_prompt("Input position_id:")
                             .interact_text()?;
 
                         args.position_id = Some(position_id);
                     }
                     if args.auto_subscribe.is_none() {
                         let auto_subscribe: bool = Input::new()
-                            .with_prompt("Please enter the auto_subscribe name")
+                            .with_prompt("Input auto_subscribe:")
                             .interact_text()?;
 
                         args.auto_subscribe = Some(auto_subscribe);
@@ -2461,7 +2443,7 @@ async fn set_locked_product_redeem_option(
                 if args.interactive {
                     if args.position_id.is_none() {
                         let position_id: String = Input::new()
-                            .with_prompt("Please enter the position_id name")
+                            .with_prompt("Input position_id:")
                             .interact_text()?;
 
                         args.position_id = Some(position_id);
@@ -2548,15 +2530,14 @@ async fn subscribe_flexible_product(mut args: SubscribeFlexibleProductArgs) -> a
                 if args.interactive {
                     if args.product_id.is_none() {
                         let product_id: String = Input::new()
-                            .with_prompt("Please enter the product_id name")
+                            .with_prompt("Input product_id:")
                             .interact_text()?;
 
                         args.product_id = Some(product_id);
                     }
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }
@@ -2596,15 +2577,14 @@ async fn subscribe_locked_product(mut args: SubscribeLockedProductArgs) -> anyho
                 if args.interactive {
                     if args.project_id.is_none() {
                         let project_id: String = Input::new()
-                            .with_prompt("Please enter the project_id name")
+                            .with_prompt("Input project_id:")
                             .interact_text()?;
 
                         args.project_id = Some(project_id);
                     }
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }
@@ -2705,9 +2685,7 @@ async fn get_rwusd_rate_history(args: GetRwusdRateHistoryArgs) -> anyhow::Result
     Ok(())
 }
 
-async fn get_rwusd_redemption_history(
-    args: GetRwusdRedemptionHistoryArgs,
-) -> anyhow::Result<()> {
+async fn get_rwusd_redemption_history(args: GetRwusdRedemptionHistoryArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
     let params = match read_stdin_as::<GetRwusdRedemptionHistoryParams>() {
@@ -2807,9 +2785,8 @@ async fn redeem_rwusd(mut args: RedeemRwusdArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }
@@ -2886,9 +2863,8 @@ async fn subscribe_rwusd(mut args: SubscribeRwusdArgs) -> anyhow::Result<()> {
                         args.asset = Some(selected);
                     }
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }

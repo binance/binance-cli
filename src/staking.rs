@@ -1,5 +1,5 @@
 use crate::utils::{
-    build_user_agent, decode_selected_entities, get_configuration_rest_api, read_json_as,
+    decode_selected_entities, get_client_configuration, init_user_agent, read_json_as,
     read_stdin_as,
 };
 use binance_sdk::config::{ConfigurationRestApi, PrivateKey};
@@ -13,38 +13,33 @@ use std::io;
 use std::io::{Error, ErrorKind};
 
 fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> {
-    unsafe {
-        env::set_var(
-            "BINANCE_CONNECTOR_RUST_USER_AGENT",
-            build_user_agent("staking"),
-        );
-    }
+    init_user_agent("staking");
 
-    let config_rest_api = get_configuration_rest_api(profile, "staking").unwrap();
+    let client_config = get_client_configuration(profile, "staking").unwrap();
     let api_env = env::var("BINANCE_API_ENV")
         .ok()
-        .or(config_rest_api.env)
+        .or(client_config.env)
         .unwrap_or_else(|| "prod".to_string());
 
-    let base_path = match api_env.as_str() {
-        "prod" => STAKING_REST_API_PROD_URL,
+    let base_path = client_config.base_path.unwrap_or(match api_env.as_str() {
+        "prod" => STAKING_REST_API_PROD_URL.to_string(),
         _ => {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
                 "invalid BINANCE_API_ENV",
             ));
         }
-    };
+    });
 
     let mut builder = ConfigurationRestApi::builder().base_path(base_path);
 
     if is_signed {
         builder = builder
-            .api_key(config_rest_api.api_key)
-            .api_secret(config_rest_api.api_secret);
+            .api_key(client_config.api_key)
+            .api_secret(client_config.api_secret);
 
-        if config_rest_api.private_key.is_some()  {
-            builder = builder.private_key(PrivateKey::File(config_rest_api.private_key.unwrap()));
+        if client_config.private_key.is_some() {
+            builder = builder.private_key(PrivateKey::File(client_config.private_key.unwrap()));
         }
     }
 
@@ -1283,9 +1278,7 @@ async fn eth_staking_account(args: EthStakingAccountArgs) -> anyhow::Result<()> 
     Ok(())
 }
 
-async fn get_current_eth_staking_quota(
-    args: GetCurrentEthStakingQuotaArgs,
-) -> anyhow::Result<()> {
+async fn get_current_eth_staking_quota(args: GetCurrentEthStakingQuotaArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
     let params = match read_stdin_as::<GetCurrentEthStakingQuotaParams>() {
@@ -1486,9 +1479,8 @@ async fn redeem_eth(mut args: RedeemEthArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }
@@ -1524,9 +1516,8 @@ async fn subscribe_eth_staking(mut args: SubscribeEthStakingArgs) -> anyhow::Res
             None => {
                 if args.interactive {
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }
@@ -1561,9 +1552,8 @@ async fn wrap_beth(mut args: WrapBethArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }
@@ -1602,7 +1592,7 @@ async fn get_on_chain_yields_locked_personal_left_quota(
                 if args.interactive {
                     if args.project_id.is_none() {
                         let project_id: String = Input::new()
-                            .with_prompt("Please enter the project_id name")
+                            .with_prompt("Input project_id:")
                             .interact_text()?;
 
                         args.project_id = Some(project_id);
@@ -1777,15 +1767,14 @@ async fn get_on_chain_yields_locked_subscription_preview(
                 if args.interactive {
                     if args.project_id.is_none() {
                         let project_id: String = Input::new()
-                            .with_prompt("Please enter the project_id name")
+                            .with_prompt("Input project_id:")
                             .interact_text()?;
 
                         args.project_id = Some(project_id);
                     }
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }
@@ -1888,7 +1877,7 @@ async fn redeem_on_chain_yields_locked_product(
                 if args.interactive {
                     if args.position_id.is_none() {
                         let position_id: String = Input::new()
-                            .with_prompt("Please enter the position_id name")
+                            .with_prompt("Input position_id:")
                             .interact_text()?;
 
                         args.position_id = Some(position_id);
@@ -1931,14 +1920,14 @@ async fn set_on_chain_yields_locked_auto_subscribe(
                 if args.interactive {
                     if args.position_id.is_none() {
                         let position_id: String = Input::new()
-                            .with_prompt("Please enter the position_id name")
+                            .with_prompt("Input position_id:")
                             .interact_text()?;
 
                         args.position_id = Some(position_id);
                     }
                     if args.auto_subscribe.is_none() {
                         let auto_subscribe: bool = Input::new()
-                            .with_prompt("Please enter the auto_subscribe name")
+                            .with_prompt("Input auto_subscribe:")
                             .interact_text()?;
 
                         args.auto_subscribe = Some(auto_subscribe);
@@ -1982,7 +1971,7 @@ async fn set_on_chain_yields_locked_product_redeem_option(
                 if args.interactive {
                     if args.position_id.is_none() {
                         let position_id: String = Input::new()
-                            .with_prompt("Please enter the position_id name")
+                            .with_prompt("Input position_id:")
                             .interact_text()?;
 
                         args.position_id = Some(position_id);
@@ -2052,15 +2041,14 @@ async fn subscribe_on_chain_yields_locked_product(
                 if args.interactive {
                     if args.project_id.is_none() {
                         let project_id: String = Input::new()
-                            .with_prompt("Please enter the project_id name")
+                            .with_prompt("Input project_id:")
                             .interact_text()?;
 
                         args.project_id = Some(project_id);
                     }
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }
@@ -2092,9 +2080,7 @@ async fn subscribe_on_chain_yields_locked_product(
     Ok(())
 }
 
-async fn get_soft_staking_product_list(
-    args: GetSoftStakingProductListArgs,
-) -> anyhow::Result<()> {
+async fn get_soft_staking_product_list(args: GetSoftStakingProductListArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
     let params = match read_stdin_as::<GetSoftStakingProductListParams>() {
@@ -2167,7 +2153,7 @@ async fn set_soft_staking(mut args: SetSoftStakingArgs) -> anyhow::Result<()> {
                 if args.interactive {
                     if args.soft_staking.is_none() {
                         let soft_staking: bool = Input::new()
-                            .with_prompt("Please enter the soft_staking name")
+                            .with_prompt("Input soft_staking:")
                             .interact_text()?;
 
                         args.soft_staking = Some(soft_staking);
@@ -2378,9 +2364,7 @@ async fn get_sol_staking_history(args: GetSolStakingHistoryArgs) -> anyhow::Resu
     Ok(())
 }
 
-async fn get_sol_staking_quota_details(
-    args: GetSolStakingQuotaDetailsArgs,
-) -> anyhow::Result<()> {
+async fn get_sol_staking_quota_details(args: GetSolStakingQuotaDetailsArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
     let params = match read_stdin_as::<GetSolStakingQuotaDetailsParams>() {
@@ -2440,9 +2424,8 @@ async fn redeem_sol(mut args: RedeemSolArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }
@@ -2500,9 +2483,8 @@ async fn subscribe_sol_staking(mut args: SubscribeSolStakingArgs) -> anyhow::Res
             None => {
                 if args.interactive {
                     if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Please enter the amount name")
-                            .interact_text()?;
+                        let amount: rust_decimal::Decimal =
+                            Input::new().with_prompt("Input amount:").interact_text()?;
 
                         args.amount = Some(amount);
                     }

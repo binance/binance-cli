@@ -8,6 +8,7 @@ use std::sync::OnceLock;
 use std::{env, fs, process};
 
 static STDIN_RAW: OnceLock<String> = OnceLock::new();
+static USER_AGENT_INIT: OnceLock<()> = OnceLock::new();
 
 pub fn decode_selected_entities(input: &str, is_full: bool) -> String {
     let description = if is_full {
@@ -129,6 +130,7 @@ pub struct CliConfiguration {
     pub api_secret: String,
     pub env: Option<String>,
     pub base_path: Option<String>,
+    pub base_path_ws_streams: Option<String>,
     pub private_key: Option<String>,
 }
 
@@ -201,6 +203,14 @@ pub fn get_profile_config(profile_name: &str, package_name: &str) -> Option<CliC
         None
     };
 
+    let base_path_ws_streams = if !package_name.is_empty() {
+        creds
+            .get(&format!("{}-ws-streams-base-path", package_name))
+            .cloned()
+    } else {
+        None
+    };
+
     Some(CliConfiguration {
         api_key,
         api_secret,
@@ -209,6 +219,13 @@ pub fn get_profile_config(profile_name: &str, package_name: &str) -> Option<CliC
             .ok()
             .filter(|v| !v.is_empty())
             .or(base_path),
+        base_path_ws_streams: std::env::var(format!(
+            "BINANCE_{}_WS_STREAMS_BASE_PATH",
+            package_name.to_uppercase()
+        ))
+        .ok()
+        .filter(|v| !v.is_empty())
+        .or(base_path_ws_streams),
         private_key: None,
     })
 }
@@ -226,6 +243,11 @@ pub fn get_session_creds(profile: Option<&str>, package_name: &str) -> Option<Cl
             api_secret,
             env: env::var("BINANCE_API_ENV").ok(),
             base_path: env::var(format!("BINANCE_{}_BASE_PATH", package_name)).ok(),
+            base_path_ws_streams: env::var(format!(
+                "BINANCE_{}_WS_STREAMS_BASE_PATH",
+                package_name
+            ))
+            .ok(),
             private_key: None,
         });
     }
@@ -234,12 +256,16 @@ pub fn get_session_creds(profile: Option<&str>, package_name: &str) -> Option<Cl
         return Some(CliConfiguration {
             api_key: String::new(),
             api_secret: String::new(),
-            env: None,
-            base_path: None,
+            env: env::var("BINANCE_API_ENV").ok(),
+            base_path: env::var(format!("BINANCE_{}_BASE_PATH", package_name)).ok(),
+            base_path_ws_streams: env::var(format!(
+                "BINANCE_{}_WS_STREAMS_BASE_PATH",
+                package_name
+            ))
+            .ok(),
             private_key: None,
         });
     };
-
 
     get_profile_config(&profile_name, package_name)
 }
@@ -248,7 +274,7 @@ pub fn is_hmac_secret_key(key: &str) -> bool {
     key.len() == 64 && key.chars().all(|c| c.is_ascii_alphanumeric())
 }
 
-pub fn get_configuration_rest_api(
+pub fn get_client_configuration(
     profile: Option<&str>,
     package_name: &str,
 ) -> Option<CliConfiguration> {
@@ -280,4 +306,36 @@ pub fn build_user_agent(product: &str) -> String {
         std::env::consts::OS,
         std::env::consts::ARCH,
     )
+}
+
+pub fn init_user_agent(product: &str) {
+    USER_AGENT_INIT.get_or_init(|| unsafe {
+        std::env::set_var(
+            "BINANCE_CONNECTOR_RUST_USER_AGENT",
+            build_user_agent(product),
+        );
+    });
+}
+
+#[cfg(unix)]
+pub async fn wait_for_shutdown() {
+    use tokio::signal::unix::{SignalKind, signal};
+
+    let mut sigterm = signal(SignalKind::terminate()).expect("failed to install SIGTERM handler");
+
+    tokio::select! {
+        _ = tokio::signal::ctrl_c() => {
+            eprintln!("received Ctrl+C");
+        }
+        _ = sigterm.recv() => {
+            eprintln!("received SIGTERM");
+        }
+    }
+}
+
+#[cfg(not(unix))]
+pub async fn wait_for_shutdown() {
+    tokio::signal::ctrl_c()
+        .await
+        .expect("failed to listen for Ctrl+C");
 }
