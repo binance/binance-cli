@@ -8,7 +8,25 @@ A simple CLI that interacts with the Binance API
 
 ## Installation
 
-Download the correct binary from [Release](https://github.com/binance/binance-cli/releases) 
+1. If global npm package `@binance/binance-cli` exists and `binance-cli --version` is `< 2.0.0`, uninstall it:
+
+```sh
+npm uninstall -g @binance/binance-cli
+```
+
+2. Install the latest release:
+
+```sh
+curl --proto '=https' --tlsv1.2 -LsSf \
+  https://github.com/binance/binance-cli/releases/latest/download/binance-cli-installer.sh \
+  | sh
+```
+
+3. Verify:
+
+```sh
+binance-cli --version
+```
 
 ## Usage
 
