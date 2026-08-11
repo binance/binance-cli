@@ -48,12 +48,14 @@ where
 
     match serde_json::from_str::<T>(stdin) {
         Ok(value) => Some(value),
-        Err(_) => {
+        Err(err) => {
             let preview = preview_stdin(stdin);
 
             eprintln!(
                 "Error: stdin input is not valid JSON.\n\
-                 Received: \"{}\"",
+                Serde error: {}\n\
+                Received: \"{}\"",
+                err,
                 preview.trim(),
             );
 
@@ -68,12 +70,14 @@ where
 {
     match serde_json::from_str::<T>(&json) {
         Ok(value) => Some(value),
-        Err(_) => {
+        Err(err) => {
             let preview = preview_stdin(&json);
 
             eprintln!(
                 "Error: json param is not valid JSON.\n\
-                 Received: \"{}\"",
+                Serde error: {}\n\
+                Received: \"{}\"",
+                err,
                 preview.trim(),
             );
 
@@ -280,7 +284,7 @@ pub fn get_client_configuration(
 ) -> Option<CliConfiguration> {
     let mut creds = get_session_creds(profile, package_name)?;
 
-    if !creds.api_secret.is_empty() && is_hmac_secret_key(&creds.api_secret) {
+    if creds.api_secret.is_empty() || is_hmac_secret_key(&creds.api_secret) {
         Some(creds)
     } else {
         creds.private_key = Some(creds.api_secret.clone());
