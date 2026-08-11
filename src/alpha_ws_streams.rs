@@ -29,7 +29,7 @@ fn get_client(profile: Option<&str>) -> Result<WebsocketStreamsHandle, Error> {
             _ => {
                 return Err(Error::new(
                     ErrorKind::InvalidInput,
-                    "invalid BINANCE_API_ENV",
+                    "Invalid api env, valid values: prod",
                 ));
             }
         });

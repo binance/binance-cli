@@ -31,7 +31,7 @@ fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> 
         _ => {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "invalid BINANCE_API_ENV",
+                "Invalid api env, valid values: testnet, demo, prod",
             ));
         }
     });
