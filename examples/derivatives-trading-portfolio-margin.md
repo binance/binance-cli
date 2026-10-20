@@ -63,7 +63,7 @@ binance-cli derivatives-portfolio-margin fund-auto-collection --recv-window 5000
 ### [POST /papi/v1/asset-collection](https://developers.binance.com/en/docs/catalog/advanced-trading-derivatives-trading-portfolio-margin/api/rest-api/account#fund-collection-by-asset) - Fund Collection by Asset (TRADE)
 
 ```bash
-binance-cli derivatives-portfolio-margin fund-collection-by-asset --asset BTC --recv-window 5000
+binance-cli derivatives-portfolio-margin fund-collection-by-asset --asset BTC --amount 10 --future-type UM --recv-window 5000
 ```
 
 ### [GET /papi/v1/repay-futures-switch](https://developers.binance.com/en/docs/catalog/advanced-trading-derivatives-trading-portfolio-margin/api/rest-api/account#get-auto-repay-futures-status) - Get Auto-repay-futures Status (USER_DATA)
@@ -280,12 +280,6 @@ binance-cli derivatives-portfolio-margin cancel-all-cm-open-orders --symbol BTCU
 binance-cli derivatives-portfolio-margin cancel-all-um-algo-open-orders --symbol BNBUSDT --recv-window 5000
 ```
 
-### [DELETE /papi/v1/um/conditional/allOpenOrders](https://developers.binance.com/en/docs/catalog/advanced-trading-derivatives-trading-portfolio-margin/api/rest-api/trade#cancel-all-um-open-conditional-orders) - Cancel All UM Open Conditional Orders (TRADE)
-
-```bash
-binance-cli derivatives-portfolio-margin cancel-all-um-open-conditional-orders --symbol BTCUSDT --recv-window 5000
-```
-
 ### [DELETE /papi/v1/um/allOpenOrders](https://developers.binance.com/en/docs/catalog/advanced-trading-derivatives-trading-portfolio-margin/api/rest-api/trade#cancel-all-um-open-orders) - Cancel All UM Open Orders (TRADE)
 
 ```bash
@@ -326,12 +320,6 @@ binance-cli derivatives-portfolio-margin cancel-margin-account-order --symbol LT
 
 ```bash
 binance-cli derivatives-portfolio-margin cancel-um-algo-order --algo-id 2146760 --client-algo-id 6B2I9XVcJpCjqPAJ4YoFX7 --recv-window 5000
-```
-
-### [DELETE /papi/v1/um/conditional/order](https://developers.binance.com/en/docs/catalog/advanced-trading-derivatives-trading-portfolio-margin/api/rest-api/trade#cancel-um-conditional-order) - Cancel UM Conditional Order (TRADE)
-
-```bash
-binance-cli derivatives-portfolio-margin cancel-um-conditional-order --symbol BTCUSDT --strategy-id 1 --new-client-strategy-id 1 --recv-window 5000
 ```
 
 ### [DELETE /papi/v1/um/order](https://developers.binance.com/en/docs/catalog/advanced-trading-derivatives-trading-portfolio-margin/api/rest-api/trade#cancel-um-order) - Cancel UM Order (TRADE)
@@ -427,19 +415,13 @@ binance-cli derivatives-portfolio-margin new-margin-order --symbol BTCUSDT --sid
 ### [POST /papi/v1/um/algo/order](https://developers.binance.com/en/docs/catalog/advanced-trading-derivatives-trading-portfolio-margin/api/rest-api/trade#new-um-algo-order) - New UM Algo Order (TRADE)
 
 ```bash
-binance-cli derivatives-portfolio-margin new-um-algo-order --algo-type CONDITIONAL --symbol BNBUSDT --side SELL --rtype TAKE_PROFIT --quantity 0.01 --position-side BOTH --time-in-force GTC --price 750.000 --trigger-price 750.000 --working-type CONTRACT_PRICE --price-match NONE --price-protect TRUE --reduce-only TRUE --activate-price 700 --callback-rate 1 --client-algo-id 6B2I9XVcJpCjqPAJ4YoFX7 --new-order-resp-type ACK --self-trade-prevention-mode NONE --good-till-date 0 --recv-window 5000
-```
-
-### [POST /papi/v1/um/conditional/order](https://developers.binance.com/en/docs/catalog/advanced-trading-derivatives-trading-portfolio-margin/api/rest-api/trade#new-um-conditional-order) - New UM Conditional Order (TRADE)
-
-```bash
-binance-cli derivatives-portfolio-margin new-um-conditional-order --symbol BTCUSDT --side BUY --strategy-type STOP --position-side BOTH --time-in-force GTC --quantity 1.0 --reduce-only TRUE --price 1.0 --working-type MARK_PRICE --price-protect TRUE --new-client-strategy-id 1 --stop-price 1.0 --activation-price 1.0 --callback-rate 1.0 --price-match OPPONENT --self-trade-prevention-mode NONE --good-till-date 1770736694138 --recv-window 5000
+binance-cli derivatives-portfolio-margin new-um-algo-order --algo-type CONDITIONAL --symbol BNBUSDT --side SELL --rtype TAKE_PROFIT --position-side BOTH --time-in-force GTC --quantity 0.01 --price 750.000 --trigger-price 750.000 --working-type CONTRACT_PRICE --price-match NONE --close-position TRUE --price-protect TRUE --reduce-only TRUE --activate-price 700 --callback-rate 1 --client-algo-id 6B2I9XVcJpCjqPAJ4YoFX7 --new-order-resp-type ACK --self-trade-prevention-mode NONE --good-till-date 0 --recv-window 5000
 ```
 
 ### [POST /papi/v1/um/order](https://developers.binance.com/en/docs/catalog/advanced-trading-derivatives-trading-portfolio-margin/api/rest-api/trade#new-um-order) - New UM Order (TRADE)
 
 ```bash
-binance-cli derivatives-portfolio-margin new-um-order --symbol BTCUSDT --side BUY --rtype LIMIT --position-side BOTH --time-in-force GTC --quantity 1.0 --reduce-only TRUE --price 1.0 --new-client-order-id 1 --new-order-resp-type ACK --price-match OPPONENT --self-trade-prevention-mode NONE --good-till-date 1770736694138 --recv-window 5000
+binance-cli derivatives-portfolio-margin new-um-order --symbol BTCUSDT --side BUY --rtype LIMIT --position-side BOTH --time-in-force GTC --quantity 1.0 --reduce-only TRUE --price 1.0 --new-client-order-id 1 --new-order-resp-type ACK --price-match OPPONENT --self-trade-prevention-mode EXPIRE_MAKER --good-till-date 1770736694138 --recv-window 5000
 ```
 
 ### [GET /papi/v1/cm/conditional/allOrders](https://developers.binance.com/en/docs/catalog/advanced-trading-derivatives-trading-portfolio-margin/api/rest-api/trade#query-all-cm-conditional-orders) - Query All CM Conditional Orders (USER_DATA)
@@ -472,12 +454,6 @@ binance-cli derivatives-portfolio-margin query-all-current-cm-open-orders --symb
 binance-cli derivatives-portfolio-margin query-all-current-um-open-algo-orders --algo-type CONDITIONAL --symbol BNBUSDT --algo-id 2146760 --recv-window 5000
 ```
 
-### [GET /papi/v1/um/conditional/openOrders](https://developers.binance.com/en/docs/catalog/advanced-trading-derivatives-trading-portfolio-margin/api/rest-api/trade#query-all-current-um-open-conditional-orders) - Query All Current UM Open Conditional Orders (USER_DATA)
-
-```bash
-binance-cli derivatives-portfolio-margin query-all-current-um-open-conditional-orders --symbol BTCUSDT --recv-window 5000
-```
-
 ### [GET /papi/v1/um/openOrders](https://developers.binance.com/en/docs/catalog/advanced-trading-derivatives-trading-portfolio-margin/api/rest-api/trade#query-all-current-um-open-orders) - Query All Current UM Open Orders (USER_DATA)
 
 ```bash
@@ -488,12 +464,6 @@ binance-cli derivatives-portfolio-margin query-all-current-um-open-orders --symb
 
 ```bash
 binance-cli derivatives-portfolio-margin query-all-margin-account-orders --symbol BTCUSDT --order-id 1 --start-time 1623319461670 --end-time 1641782889000 --limit 500 --recv-window 5000
-```
-
-### [GET /papi/v1/um/conditional/allOrders](https://developers.binance.com/en/docs/catalog/advanced-trading-derivatives-trading-portfolio-margin/api/rest-api/trade#query-all-um-conditional-orders) - Query All UM Conditional Orders (USER_DATA)
-
-```bash
-binance-cli derivatives-portfolio-margin query-all-um-conditional-orders --symbol BTCUSDT --strategy-id 1 --start-time 1623319461670 --end-time 1641782889000 --limit 500 --recv-window 5000
 ```
 
 ### [GET /papi/v1/um/allOrders](https://developers.binance.com/en/docs/catalog/advanced-trading-derivatives-trading-portfolio-margin/api/rest-api/trade#query-all-um-orders) - Query All UM Orders (USER_DATA)
@@ -544,12 +514,6 @@ binance-cli derivatives-portfolio-margin query-current-margin-open-order --symbo
 binance-cli derivatives-portfolio-margin query-current-um-open-algo-order --algo-id 2146760 --client-algo-id 6B2I9XVcJpCjqPAJ4YoFX7 --recv-window 5000
 ```
 
-### [GET /papi/v1/um/conditional/openOrder](https://developers.binance.com/en/docs/catalog/advanced-trading-derivatives-trading-portfolio-margin/api/rest-api/trade#query-current-um-open-conditional-order) - Query Current UM Open Conditional Order (USER_DATA)
-
-```bash
-binance-cli derivatives-portfolio-margin query-current-um-open-conditional-order --symbol BTCUSDT --strategy-id 1 --new-client-strategy-id 1 --recv-window 5000
-```
-
 ### [GET /papi/v1/um/openOrder](https://developers.binance.com/en/docs/catalog/advanced-trading-derivatives-trading-portfolio-margin/api/rest-api/trade#query-current-um-open-order) - Query Current UM Open Order (USER_DATA)
 
 ```bash
@@ -584,12 +548,6 @@ binance-cli derivatives-portfolio-margin query-margin-accounts-open-oco --recv-w
 
 ```bash
 binance-cli derivatives-portfolio-margin query-um-algo-order-history --symbol BNBUSDT --algo-id 2146760 --start-time 1770130294138 --end-time 1770736694138 --limit 500 --recv-window 5000
-```
-
-### [GET /papi/v1/um/conditional/orderHistory](https://developers.binance.com/en/docs/catalog/advanced-trading-derivatives-trading-portfolio-margin/api/rest-api/trade#query-um-conditional-order-history) - Query UM Conditional Order History (USER_DATA)
-
-```bash
-binance-cli derivatives-portfolio-margin query-um-conditional-order-history --symbol BTCUSDT --strategy-id 1 --new-client-strategy-id 1 --recv-window 5000
 ```
 
 ### [GET /papi/v1/um/orderAmendment](https://developers.binance.com/en/docs/catalog/advanced-trading-derivatives-trading-portfolio-margin/api/rest-api/trade#query-um-modify-order-history) - Query UM Modify Order History (TRADE)

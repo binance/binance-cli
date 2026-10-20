@@ -43,9 +43,7 @@ fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> 
         }
     }
 
-    let rest_conf = builder
-        .build()
-        .map_err(|err| Error::new(ErrorKind::Other, err))?;
+    let rest_conf = builder.build().map_err(Error::other)?;
 
     Ok(CryptoLoanRestApi::from_config(rest_conf))
 }
@@ -392,7 +390,10 @@ pub enum CryptoLoanCommands {
 
 Weight(IP): 6000
 
-Security Type: USER_DATA"#, false),
+Security Type: USER_DATA
+
+Notes:
+- Rate limit: 1 request per second per account."#, false),
     )]
     CheckCollateralRepayRate(CheckCollateralRepayRateArgs),
     #[command(
@@ -403,7 +404,8 @@ Weight(UID): 6000
 Security Type: TRADE
 
 Notes:
-- API key needs Spot & Margin Trading permission for this endpoint."#, false),
+- API key needs Spot & Margin Trading permission for this endpoint.
+- Rate limit: 1 request per second per loan position (account + loan coin + collateral coin combination)."#, false),
     )]
     FlexibleLoanAdjustLtv(FlexibleLoanAdjustLtvArgs),
     #[command(
@@ -415,7 +417,8 @@ Security Type: TRADE
 
 Notes:
 - This endpoint is available for both master and sub-accounts.
-- You can customize LTV by entering `loanAmount` and `collateralAmount`."#, false),
+- You can customize LTV by entering `loanAmount` and `collateralAmount`.
+- Rate limit: 1 request per second per account."#, false),
     )]
     FlexibleLoanBorrow(FlexibleLoanBorrowArgs),
     #[command(
@@ -426,7 +429,8 @@ Weight(IP): 6000
 Security Type: TRADE
 
 Notes:
-- `repayAmount` is mandatory even when `fullRepayment = FALSE`."#, false),
+- `repayAmount` is mandatory even when `fullRepayment = FALSE`.
+- Rate limit: 1 request per second per loan position (account + loan coin + collateral coin combination)."#, false),
     )]
     FlexibleLoanRepay(FlexibleLoanRepayArgs),
     #[command(
@@ -434,7 +438,10 @@ Notes:
 
 Weight(IP): 400
 
-Security Type: USER_DATA"#, false),
+Security Type: USER_DATA
+
+Notes:
+- Rate limit: 1 request per second per account."#, false),
     )]
     GetFlexibleLoanAssetsData(GetFlexibleLoanAssetsDataArgs),
     #[command(
@@ -446,7 +453,8 @@ Security Type: USER_DATA
 
 Notes:
 - If `startTime` and `endTime` are not sent, the recent 90-day data is returned.
-- The max interval between `startTime` and `endTime` is 180 days."#, false),
+- The max interval between `startTime` and `endTime` is 180 days.
+- Rate limit: 5 requests per second per account."#, false),
     )]
     GetFlexibleLoanBorrowHistory(GetFlexibleLoanBorrowHistoryArgs),
     #[command(
@@ -455,7 +463,10 @@ USD value.
 
 Weight(IP): 400
 
-Security Type: USER_DATA"#, false),
+Security Type: USER_DATA
+
+Notes:
+- Rate limit: 1 request per second per account."#, false),
     )]
     GetFlexibleLoanCollateralAssetsData(GetFlexibleLoanCollateralAssetsDataArgs),
     #[command(
@@ -476,7 +487,10 @@ Notes:
 
 Weight(IP): 400
 
-Security Type: USER_DATA"#, false),
+Security Type: USER_DATA
+
+Notes:
+- Rate limit: 1 request per second per account."#, false),
     )]
     GetFlexibleLoanLiquidationHistory(GetFlexibleLoanLiquidationHistoryArgs),
     #[command(
@@ -488,7 +502,8 @@ Security Type: USER_DATA
 
 Notes:
 - If `startTime` and `endTime` are not sent, the recent 90-day data is returned.
-- The max interval between `startTime` and `endTime` is 180 days."#, false),
+- The max interval between `startTime` and `endTime` is 180 days.
+- Rate limit: 5 requests per second per account."#, false),
     )]
     GetFlexibleLoanLtvAdjustmentHistory(GetFlexibleLoanLtvAdjustmentHistoryArgs),
     #[command(
@@ -496,7 +511,10 @@ Notes:
 
 Weight(IP): 300
 
-Security Type: USER_DATA"#, false),
+Security Type: USER_DATA
+
+Notes:
+- Rate limit: 10 requests per second per account."#, false),
     )]
     GetFlexibleLoanOngoingOrders(GetFlexibleLoanOngoingOrdersArgs),
     #[command(
@@ -508,7 +526,8 @@ Security Type: USER_DATA
 
 Notes:
 - If `startTime` and `endTime` are not sent, the recent 90-day data is returned.
-- The max interval between `startTime` and `endTime` is 180 days."#, false),
+- The max interval between `startTime` and `endTime` is 180 days.
+- Rate limit: 5 requests per second per account."#, false),
     )]
     GetFlexibleLoanRepaymentHistory(GetFlexibleLoanRepaymentHistoryArgs),
     #[command(
@@ -649,9 +668,9 @@ async fn check_collateral_repay_rate(mut args: CheckCollateralRepayRateArgs) -> 
                 }
                 CheckCollateralRepayRateParams::builder(
                     args.loan_coin
-                        .ok_or_else(|| anyhow::anyhow!("loan_coin is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("loan-coin is required"))?,
                     args.collateral_coin
-                        .ok_or_else(|| anyhow::anyhow!("collateral_coin is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("collateral-coin is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -700,7 +719,7 @@ async fn flexible_loan_adjust_ltv(mut args: FlexibleLoanAdjustLtvArgs) -> anyhow
                         args.adjustment_amount = Some(adjustment_amount);
                     }
                     if args.direction.is_none() {
-                        let options = vec![
+                        let options = [
                             ("ADDITIONAL", FlexibleLoanAdjustLtvDirectionEnum::Additional),
                             ("REDUCED", FlexibleLoanAdjustLtvDirectionEnum::Reduced),
                         ];
@@ -722,11 +741,11 @@ async fn flexible_loan_adjust_ltv(mut args: FlexibleLoanAdjustLtvArgs) -> anyhow
                 }
                 FlexibleLoanAdjustLtvParams::builder(
                     args.loan_coin
-                        .ok_or_else(|| anyhow::anyhow!("loan_coin is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("loan-coin is required"))?,
                     args.collateral_coin
-                        .ok_or_else(|| anyhow::anyhow!("collateral_coin is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("collateral-coin is required"))?,
                     args.adjustment_amount
-                        .ok_or_else(|| anyhow::anyhow!("adjustment_amount is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("adjustment-amount is required"))?,
                     args.direction
                         .ok_or_else(|| anyhow::anyhow!("direction is required"))?,
                 )
@@ -772,9 +791,9 @@ async fn flexible_loan_borrow(mut args: FlexibleLoanBorrowArgs) -> anyhow::Resul
                 }
                 FlexibleLoanBorrowParams::builder(
                     args.loan_coin
-                        .ok_or_else(|| anyhow::anyhow!("loan_coin is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("loan-coin is required"))?,
                     args.collateral_coin
-                        .ok_or_else(|| anyhow::anyhow!("collateral_coin is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("collateral-coin is required"))?,
                 )
                 .loan_amount(args.loan_amount)
                 .collateral_amount(args.collateral_amount)
@@ -827,11 +846,11 @@ async fn flexible_loan_repay(mut args: FlexibleLoanRepayArgs) -> anyhow::Result<
                 }
                 FlexibleLoanRepayParams::builder(
                     args.loan_coin
-                        .ok_or_else(|| anyhow::anyhow!("loan_coin is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("loan-coin is required"))?,
                     args.collateral_coin
-                        .ok_or_else(|| anyhow::anyhow!("collateral_coin is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("collateral-coin is required"))?,
                     args.repay_amount
-                        .ok_or_else(|| anyhow::anyhow!("repay_amount is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("repay-amount is required"))?,
                 )
                 .collateral_return(args.collateral_return)
                 .full_repayment(args.full_repayment)
@@ -970,7 +989,7 @@ async fn get_flexible_loan_interest_rate_history(
                     args.coin
                         .ok_or_else(|| anyhow::anyhow!("coin is required"))?,
                     args.recv_window
-                        .ok_or_else(|| anyhow::anyhow!("recv_window is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("recv-window is required"))?,
                 )
                 .start_time(args.start_time)
                 .end_time(args.end_time)

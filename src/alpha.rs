@@ -43,9 +43,7 @@ fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> 
         }
     }
 
-    let rest_conf = builder
-        .build()
-        .map_err(|err| Error::new(ErrorKind::Other, err))?;
+    let rest_conf = builder.build().map_err(Error::other)?;
 
     Ok(AlphaRestApi::from_config(rest_conf))
 }
@@ -192,13 +190,11 @@ async fn aggregated_trades(mut args: AggregatedTradesArgs) -> anyhow::Result<()>
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 AggregatedTradesParams::builder(
                     args.symbol
@@ -231,13 +227,11 @@ async fn full_depth(mut args: FullDepthArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 FullDepthParams::builder(
                     args.symbol
@@ -353,13 +347,11 @@ async fn ticker(mut args: TickerArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 TickerParams::builder(
                     args.symbol

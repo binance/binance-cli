@@ -43,9 +43,7 @@ fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> 
         }
     }
 
-    let rest_conf = builder
-        .build()
-        .map_err(|err| Error::new(ErrorKind::Other, err))?;
+    let rest_conf = builder.build().map_err(Error::other)?;
 
     Ok(StakingRestApi::from_config(rest_conf))
 }
@@ -1477,13 +1475,11 @@ async fn redeem_eth(mut args: RedeemEthArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal =
-                            Input::new().with_prompt("Input amount:").interact_text()?;
+                if args.interactive && args.amount.is_none() {
+                    let amount: rust_decimal::Decimal =
+                        Input::new().with_prompt("Input amount:").interact_text()?;
 
-                        args.amount = Some(amount);
-                    }
+                    args.amount = Some(amount);
                 }
                 RedeemEthParams::builder(
                     args.amount
@@ -1514,13 +1510,11 @@ async fn subscribe_eth_staking(mut args: SubscribeEthStakingArgs) -> anyhow::Res
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal =
-                            Input::new().with_prompt("Input amount:").interact_text()?;
+                if args.interactive && args.amount.is_none() {
+                    let amount: rust_decimal::Decimal =
+                        Input::new().with_prompt("Input amount:").interact_text()?;
 
-                        args.amount = Some(amount);
-                    }
+                    args.amount = Some(amount);
                 }
                 SubscribeEthStakingParams::builder(
                     args.amount
@@ -1550,13 +1544,11 @@ async fn wrap_beth(mut args: WrapBethArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal =
-                            Input::new().with_prompt("Input amount:").interact_text()?;
+                if args.interactive && args.amount.is_none() {
+                    let amount: rust_decimal::Decimal =
+                        Input::new().with_prompt("Input amount:").interact_text()?;
 
-                        args.amount = Some(amount);
-                    }
+                    args.amount = Some(amount);
                 }
                 WrapBethParams::builder(
                     args.amount
@@ -1589,18 +1581,16 @@ async fn get_on_chain_yields_locked_personal_left_quota(
                     io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
                 })?,
             None => {
-                if args.interactive {
-                    if args.project_id.is_none() {
-                        let project_id: String = Input::new()
-                            .with_prompt("Input project_id:")
-                            .interact_text()?;
+                if args.interactive && args.project_id.is_none() {
+                    let project_id: String = Input::new()
+                        .with_prompt("Input project_id:")
+                        .interact_text()?;
 
-                        args.project_id = Some(project_id);
-                    }
+                    args.project_id = Some(project_id);
                 }
                 GetOnChainYieldsLockedPersonalLeftQuotaParams::builder(
                     args.project_id
-                        .ok_or_else(|| anyhow::anyhow!("project_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("project-id is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -1781,7 +1771,7 @@ async fn get_on_chain_yields_locked_subscription_preview(
                 }
                 GetOnChainYieldsLockedSubscriptionPreviewParams::builder(
                     args.project_id
-                        .ok_or_else(|| anyhow::anyhow!("project_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("project-id is required"))?,
                     args.amount
                         .ok_or_else(|| anyhow::anyhow!("amount is required"))?,
                 )
@@ -1874,18 +1864,16 @@ async fn redeem_on_chain_yields_locked_product(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.position_id.is_none() {
-                        let position_id: String = Input::new()
-                            .with_prompt("Input position_id:")
-                            .interact_text()?;
+                if args.interactive && args.position_id.is_none() {
+                    let position_id: String = Input::new()
+                        .with_prompt("Input position_id:")
+                        .interact_text()?;
 
-                        args.position_id = Some(position_id);
-                    }
+                    args.position_id = Some(position_id);
                 }
                 RedeemOnChainYieldsLockedProductParams::builder(
                     args.position_id
-                        .ok_or_else(|| anyhow::anyhow!("position_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("position-id is required"))?,
                 )
                 .channel_id(args.channel_id)
                 .recv_window(args.recv_window)
@@ -1935,9 +1923,9 @@ async fn set_on_chain_yields_locked_auto_subscribe(
                 }
                 SetOnChainYieldsLockedAutoSubscribeParams::builder(
                     args.position_id
-                        .ok_or_else(|| anyhow::anyhow!("position_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("position-id is required"))?,
                     args.auto_subscribe
-                        .ok_or_else(|| anyhow::anyhow!("auto_subscribe is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("auto-subscribe is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -1977,7 +1965,7 @@ async fn set_on_chain_yields_locked_product_redeem_option(
                         args.position_id = Some(position_id);
                     }
                     if args.redeem_to.is_none() {
-                        let options = vec![
+                        let options = [
                             (
                                 "SPOT",
                                 SetOnChainYieldsLockedProductRedeemOptionRedeemToEnum::Spot,
@@ -2005,9 +1993,9 @@ async fn set_on_chain_yields_locked_product_redeem_option(
                 }
                 SetOnChainYieldsLockedProductRedeemOptionParams::builder(
                     args.position_id
-                        .ok_or_else(|| anyhow::anyhow!("position_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("position-id is required"))?,
                     args.redeem_to
-                        .ok_or_else(|| anyhow::anyhow!("redeem_to is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("redeem-to is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -2055,7 +2043,7 @@ async fn subscribe_on_chain_yields_locked_product(
                 }
                 SubscribeOnChainYieldsLockedProductParams::builder(
                     args.project_id
-                        .ok_or_else(|| anyhow::anyhow!("project_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("project-id is required"))?,
                     args.amount
                         .ok_or_else(|| anyhow::anyhow!("amount is required"))?,
                 )
@@ -2150,18 +2138,16 @@ async fn set_soft_staking(mut args: SetSoftStakingArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.soft_staking.is_none() {
-                        let soft_staking: bool = Input::new()
-                            .with_prompt("Input soft_staking:")
-                            .interact_text()?;
+                if args.interactive && args.soft_staking.is_none() {
+                    let soft_staking: bool = Input::new()
+                        .with_prompt("Input soft_staking:")
+                        .interact_text()?;
 
-                        args.soft_staking = Some(soft_staking);
-                    }
+                    args.soft_staking = Some(soft_staking);
                 }
                 SetSoftStakingParams::builder(
                     args.soft_staking
-                        .ok_or_else(|| anyhow::anyhow!("soft_staking is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("soft-staking is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -2264,31 +2250,29 @@ async fn get_boost_rewards_history(mut args: GetBoostRewardsHistoryArgs) -> anyh
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.r#type.is_none() {
-                        let options = vec![
-                            ("CLAIM", GetBoostRewardsHistoryTypeEnum::Claim),
-                            ("DISTRIBUTE", GetBoostRewardsHistoryTypeEnum::Distribute),
-                        ];
+                if args.interactive && args.r#type.is_none() {
+                    let options = [
+                        ("CLAIM", GetBoostRewardsHistoryTypeEnum::Claim),
+                        ("DISTRIBUTE", GetBoostRewardsHistoryTypeEnum::Distribute),
+                    ];
 
-                        let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
+                    let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
 
-                        let selected = Select::new()
-                            .with_prompt("Please select the r#type")
-                            .items(&labels)
-                            .default(0)
-                            .interact()?;
+                    let selected = Select::new()
+                        .with_prompt("Please select the r#type")
+                        .items(&labels)
+                        .default(0)
+                        .interact()?;
 
-                        let selected = options[selected].1.clone();
+                    let selected = options[selected].1.clone();
 
-                        println!("Selected option: {:?}", selected);
+                    println!("Selected option: {:?}", selected);
 
-                        args.r#type = Some(selected);
-                    }
+                    args.r#type = Some(selected);
                 }
                 GetBoostRewardsHistoryParams::builder(
                     args.r#type
-                        .ok_or_else(|| anyhow::anyhow!("r#type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("rtype is required"))?,
                 )
                 .start_time(args.start_time)
                 .end_time(args.end_time)
@@ -2422,13 +2406,11 @@ async fn redeem_sol(mut args: RedeemSolArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal =
-                            Input::new().with_prompt("Input amount:").interact_text()?;
+                if args.interactive && args.amount.is_none() {
+                    let amount: rust_decimal::Decimal =
+                        Input::new().with_prompt("Input amount:").interact_text()?;
 
-                        args.amount = Some(amount);
-                    }
+                    args.amount = Some(amount);
                 }
                 RedeemSolParams::builder(
                     args.amount
@@ -2481,13 +2463,11 @@ async fn subscribe_sol_staking(mut args: SubscribeSolStakingArgs) -> anyhow::Res
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.amount.is_none() {
-                        let amount: rust_decimal::Decimal =
-                            Input::new().with_prompt("Input amount:").interact_text()?;
+                if args.interactive && args.amount.is_none() {
+                    let amount: rust_decimal::Decimal =
+                        Input::new().with_prompt("Input amount:").interact_text()?;
 
-                        args.amount = Some(amount);
-                    }
+                    args.amount = Some(amount);
                 }
                 SubscribeSolStakingParams::builder(
                     args.amount

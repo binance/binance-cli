@@ -43,9 +43,7 @@ fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> 
         }
     }
 
-    let rest_conf = builder
-        .build()
-        .map_err(|err| Error::new(ErrorKind::Other, err))?;
+    let rest_conf = builder.build().map_err(Error::other)?;
 
     Ok(DualInvestmentRestApi::from_config(rest_conf))
 }
@@ -72,24 +70,6 @@ option), you should input: `optionType: PUT`, `exercisedCoin: BNB`, `investCoin:
     page_size: Option<i64>,
     #[arg(help = r#"Page index"#, long)]
     page_index: Option<i64>,
-    #[arg(help = r#"Request validity window in milliseconds"#, long)]
-    recv_window: Option<i64>,
-    #[arg(short = 'i', long)]
-    interactive: bool,
-    #[arg(help = r#"Send all fields as JSON"#, long)]
-    json: Option<String>,
-    #[arg(help = r#"Select a profile"#, long)]
-    profile: Option<String>,
-}
-#[derive(Args, Debug)]
-struct ChangeAutoCompoundStatusArgs {
-    #[arg(help = r#"Get positionId from `/sapi/v1/dci/product/positions`"#, long)]
-    position_id: Option<String>,
-    #[arg(
-        help = r#"`NONE`: switch off the plan, `STANDARD`: standard plan, `ADVANCED`: advanced plan"#,
-        long
-    )]
-    auto_compound_plan: Option<ChangeAutoCompoundStatusAutoCompoundPlanEnum>,
     #[arg(help = r#"Request validity window in milliseconds"#, long)]
     recv_window: Option<i64>,
     #[arg(short = 'i', long)]
@@ -141,11 +121,6 @@ struct SubscribeDualInvestmentProductsArgs {
     order_id: Option<String>,
     #[arg(help = r#"the amount for subscribing"#, long)]
     deposit_amount: Option<rust_decimal::Decimal>,
-    #[arg(
-        help = r#"`NONE`: switch off the plan, `STANDARD`: standard plan, `ADVANCED`: advanced plan"#,
-        long
-    )]
-    auto_compound_plan: Option<SubscribeDualInvestmentProductsAutoCompoundPlanEnum>,
     #[arg(help = r#"Request validity window in milliseconds"#, long)]
     recv_window: Option<i64>,
     #[arg(short = 'i', long)]
@@ -164,17 +139,6 @@ pub enum DualInvestmentCommands {
 Weight(IP): 1"#, false),
     )]
     GetDualInvestmentProductList(GetDualInvestmentProductListArgs),
-    #[command(
-        about = decode_selected_entities(r#"Change Auto-Compound status
-
-Weight(IP): 1
-
-Security Type: USER_DATA
-
-Notes:
-- 15:31 ~ 16:00 UTC+8: This function is disabled."#, false),
-    )]
-    ChangeAutoCompoundStatus(ChangeAutoCompoundStatusArgs),
     #[command(
         about = decode_selected_entities(r#"Check Dual Investment accounts
 
@@ -212,10 +176,6 @@ pub async fn handle_dual_investment_command(command: DualInvestmentCommands) -> 
             get_dual_investment_product_list(args).await
         }
 
-        DualInvestmentCommands::ChangeAutoCompoundStatus(args) => {
-            change_auto_compound_status(args).await
-        }
-
         DualInvestmentCommands::CheckDualInvestmentAccounts(args) => {
             check_dual_investment_accounts(args).await
         }
@@ -246,7 +206,7 @@ async fn get_dual_investment_product_list(
             None => {
                 if args.interactive {
                     if args.option_type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("CALL", GetDualInvestmentProductListOptionTypeEnum::Call),
                             ("PUT", GetDualInvestmentProductListOptionTypeEnum::Put),
                         ];
@@ -282,11 +242,11 @@ async fn get_dual_investment_product_list(
                 }
                 GetDualInvestmentProductListParams::builder(
                     args.option_type
-                        .ok_or_else(|| anyhow::anyhow!("option_type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("option-type is required"))?,
                     args.exercised_coin
-                        .ok_or_else(|| anyhow::anyhow!("exercised_coin is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("exercised-coin is required"))?,
                     args.invest_coin
-                        .ok_or_else(|| anyhow::anyhow!("invest_coin is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("invest-coin is required"))?,
                 )
                 .page_size(args.page_size)
                 .page_index(args.page_index)
@@ -298,74 +258,6 @@ async fn get_dual_investment_product_list(
 
     // Make the API call
     let response = rest_client.get_dual_investment_product_list(params).await?;
-
-    let data = response.data().await?;
-    println!("{}", serde_json::to_string_pretty(&data).unwrap());
-    Ok(())
-}
-
-async fn change_auto_compound_status(mut args: ChangeAutoCompoundStatusArgs) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref(), true)?;
-
-    let params = match read_stdin_as::<ChangeAutoCompoundStatusParams>() {
-        Some(params) => params,
-        None => match args.json {
-            Some(json) => {
-                read_json_as::<ChangeAutoCompoundStatusParams>(json).ok_or_else(|| {
-                    io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
-                })?
-            }
-            None => {
-                if args.interactive {
-                    if args.position_id.is_none() {
-                        let position_id: String = Input::new()
-                            .with_prompt("Input position_id:")
-                            .interact_text()?;
-
-                        args.position_id = Some(position_id);
-                    }
-                    if args.auto_compound_plan.is_none() {
-                        let options = vec![
-                            ("NONE", ChangeAutoCompoundStatusAutoCompoundPlanEnum::None),
-                            (
-                                "STANDARD",
-                                ChangeAutoCompoundStatusAutoCompoundPlanEnum::Standard,
-                            ),
-                            (
-                                "ADVANCED",
-                                ChangeAutoCompoundStatusAutoCompoundPlanEnum::Advanced,
-                            ),
-                        ];
-
-                        let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
-
-                        let selected = Select::new()
-                            .with_prompt("Please select the auto_compound_plan")
-                            .items(&labels)
-                            .default(0)
-                            .interact()?;
-
-                        let selected = options[selected].1.clone();
-
-                        println!("Selected option: {:?}", selected);
-
-                        args.auto_compound_plan = Some(selected);
-                    }
-                }
-                ChangeAutoCompoundStatusParams::builder(
-                    args.position_id
-                        .ok_or_else(|| anyhow::anyhow!("position_id is required"))?,
-                    args.auto_compound_plan
-                        .ok_or_else(|| anyhow::anyhow!("auto_compound_plan is required"))?,
-                )
-                .recv_window(args.recv_window)
-                .build()?
-            }
-        },
-    };
-
-    // Make the API call
-    let response = rest_client.change_auto_compound_status(params).await?;
 
     let data = response.data().await?;
     println!("{}", serde_json::to_string_pretty(&data).unwrap());
@@ -432,73 +324,48 @@ async fn subscribe_dual_investment_products(
 ) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
-    let params =
-        match read_stdin_as::<SubscribeDualInvestmentProductsParams>() {
-            Some(params) => params,
-            None => match args.json {
-                Some(json) => read_json_as::<SubscribeDualInvestmentProductsParams>(json)
-                    .ok_or_else(|| {
-                        io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
-                    })?,
-                None => {
-                    if args.interactive {
-                        if args.id.is_none() {
-                            let id: String =
-                                Input::new().with_prompt("Input id:").interact_text()?;
+    let params = match read_stdin_as::<SubscribeDualInvestmentProductsParams>() {
+        Some(params) => params,
+        None => match args.json {
+            Some(json) => {
+                read_json_as::<SubscribeDualInvestmentProductsParams>(json).ok_or_else(|| {
+                    io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
+                })?
+            }
+            None => {
+                if args.interactive {
+                    if args.id.is_none() {
+                        let id: String = Input::new().with_prompt("Input id:").interact_text()?;
 
-                            args.id = Some(id);
-                        }
-                        if args.order_id.is_none() {
-                            let order_id: String = Input::new()
-                                .with_prompt("Input order_id:")
-                                .interact_text()?;
-
-                            args.order_id = Some(order_id);
-                        }
-                        if args.deposit_amount.is_none() {
-                            let deposit_amount: rust_decimal::Decimal = Input::new()
-                                .with_prompt("Input deposit_amount:")
-                                .interact_text()?;
-
-                            args.deposit_amount = Some(deposit_amount);
-                        }
-                        if args.auto_compound_plan.is_none() {
-                            let options =
-                                vec![
-                        ("NONE", SubscribeDualInvestmentProductsAutoCompoundPlanEnum::None),
-                        ("STANDARD", SubscribeDualInvestmentProductsAutoCompoundPlanEnum::Standard),
-                        ("ADVANCED", SubscribeDualInvestmentProductsAutoCompoundPlanEnum::Advanced),
-                    ];
-
-                            let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
-
-                            let selected = Select::new()
-                                .with_prompt("Please select the auto_compound_plan")
-                                .items(&labels)
-                                .default(0)
-                                .interact()?;
-
-                            let selected = options[selected].1.clone();
-
-                            println!("Selected option: {:?}", selected);
-
-                            args.auto_compound_plan = Some(selected);
-                        }
+                        args.id = Some(id);
                     }
-                    SubscribeDualInvestmentProductsParams::builder(
-                        args.id.ok_or_else(|| anyhow::anyhow!("id is required"))?,
-                        args.order_id
-                            .ok_or_else(|| anyhow::anyhow!("order_id is required"))?,
-                        args.deposit_amount
-                            .ok_or_else(|| anyhow::anyhow!("deposit_amount is required"))?,
-                        args.auto_compound_plan
-                            .ok_or_else(|| anyhow::anyhow!("auto_compound_plan is required"))?,
-                    )
-                    .recv_window(args.recv_window)
-                    .build()?
+                    if args.order_id.is_none() {
+                        let order_id: String = Input::new()
+                            .with_prompt("Input order_id:")
+                            .interact_text()?;
+
+                        args.order_id = Some(order_id);
+                    }
+                    if args.deposit_amount.is_none() {
+                        let deposit_amount: rust_decimal::Decimal = Input::new()
+                            .with_prompt("Input deposit_amount:")
+                            .interact_text()?;
+
+                        args.deposit_amount = Some(deposit_amount);
+                    }
                 }
-            },
-        };
+                SubscribeDualInvestmentProductsParams::builder(
+                    args.id.ok_or_else(|| anyhow::anyhow!("id is required"))?,
+                    args.order_id
+                        .ok_or_else(|| anyhow::anyhow!("order-id is required"))?,
+                    args.deposit_amount
+                        .ok_or_else(|| anyhow::anyhow!("deposit-amount is required"))?,
+                )
+                .recv_window(args.recv_window)
+                .build()?
+            }
+        },
+    };
 
     // Make the API call
     let response = rest_client

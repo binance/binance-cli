@@ -35,13 +35,13 @@ binance-cli vip-loan query-vip-loan-fixed-rate-market --loan-coin USDT --duratio
 ### [POST /sapi/v1/loan/vip/borrow](https://developers.binance.com/en/docs/catalog/investment-and-services-vip-loan/api/rest-api/trade#vip-loan-borrow) - VIP Loan Borrow (TRADE)
 
 ```bash
-binance-cli vip-loan vip-loan-borrow --loan-account-id 1 --loan-coin BTC --loan-amount 1.0 --collateral-account-id 12345678,12345678,12345678 --collateral-coin BUSD,USDT,ETH --is-flexible-rate true --loan-term 30 --recv-window 5000
+binance-cli vip-loan vip-loan-borrow --loan-account-id 1 --loan-coin BTC --loan-amount 1.0 --collateral-account-id 12345678,12345678,12345678 --collateral-coin BUSD,USDT,USDT-Earn,ETH --is-flexible-rate true --loan-term 30 --recv-window 5000
 ```
 
 ### [POST /sapi/v1/loan/vip/fixed/borrow](https://developers.binance.com/en/docs/catalog/investment-and-services-vip-loan/api/rest-api/trade#vip-loan-fixed-rate-borrow) - VIP Loan Fixed Rate Borrow (TRADE)
 
 ```bash
-binance-cli vip-loan vip-loan-fixed-rate-borrow --supply-request 1212:0.12:100;3434:0.13:50 --borrow-coin BUSD --loan-term 30 --borrow-uid 12345678 --collateral-coin BNB,ETH,BTC --collateral-account-id 12345,67890,13579 --auto-repay true --recv-window 5000
+binance-cli vip-loan vip-loan-fixed-rate-borrow --supply-request 1212:0.12:100;3434:0.13:50 --borrow-coin BUSD --loan-term 30 --borrow-uid 12345678 --collateral-coin BNB,BNB-Earn,ETH,BTC --collateral-account-id 12345,67890,13579 --auto-repay true --recv-window 5000
 ```
 
 ### [POST /sapi/v1/loan/vip/renew](https://developers.binance.com/en/docs/catalog/investment-and-services-vip-loan/api/rest-api/trade#vip-loan-renew) - VIP Loan Renew (TRADE)

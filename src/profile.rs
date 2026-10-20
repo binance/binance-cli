@@ -280,7 +280,7 @@ fn create_profile(mut args: CreateArgs) -> Result<()> {
 
             let selected = Select::new()
                 .with_prompt("Please choose the environment")
-                .items(&choices)
+                .items(choices)
                 .default(0)
                 .interact()?;
 

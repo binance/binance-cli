@@ -57,7 +57,7 @@ binance-cli futures-coin get-futures-transaction-history-download-link-by-id --d
 ### [GET /dapi/v1/income](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-coin-m-futures/api/rest-api/account#get-income-history) - Get Income History (USER_DATA)
 
 ```bash
-binance-cli futures-coin get-income-history --symbol BTCUSDT --income-type TRANSFER --start-time 1623319461670 --end-time 1641782889000 --page 1 --limit 30 --recv-window 5000
+binance-cli futures-coin get-income-history --symbol BTCUSDT --income-type TRANSFER --start-time 1623319461670 --end-time 1641782889000 --limit 30 --recv-window 5000
 ```
 
 ### [GET /dapi/v1/leverageBracket](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-coin-m-futures/api/rest-api/account#notional-bracket-for-pair) - Notional Bracket for Pair (USER_DATA)
@@ -143,7 +143,7 @@ binance-cli futures-coin kline-candlestick-data --symbol BTCUSD --interval INTER
 ### [GET /futures/data/globalLongShortAccountRatio](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-coin-m-futures/api/rest-api/market-data#long-short-ratio) - Long/Short Ratio
 
 ```bash
-binance-cli futures-coin long-short-ratio --pair pair_example --period PERIOD_5m --limit 30 --start-time 1623319461670 --end-time 1641782889000
+binance-cli futures-coin long-short-ratio --pair pair_example --period PERIOD_5m --contract-type PERPETUAL --limit 30 --start-time 1623319461670 --end-time 1641782889000
 ```
 
 ### [GET /dapi/v1/markPriceKlines](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-coin-m-futures/api/rest-api/market-data#mark-price-kline-candlestick-data) - Mark Price Kline/Candlestick Data
@@ -167,7 +167,7 @@ binance-cli futures-coin open-interest --symbol BTCUSD_200626
 ### [GET /futures/data/openInterestHist](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-coin-m-futures/api/rest-api/market-data#open-interest-statistics) - Open Interest Statistics
 
 ```bash
-binance-cli futures-coin open-interest-statistics --pair BTCUSD --contract-type PERPETUAL --period PERIOD_5m --limit 30 --start-time 1623319461670 --end-time 1641782889000
+binance-cli futures-coin open-interest-statistics --pair BTCUSD --period PERIOD_5m --contract-type PERPETUAL --limit 30 --start-time 1623319461670 --end-time 1641782889000
 ```
 
 ### [GET /dapi/v1/depth](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-coin-m-futures/api/rest-api/market-data#order-book) - Order Book
@@ -227,13 +227,13 @@ binance-cli futures-coin ticker24hr-price-change-statistics --symbol BTCUSD_2009
 ### [GET /futures/data/topLongShortAccountRatio](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-coin-m-futures/api/rest-api/market-data#top-trader-long-short-ratio-accounts) - Top Trader Long/Short Account Ratio
 
 ```bash
-binance-cli futures-coin top-trader-long-short-ratio-accounts --symbol symbol_example --period PERIOD_5m --limit 30 --start-time 1623319461670 --end-time 1641782889000
+binance-cli futures-coin top-trader-long-short-ratio-accounts --pair BTCUSD --period PERIOD_5m --contract-type PERPETUAL --limit 30 --start-time 1623319461670 --end-time 1641782889000
 ```
 
 ### [GET /futures/data/topLongShortPositionRatio](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-coin-m-futures/api/rest-api/market-data#top-trader-long-short-ratio-positions) - Top Trader Long/Short Position Ratio
 
 ```bash
-binance-cli futures-coin top-trader-long-short-ratio-positions --pair BTCUSD --period PERIOD_5m --limit 30 --start-time 1623319461670 --end-time 1641782889000
+binance-cli futures-coin top-trader-long-short-ratio-positions --pair BTCUSD --period PERIOD_5m --contract-type PERPETUAL --limit 30 --start-time 1623319461670 --end-time 1641782889000
 ```
 
 ## Trade

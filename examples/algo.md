@@ -3,7 +3,7 @@
 ### [DELETE /sapi/v1/algo/futures/order](https://developers.binance.com/en/docs/catalog/advanced-trading-algo-trading/api/rest-api/future-algo#cancel-algo-order-future-algo) - Cancel Futures Algo Order (TRADE)
 
 ```bash
-binance-cli algo cancel-algo-order-future-algo --algo-id 1 --recv-window 5000
+binance-cli algo cancel-algo-order-future-algo --algo-id 1 --client-algo-id 65ce1630101a480b85915d7e11fd5078 --recv-window 5000
 ```
 
 ### [GET /sapi/v1/algo/futures/openOrders](https://developers.binance.com/en/docs/catalog/advanced-trading-algo-trading/api/rest-api/future-algo#query-current-algo-open-orders-future-algo) - Query Current Futures Algo Open Orders (USER_DATA)
@@ -41,7 +41,7 @@ binance-cli algo volume-participation-future-algo --symbol BTCUSDT --side BUY --
 ### [DELETE /sapi/v1/algo/spot/order](https://developers.binance.com/en/docs/catalog/advanced-trading-algo-trading/api/rest-api/spot-algo#cancel-algo-order-spot-algo) - Cancel Spot Algo Order (TRADE)
 
 ```bash
-binance-cli algo cancel-algo-order-spot-algo --algo-id 14511 --recv-window 5000
+binance-cli algo cancel-algo-order-spot-algo --algo-id 14511 --client-algo-id 65ce1630101a480b85915d7e11fd5078 --recv-window 5000
 ```
 
 ### [GET /sapi/v1/algo/spot/openOrders](https://developers.binance.com/en/docs/catalog/advanced-trading-algo-trading/api/rest-api/spot-algo#query-current-algo-open-orders-spot-algo) - Query Current Spot Algo Open Orders (USER_DATA)
@@ -66,4 +66,10 @@ binance-cli algo query-sub-orders-spot-algo --algo-id 1 --page 1 --page-size 10 
 
 ```bash
 binance-cli algo time-weighted-average-price-spot-algo --symbol BTCUSDT --side BUY --quantity 1 --duration 5000 --client-algo-id 1 --limit-price 1
+```
+
+### [POST /sapi/v1/algo/spot/newOrderVp](https://developers.binance.com/en/docs/catalog/advanced-trading-algo-trading/api/rest-api/spot-algo#volume-participation) - Volume Participation (VP) New Order (TRADE)
+
+```bash
+binance-cli algo volume-participation --symbol BTCUSDT --side BUY --quantity 1 --urgency LOW --client-algo-id 1 --vp-time-limit 5000 --recv-window 5000
 ```

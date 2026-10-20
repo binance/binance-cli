@@ -43,9 +43,7 @@ fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> 
         }
     }
 
-    let rest_conf = builder
-        .build()
-        .map_err(|err| Error::new(ErrorKind::Other, err))?;
+    let rest_conf = builder.build().map_err(Error::other)?;
 
     Ok(SimpleEarnRestApi::from_config(rest_conf))
 }
@@ -1601,7 +1599,7 @@ async fn redeem_bfusd(mut args: RedeemBfusdArgs) -> anyhow::Result<()> {
                         args.amount = Some(amount);
                     }
                     if args.r#type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("FAST", RedeemBfusdTypeEnum::Fast),
                             ("STANDARD", RedeemBfusdTypeEnum::Standard),
                         ];
@@ -1625,7 +1623,7 @@ async fn redeem_bfusd(mut args: RedeemBfusdArgs) -> anyhow::Result<()> {
                     args.amount
                         .ok_or_else(|| anyhow::anyhow!("amount is required"))?,
                     args.r#type
-                        .ok_or_else(|| anyhow::anyhow!("r#type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("rtype is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -1727,18 +1725,16 @@ async fn get_flexible_personal_left_quota(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.product_id.is_none() {
-                        let product_id: String = Input::new()
-                            .with_prompt("Input product_id:")
-                            .interact_text()?;
+                if args.interactive && args.product_id.is_none() {
+                    let product_id: String = Input::new()
+                        .with_prompt("Input product_id:")
+                        .interact_text()?;
 
-                        args.product_id = Some(product_id);
-                    }
+                    args.product_id = Some(product_id);
                 }
                 GetFlexiblePersonalLeftQuotaParams::builder(
                     args.product_id
-                        .ok_or_else(|| anyhow::anyhow!("product_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("product-id is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -1880,7 +1876,7 @@ async fn get_flexible_subscription_preview(
                 }
                 GetFlexibleSubscriptionPreviewParams::builder(
                     args.product_id
-                        .ok_or_else(|| anyhow::anyhow!("product_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("product-id is required"))?,
                     args.amount
                         .ok_or_else(|| anyhow::anyhow!("amount is required"))?,
                 )
@@ -1948,18 +1944,16 @@ async fn get_locked_personal_left_quota(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.project_id.is_none() {
-                        let project_id: String = Input::new()
-                            .with_prompt("Input project_id:")
-                            .interact_text()?;
+                if args.interactive && args.project_id.is_none() {
+                    let project_id: String = Input::new()
+                        .with_prompt("Input project_id:")
+                        .interact_text()?;
 
-                        args.project_id = Some(project_id);
-                    }
+                    args.project_id = Some(project_id);
                 }
                 GetLockedPersonalLeftQuotaParams::builder(
                     args.project_id
-                        .ok_or_else(|| anyhow::anyhow!("project_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("project-id is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -2097,7 +2091,7 @@ async fn get_locked_subscription_preview(
                 }
                 GetLockedSubscriptionPreviewParams::builder(
                     args.project_id
-                        .ok_or_else(|| anyhow::anyhow!("project_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("project-id is required"))?,
                     args.amount
                         .ok_or_else(|| anyhow::anyhow!("amount is required"))?,
                 )
@@ -2159,18 +2153,16 @@ async fn get_rate_history(mut args: GetRateHistoryArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.product_id.is_none() {
-                        let product_id: String = Input::new()
-                            .with_prompt("Input product_id:")
-                            .interact_text()?;
+                if args.interactive && args.product_id.is_none() {
+                    let product_id: String = Input::new()
+                        .with_prompt("Input product_id:")
+                        .interact_text()?;
 
-                        args.product_id = Some(product_id);
-                    }
+                    args.product_id = Some(product_id);
                 }
                 GetRateHistoryParams::builder(
                     args.product_id
-                        .ok_or_else(|| anyhow::anyhow!("product_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("product-id is required"))?,
                 )
                 .apr_period(args.apr_period)
                 .start_time(args.start_time)
@@ -2265,18 +2257,16 @@ async fn redeem_flexible_product(mut args: RedeemFlexibleProductArgs) -> anyhow:
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.product_id.is_none() {
-                        let product_id: String = Input::new()
-                            .with_prompt("Input product_id:")
-                            .interact_text()?;
+                if args.interactive && args.product_id.is_none() {
+                    let product_id: String = Input::new()
+                        .with_prompt("Input product_id:")
+                        .interact_text()?;
 
-                        args.product_id = Some(product_id);
-                    }
+                    args.product_id = Some(product_id);
                 }
                 RedeemFlexibleProductParams::builder(
                     args.product_id
-                        .ok_or_else(|| anyhow::anyhow!("product_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("product-id is required"))?,
                 )
                 .redeem_all(args.redeem_all)
                 .amount(args.amount)
@@ -2305,18 +2295,16 @@ async fn redeem_locked_product(mut args: RedeemLockedProductArgs) -> anyhow::Res
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.position_id.is_none() {
-                        let position_id: String = Input::new()
-                            .with_prompt("Input position_id:")
-                            .interact_text()?;
+                if args.interactive && args.position_id.is_none() {
+                    let position_id: String = Input::new()
+                        .with_prompt("Input position_id:")
+                        .interact_text()?;
 
-                        args.position_id = Some(position_id);
-                    }
+                    args.position_id = Some(position_id);
                 }
                 RedeemLockedProductParams::builder(
                     args.position_id
-                        .ok_or_else(|| anyhow::anyhow!("position_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("position-id is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -2362,9 +2350,9 @@ async fn set_flexible_auto_subscribe(mut args: SetFlexibleAutoSubscribeArgs) -> 
                 }
                 SetFlexibleAutoSubscribeParams::builder(
                     args.product_id
-                        .ok_or_else(|| anyhow::anyhow!("product_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("product-id is required"))?,
                     args.auto_subscribe
-                        .ok_or_else(|| anyhow::anyhow!("auto_subscribe is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("auto-subscribe is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -2408,9 +2396,9 @@ async fn set_locked_auto_subscribe(mut args: SetLockedAutoSubscribeArgs) -> anyh
                 }
                 SetLockedAutoSubscribeParams::builder(
                     args.position_id
-                        .ok_or_else(|| anyhow::anyhow!("position_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("position-id is required"))?,
                     args.auto_subscribe
-                        .ok_or_else(|| anyhow::anyhow!("auto_subscribe is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("auto-subscribe is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -2449,7 +2437,7 @@ async fn set_locked_product_redeem_option(
                         args.position_id = Some(position_id);
                     }
                     if args.redeem_to.is_none() {
-                        let options = vec![
+                        let options = [
                             ("SPOT", SetLockedProductRedeemOptionRedeemToEnum::Spot),
                             (
                                 "FLEXIBLE",
@@ -2474,9 +2462,9 @@ async fn set_locked_product_redeem_option(
                 }
                 SetLockedProductRedeemOptionParams::builder(
                     args.position_id
-                        .ok_or_else(|| anyhow::anyhow!("position_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("position-id is required"))?,
                     args.redeem_to
-                        .ok_or_else(|| anyhow::anyhow!("redeem_to is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("redeem-to is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -2544,7 +2532,7 @@ async fn subscribe_flexible_product(mut args: SubscribeFlexibleProductArgs) -> a
                 }
                 SubscribeFlexibleProductParams::builder(
                     args.product_id
-                        .ok_or_else(|| anyhow::anyhow!("product_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("product-id is required"))?,
                     args.amount
                         .ok_or_else(|| anyhow::anyhow!("amount is required"))?,
                 )
@@ -2591,7 +2579,7 @@ async fn subscribe_locked_product(mut args: SubscribeLockedProductArgs) -> anyho
                 }
                 SubscribeLockedProductParams::builder(
                     args.project_id
-                        .ok_or_else(|| anyhow::anyhow!("project_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("project-id is required"))?,
                     args.amount
                         .ok_or_else(|| anyhow::anyhow!("amount is required"))?,
                 )
@@ -2791,7 +2779,7 @@ async fn redeem_rwusd(mut args: RedeemRwusdArgs) -> anyhow::Result<()> {
                         args.amount = Some(amount);
                     }
                     if args.r#type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("FAST", RedeemRwusdTypeEnum::Fast),
                             ("STANDARD", RedeemRwusdTypeEnum::Standard),
                         ];
@@ -2815,7 +2803,7 @@ async fn redeem_rwusd(mut args: RedeemRwusdArgs) -> anyhow::Result<()> {
                     args.amount
                         .ok_or_else(|| anyhow::anyhow!("amount is required"))?,
                     args.r#type
-                        .ok_or_else(|| anyhow::anyhow!("r#type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("rtype is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -2843,7 +2831,7 @@ async fn subscribe_rwusd(mut args: SubscribeRwusdArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.asset.is_none() {
-                        let options = vec![
+                        let options = [
                             ("USDT", SubscribeRwusdAssetEnum::Usdt),
                             ("USDC", SubscribeRwusdAssetEnum::Usdc),
                         ];

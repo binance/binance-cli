@@ -60,7 +60,7 @@ binance-cli spot kline-offset --symbol bnbusdt --interval INTERVAL_1s --id e9d6b
 binance-cli spot mini-ticker --symbol bnbusdt --id e9d6b4349871b40611412680b3445fac
 ```
 
-### [partial_book_depth](https://developers.binance.com/en/docs/catalog/core-trading-spot-trading/api/ws-streams/~#partial-book-depth) - WebSocket Partial Book Depth Streams
+### [partial_book_depth](https://developers.binance.com/en/docs/catalog/core-trading-spot-trading/api/ws-streams/~#partial-book-depth) - Partial Book Depth Streams
 
 ```bash
 binance-cli spot partial-book-depth --symbol bnbusdt --levels LEVELS_5 --id e9d6b4349871b40611412680b3445fac --update-speed UPDATE_SPEED_100ms

@@ -121,7 +121,7 @@ binance-cli sub-account get-detail-on-sub-accounts-margin-account --email 123@te
 ### [GET /sapi/v1/sub-account/futures/move-position](https://developers.binance.com/en/docs/catalog/vip-and-institutional-sub-account/api/rest-api/asset-management#get-move-position-history-for-sub-account) - Get Move Position History for Sub-account (For Master Account) (USER_DATA)
 
 ```bash
-binance-cli sub-account get-move-position-history-for-sub-account --symbol BTCUSDT --page 1 --rows 1 --start-time 1623319461670 --end-time 1641782889000 --recv-window 5000
+binance-cli sub-account get-move-position-history-for-sub-account --symbol BTCUSDT --page 1 --rows 1 --product-type UM --start-time 1623319461670 --end-time 1641782889000 --recv-window 5000
 ```
 
 ### [GET /sapi/v1/capital/deposit/subAddress](https://developers.binance.com/en/docs/catalog/vip-and-institutional-sub-account/api/rest-api/asset-management#get-sub-account-deposit-address) - Get Sub-account Deposit Address (For Master Account) (USER_DATA)

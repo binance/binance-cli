@@ -43,9 +43,7 @@ fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> 
         }
     }
 
-    let rest_conf = builder
-        .build()
-        .map_err(|err| Error::new(ErrorKind::Other, err))?;
+    let rest_conf = builder.build().map_err(Error::other)?;
 
     Ok(MarginTradingRestApi::from_config(rest_conf))
 }
@@ -1073,6 +1071,19 @@ struct QueryMarginAccountsOpenOrdersArgs {
     profile: Option<String>,
 }
 #[derive(Args, Debug)]
+struct QueryMarginAccountsOpenOtootocoOrderListsArgs {
+    #[arg(help = r#""#, long)]
+    symbol: Option<String>,
+    #[arg(help = r#""#, long)]
+    recv_window: Option<i64>,
+    #[arg(short = 'i', long)]
+    interactive: bool,
+    #[arg(help = r#"Send all fields as JSON"#, long)]
+    json: Option<String>,
+    #[arg(help = r#"Select a profile"#, long)]
+    profile: Option<String>,
+}
+#[derive(Args, Debug)]
 struct QueryMarginAccountsOrderArgs {
     #[arg(help = r#""#, long)]
     symbol: Option<String>,
@@ -1248,7 +1259,7 @@ Weight(UID): 3000, 1 times/min per IP
 Security Type: USER_DATA
 
 Notes:
-- The margin level need higher than the initial risk ratio of adjusted leverage, the initial risk ratio of 3x is 1.5 , the initial risk ratio of 5x is 1.25; The detail conditions on how to switch between Cross Margin Classic and Cross Margin Pro can refer to [the FAQ](https://www.binance.com/en/support/faq/how-to-activate-the-cross-margin-pro-mode-on-binance-e27786da05e743a694b8c625b3bc475d)."#, false),
+- The margin level need higher than the initial risk ratio of adjusted leverage, the initial risk ratio of 3x is 1.5 , the initial risk ratio of 5x is 1.25; The detail conditions on how to switch between Cross Margin Classic and Cross Margin Pro can refer to the FAQ."#, false),
     )]
     AdjustCrossMarginMaxLeverage(AdjustCrossMarginMaxLeverageArgs),
     #[command(
@@ -1295,8 +1306,21 @@ Notes:
 
 - The time between startTime and endTime cannot be longer than 7 days.
 
-- If fromId is set, the data with id > fromId will be returned.
-Otherwise the latest data will be returned
+- If both startTime and endTime are omitted, the most recent 7 days are
+queried (endTime defaults to the current time, and startTime to the
+current time minus 7 days).
+
+- If startTime is provided without endTime, endTime defaults to
+startTime plus 7 days.
+
+- If endTime is provided without startTime, startTime defaults to
+endTime minus 7 days.
+
+- If fromId is set, the data with id > fromId within the queried time
+range will be returned. Otherwise the latest data within that range will
+be returned. fromId does not extend the time range; to retrieve older
+records, move startTime and endTime backwards in windows of up to 7
+days.
 
 - To query isolated data, Symbol needs to be entered."#, false),
     )]
@@ -1399,7 +1423,14 @@ balance"#, false),
 
 Weight(UID): 1500
 
-Security Type: USER_DATA"#, false),
+Security Type: USER_DATA
+
+Notes:
+- `-3045 INSUFFICIENT_INVENTORY`: returned when system borrowable inventory is below the requested amount, or when inventory is severely insufficient (all borrow requests rejected regardless of size). Monitor system asset availability and adjust borrow strategy accordingly.
+- `-3006 EXCEED_MAX_BORROWABLE`: borrow amount exceeds your current max borrowable limit. Query `GET /sapi/v1/margin/maxBorrowable` and adjust the request.
+- `-3012 ASSET_ADMIN_BAN_BORROW`: this asset does not currently support borrowing. Query `GET /sapi/v1/margin/allAssets` for asset borrow availability.
+- `-3015 REPAY_EXCEED_LIABILITY`: returned in two scenarios — (1) repay amount exceeds your outstanding liability, or (2) the remaining unpaid debt after this repayment would fall below Binance's minimum threshold. Adjust the repay amount accordingly.
+- `-3007 HAS_PENDING_TRANSACTION`: a borrow/repay transaction is already in progress on this account. Requests are processed in submission order across all assets, and an in-flight request briefly blocks subsequent ones. Typical processing time is ~100ms; space consecutive requests by at least 100ms. Auto-repay orders can also fail silently for this reason — verify outstanding liability after an auto-repay executes."#, false),
     )]
     MarginAccountBorrowRepay(MarginAccountBorrowRepayArgs),
     #[command(
@@ -1438,7 +1469,7 @@ Security Type: USER_DATA
 
 Notes:
 - If isolatedSymbol is not sent, crossed margin data will be sent.
-- `borrowLimit` is also available from [https://www.binance.com/en/margin-fee](https://www.binance.com/en/margin-fee)"#, false),
+- `borrowLimit` is also available from https://www.binance.com/en/margin-fee"#, false),
     )]
     QueryMaxBorrow(QueryMaxBorrowArgs),
     #[command(
@@ -1566,12 +1597,12 @@ Security Type: MARKET_DATA"#, false),
     #[command(
         about = decode_selected_entities(r#"**Eligibility**
 
-- Binance Margin offers low-latency trading through a [special key](https://www.binance.com/en/support/faq/frequently-asked-questions-on-margin-special-api-key-3208663e900d4d2e9fec4140e1832f4e), available exclusively to users with VIP level 7 or higher.
+- Binance Margin offers low-latency trading through a special key, available exclusively to users with VIP level 7 or higher.
 - If you are VIP level 6 or below, please contact your VIP manager for eligibility criterias.
 - All new Margin Special Key users are required to read, understand, and agree to the Margin Special Key Supplemental Product Terms at the master account level before creating a Margin Special Key.
 - Once signed at the master account level, the agreement applies to all sub-accounts. The master account and all sub-accounts (Cross Margin Classic and Portfolio Margin Pro) are authorized to create a Margin Special Key and are subject to the LiquidationLoan policy.
 
-For more information, please refer to [FAQ](https://www.binance.com/en/support/faq/detail/3208663e900d4d2e9fec4140e1832f4e).
+For more information, please refer to FAQ.
 
 **Supported Products:**
 
@@ -1589,7 +1620,7 @@ We support several types of API keys:
 * HMAC
 * RSA
 
-We recommend to **use Ed25519 API keys** as it should provide the best performance and security out of all supported key types. We accept PKCS#8 (BEGIN PUBLIC KEY). For how to generate an RSA key pair to send API requests on Binance. Please refer to the document below [FAQ](https://www.binance.com/en/support/faq/how-to-generate-an-rsa-key-pair-to-send-api-requests-on-binance-2b79728f331e43079b27440d9d15c5db) .
+We recommend to **use Ed25519 API keys** as it should provide the best performance and security out of all supported key types. We accept PKCS#8 (BEGIN PUBLIC KEY). For how to generate an RSA key pair to send API requests on Binance. Please refer to the document below FAQ .
 
 **How to use the Margin Special Key**
 - Use the below `sapi` endpoint to create your margin special API Key.
@@ -1597,7 +1628,7 @@ We recommend to **use Ed25519 API keys** as it should provide the best performan
 - For accessing the Isolated Margin account(s), pass the relevant `symbol` parameter in the API Key creation request.
 - Use the generated API Key (and Secret key, if applicable) to perform margin trading and listenKey generation via **Spot** REST API (`https://api.binance.com/api/v3/*`) endpoints.
 
-Read [REST API](/products/spot/rest-api#signed-trade-and-user_data-endpoint-security) or [WebSocket API](/products/spot/web-socket-api#request-security) documentation to learn how to use different API keys
+Read REST API or WebSocket API documentation to learn how to use different API keys
 
 You need to enable Permits “Enable Spot & Margin Trading” option for the API Key which requests this endpoint.
 
@@ -1659,7 +1690,7 @@ When a user creates a Margin Special API Key, the account enters "Special Key Mo
 2. All pre-execution margin checks (including Open-order-loss calculation) will revert to standard mode.
 3. A cooldown period (default: 24 hours) will be enforced, during which the account will not be permitted to create new Margin Special API Keys.
 
-For more information, please refer to [FAQ](https://www.binance.com/en/support/faq/detail/3208663e900d4d2e9fec4140e1832f4e).
+For more information, please refer to FAQ.
 
 **Preconditions:**
 
@@ -1798,13 +1829,19 @@ Security Type: TRADE
 
 Notes:
 - autoRepayAtCancel is suggested to set as “FALSE” to keep liability unrepaid under high frequent new order/cancel order execution
-- Depending on the `pendingType` or `workingType`, some optional
-- parameters will become mandatory: | Type                                                     | Additional mandatory parameters                              | Additional information | | -------------------------------------------------------- | ------------------------------------------------------------ | ---------------------- | | `workingType` = `LIMIT`                                  | `workingTimeInForce`                                         |                        | | `pendingType` = `LIMIT`                                  | `pendingPrice`, `pendingTimeInForce`                         |                        | | `pendingType` = `STOP_LOSS` or `TAKE_PROFIT`             | `pendingStopPrice` and/or `pendingTrailingDelta`             |                        | | `pendingType` = `STOP_LOSS_LIMIT` or `TAKE_PROFIT_LIMIT` | `pendingPrice`, `pendingStopPrice` and/or `pendingTrailingDelta`, `pendingTimeInForce` |                        | | `pendingTrailingDelta` is provided | `pendingPrice` |                        |"#, false),
+- Depending on the `pendingType` or `workingType`, some optional parameters will become mandatory:
+
+| Type | Additional mandatory parameters | Additional information |
+| --- | --- | --- |
+| `workingType` = `LIMIT` | `workingTimeInForce` | |
+| `pendingType` = `LIMIT` | `pendingPrice`, `pendingTimeInForce` | |
+| `pendingType` = `STOP_LOSS` or `TAKE_PROFIT` | `pendingStopPrice` and/or `pendingTrailingDelta` | |
+| `pendingType` = `STOP_LOSS_LIMIT` or `TAKE_PROFIT_LIMIT` | `pendingPrice`, `pendingStopPrice` and/or `pendingTrailingDelta`, `pendingTimeInForce` | |
+| `pendingTrailingDelta` is provided | `pendingPrice` | |"#, false),
     )]
     MarginAccountNewOto(MarginAccountNewOtoArgs),
     #[command(
         about = decode_selected_entities(r#"Post a new OTOCO order for margin account：
-
 
 - An OTOCO (One-Triggers-One-Cancels-the-Other) is an order list
 comprised of 3 orders.
@@ -1815,7 +1852,7 @@ comprised of 3 orders.
 - OTOCO has 2 pending orders (pending above and pending below), forming
 an OCO pair. The pending orders are only placed on the order book when
 the working order gets **fully filled**.
-  - The rules of the pending above and pending below follow the same rules as the [Order List OCO](https://developers.binance.com/en/docs/catalog/core-trading-margin-trading/api/rest-api/trade#margin-account-new-oco).
+  - The rules of the pending above and pending below follow the same rules as the Order List OCO.
 - OTOCOs add **3 orders** against the unfilled order count,
 `EXCHANGE_MAX_NUM_ORDERS` filter, and `MAX_NUM_ORDERS` filter.
 
@@ -1927,6 +1964,20 @@ the exchange.
 - If isIsolated ="TRUE", symbol must be sent."#, false),
     )]
     QueryMarginAccountsOpenOrders(QueryMarginAccountsOpenOrdersArgs),
+    #[command(
+        about = decode_selected_entities(r#"Retrieves all open OTO / OTOCO order lists of the margin account.
+
+
+Notes:
+- The returned list contains order lists whose `listOrderStatus` is `EXECUTING`, i.e. at least one order of the list is still open (`NEW` / `PARTIALLY_FILLED`).
+- For OTO, the `orders` array contains 2 orders: the working order and the pending order.
+- For OTOCO, the `orders` array contains 3 orders: the working order and the two pending orders (pending above / pending below).
+
+Weight(UID): 10
+
+Security Type: USER_DATA"#, false),
+    )]
+    QueryMarginAccountsOpenOtootocoOrderLists(QueryMarginAccountsOpenOtootocoOrderListsArgs),
     #[command(
         about = decode_selected_entities(r#"Query Margin Account's Order
 
@@ -2245,6 +2296,10 @@ pub async fn handle_margin_trading_command(command: MarginTradingCommands) -> an
             query_margin_accounts_open_orders(args).await
         }
 
+        MarginTradingCommands::QueryMarginAccountsOpenOtootocoOrderLists(args) => {
+            query_margin_accounts_open_otootoco_order_lists(args).await
+        }
+
         MarginTradingCommands::QueryMarginAccountsOrder(args) => {
             query_margin_accounts_order(args).await
         }
@@ -2293,18 +2348,16 @@ async fn adjust_cross_margin_max_leverage(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.max_leverage.is_none() {
-                        let max_leverage: i64 = Input::new()
-                            .with_prompt("Input max_leverage:")
-                            .interact_text()?;
+                if args.interactive && args.max_leverage.is_none() {
+                    let max_leverage: i64 = Input::new()
+                        .with_prompt("Input max_leverage:")
+                        .interact_text()?;
 
-                        args.max_leverage = Some(max_leverage);
-                    }
+                    args.max_leverage = Some(max_leverage);
                 }
                 AdjustCrossMarginMaxLeverageParams::builder(
                     args.max_leverage
-                        .ok_or_else(|| anyhow::anyhow!("max_leverage is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("max-leverage is required"))?,
                 )
                 .build()?
             }
@@ -2333,13 +2386,11 @@ async fn disable_isolated_margin_account(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 DisableIsolatedMarginAccountParams::builder(
                     args.symbol
@@ -2373,13 +2424,11 @@ async fn enable_isolated_margin_account(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 EnableIsolatedMarginAccountParams::builder(
                     args.symbol
@@ -2645,7 +2694,7 @@ async fn get_future_hourly_interest_rate(
                         args.assets = Some(assets);
                     }
                     if args.is_isolated.is_none() {
-                        let options = vec![
+                        let options = [
                             ("TRUE", GetFutureHourlyInterestRateIsIsolatedEnum::True),
                             ("FALSE", GetFutureHourlyInterestRateIsIsolatedEnum::False),
                         ];
@@ -2669,7 +2718,7 @@ async fn get_future_hourly_interest_rate(
                     args.assets
                         .ok_or_else(|| anyhow::anyhow!("assets is required"))?,
                     args.is_isolated
-                        .ok_or_else(|| anyhow::anyhow!("is_isolated is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("is-isolated is required"))?,
                 )
                 .build()?
             }
@@ -2733,7 +2782,7 @@ async fn margin_account_borrow_repay(mut args: MarginAccountBorrowRepayArgs) -> 
                         args.asset = Some(asset);
                     }
                     if args.is_isolated.is_none() {
-                        let options = vec![
+                        let options = [
                             ("TRUE", MarginAccountBorrowRepayIsIsolatedEnum::True),
                             ("FALSE", MarginAccountBorrowRepayIsIsolatedEnum::False),
                         ];
@@ -2759,7 +2808,7 @@ async fn margin_account_borrow_repay(mut args: MarginAccountBorrowRepayArgs) -> 
                         args.amount = Some(amount);
                     }
                     if args.r#type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BORROW", MarginAccountBorrowRepayTypeEnum::Borrow),
                             ("REPAY", MarginAccountBorrowRepayTypeEnum::Repay),
                         ];
@@ -2783,11 +2832,11 @@ async fn margin_account_borrow_repay(mut args: MarginAccountBorrowRepayArgs) -> 
                     args.asset
                         .ok_or_else(|| anyhow::anyhow!("asset is required"))?,
                     args.is_isolated
-                        .ok_or_else(|| anyhow::anyhow!("is_isolated is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("is-isolated is required"))?,
                     args.amount
                         .ok_or_else(|| anyhow::anyhow!("amount is required"))?,
                     args.r#type
-                        .ok_or_else(|| anyhow::anyhow!("r#type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("rtype is required"))?,
                 )
                 .symbol(args.symbol)
                 .recv_window(args.recv_window)
@@ -2817,37 +2866,35 @@ async fn query_borrow_repay_records_in_margin_account(
                     io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
                 })?,
             None => {
-                if args.interactive {
-                    if args.r#type.is_none() {
-                        let options = vec![
-                            (
-                                "BORROW",
-                                QueryBorrowRepayRecordsInMarginAccountTypeEnum::Borrow,
-                            ),
-                            (
-                                "REPAY",
-                                QueryBorrowRepayRecordsInMarginAccountTypeEnum::Repay,
-                            ),
-                        ];
+                if args.interactive && args.r#type.is_none() {
+                    let options = [
+                        (
+                            "BORROW",
+                            QueryBorrowRepayRecordsInMarginAccountTypeEnum::Borrow,
+                        ),
+                        (
+                            "REPAY",
+                            QueryBorrowRepayRecordsInMarginAccountTypeEnum::Repay,
+                        ),
+                    ];
 
-                        let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
+                    let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
 
-                        let selected = Select::new()
-                            .with_prompt("Please select the r#type")
-                            .items(&labels)
-                            .default(0)
-                            .interact()?;
+                    let selected = Select::new()
+                        .with_prompt("Please select the r#type")
+                        .items(&labels)
+                        .default(0)
+                        .interact()?;
 
-                        let selected = options[selected].1.clone();
+                    let selected = options[selected].1.clone();
 
-                        println!("Selected option: {:?}", selected);
+                    println!("Selected option: {:?}", selected);
 
-                        args.r#type = Some(selected);
-                    }
+                    args.r#type = Some(selected);
                 }
                 QueryBorrowRepayRecordsInMarginAccountParams::builder(
                     args.r#type
-                        .ok_or_else(|| anyhow::anyhow!("r#type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("rtype is required"))?,
                 )
                 .asset(args.asset)
                 .isolated_symbol(args.isolated_symbol)
@@ -2886,13 +2933,10 @@ async fn query_margin_interest_rate_history(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.asset.is_none() {
-                        let asset: String =
-                            Input::new().with_prompt("Input asset:").interact_text()?;
+                if args.interactive && args.asset.is_none() {
+                    let asset: String = Input::new().with_prompt("Input asset:").interact_text()?;
 
-                        args.asset = Some(asset);
-                    }
+                    args.asset = Some(asset);
                 }
                 QueryMarginInterestRateHistoryParams::builder(
                     args.asset
@@ -2927,13 +2971,10 @@ async fn query_max_borrow(mut args: QueryMaxBorrowArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.asset.is_none() {
-                        let asset: String =
-                            Input::new().with_prompt("Input asset:").interact_text()?;
+                if args.interactive && args.asset.is_none() {
+                    let asset: String = Input::new().with_prompt("Input asset:").interact_text()?;
 
-                        args.asset = Some(asset);
-                    }
+                    args.asset = Some(asset);
                 }
                 QueryMaxBorrowParams::builder(
                     args.asset
@@ -3136,13 +3177,11 @@ async fn query_isolated_margin_tier_data(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 QueryIsolatedMarginTierDataParams::builder(
                     args.symbol
@@ -3192,31 +3231,29 @@ async fn query_margin_available_inventory(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.r#type.is_none() {
-                        let options = vec![
-                            ("MARGIN", QueryMarginAvailableInventoryTypeEnum::Margin),
-                            ("ISOLATED", QueryMarginAvailableInventoryTypeEnum::Isolated),
-                        ];
+                if args.interactive && args.r#type.is_none() {
+                    let options = [
+                        ("MARGIN", QueryMarginAvailableInventoryTypeEnum::Margin),
+                        ("ISOLATED", QueryMarginAvailableInventoryTypeEnum::Isolated),
+                    ];
 
-                        let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
+                    let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
 
-                        let selected = Select::new()
-                            .with_prompt("Please select the r#type")
-                            .items(&labels)
-                            .default(0)
-                            .interact()?;
+                    let selected = Select::new()
+                        .with_prompt("Please select the r#type")
+                        .items(&labels)
+                        .default(0)
+                        .interact()?;
 
-                        let selected = options[selected].1.clone();
+                    let selected = options[selected].1.clone();
 
-                        println!("Selected option: {:?}", selected);
+                    println!("Selected option: {:?}", selected);
 
-                        args.r#type = Some(selected);
-                    }
+                    args.r#type = Some(selected);
                 }
                 QueryMarginAvailableInventoryParams::builder(
                     args.r#type
-                        .ok_or_else(|| anyhow::anyhow!("r#type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("rtype is required"))?,
                 )
                 .build()?
             }
@@ -3241,13 +3278,11 @@ async fn query_margin_priceindex(mut args: QueryMarginPriceindexArgs) -> anyhow:
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 QueryMarginPriceindexParams::builder(
                     args.symbol
@@ -3276,18 +3311,16 @@ async fn create_special_key(mut args: CreateSpecialKeyArgs) -> anyhow::Result<()
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.api_name.is_none() {
-                        let api_name: String = Input::new()
-                            .with_prompt("Input api_name:")
-                            .interact_text()?;
+                if args.interactive && args.api_name.is_none() {
+                    let api_name: String = Input::new()
+                        .with_prompt("Input api_name:")
+                        .interact_text()?;
 
-                        args.api_name = Some(api_name);
-                    }
+                    args.api_name = Some(api_name);
                 }
                 CreateSpecialKeyParams::builder(
                     args.api_name
-                        .ok_or_else(|| anyhow::anyhow!("api_name is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("api-name is required"))?,
                 )
                 .symbol(args.symbol)
                 .ip(args.ip)
@@ -3342,12 +3375,10 @@ async fn edit_ip_for_special_key(mut args: EditIpForSpecialKeyArgs) -> anyhow::R
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.ip.is_none() {
-                        let ip: String = Input::new().with_prompt("Input ip:").interact_text()?;
+                if args.interactive && args.ip.is_none() {
+                    let ip: String = Input::new().with_prompt("Input ip:").interact_text()?;
 
-                        args.ip = Some(ip);
-                    }
+                    args.ip = Some(ip);
                 }
                 EditIpForSpecialKeyParams::builder(
                     args.ip.ok_or_else(|| anyhow::anyhow!("ip is required"))?,
@@ -3556,13 +3587,11 @@ async fn margin_account_cancel_all_open_orders_on_a_symbol(
                     io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
                 })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 MarginAccountCancelAllOpenOrdersOnASymbolParams::builder(
                     args.symbol
@@ -3595,13 +3624,11 @@ async fn margin_account_cancel_oco(mut args: MarginAccountCancelOcoArgs) -> anyh
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 MarginAccountCancelOcoParams::builder(
                     args.symbol
@@ -3637,13 +3664,11 @@ async fn margin_account_cancel_order(mut args: MarginAccountCancelOrderArgs) -> 
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 MarginAccountCancelOrderParams::builder(
                     args.symbol
@@ -3685,7 +3710,7 @@ async fn margin_account_new_oco(mut args: MarginAccountNewOcoArgs) -> anyhow::Re
                         args.symbol = Some(symbol);
                     }
                     if args.side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", MarginAccountNewOcoSideEnum::Buy),
                             ("SELL", MarginAccountNewOcoSideEnum::Sell),
                         ];
@@ -3735,7 +3760,7 @@ async fn margin_account_new_oco(mut args: MarginAccountNewOcoArgs) -> anyhow::Re
                     args.price
                         .ok_or_else(|| anyhow::anyhow!("price is required"))?,
                     args.stop_price
-                        .ok_or_else(|| anyhow::anyhow!("stop_price is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("stop-price is required"))?,
                 )
                 .is_isolated(args.is_isolated)
                 .list_client_order_id(args.list_client_order_id)
@@ -3781,7 +3806,7 @@ async fn margin_account_new_order(mut args: MarginAccountNewOrderArgs) -> anyhow
                         args.symbol = Some(symbol);
                     }
                     if args.side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", MarginAccountNewOrderSideEnum::Buy),
                             ("SELL", MarginAccountNewOrderSideEnum::Sell),
                         ];
@@ -3801,7 +3826,7 @@ async fn margin_account_new_order(mut args: MarginAccountNewOrderArgs) -> anyhow
                         args.side = Some(selected);
                     }
                     if args.r#type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("LIMIT", MarginAccountNewOrderTypeEnum::Limit),
                             ("MARKET", MarginAccountNewOrderTypeEnum::Market),
                             ("STOP_LOSS", MarginAccountNewOrderTypeEnum::StopLoss),
@@ -3838,7 +3863,7 @@ async fn margin_account_new_order(mut args: MarginAccountNewOrderArgs) -> anyhow
                     args.side
                         .ok_or_else(|| anyhow::anyhow!("side is required"))?,
                     args.r#type
-                        .ok_or_else(|| anyhow::anyhow!("r#type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("rtype is required"))?,
                 )
                 .is_isolated(args.is_isolated)
                 .quantity(args.quantity)
@@ -3885,7 +3910,7 @@ async fn margin_account_new_oto(mut args: MarginAccountNewOtoArgs) -> anyhow::Re
                         args.symbol = Some(symbol);
                     }
                     if args.working_type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("LIMIT", MarginAccountNewOtoWorkingTypeEnum::Limit),
                             (
                                 "LIMIT_MAKER",
@@ -3908,7 +3933,7 @@ async fn margin_account_new_oto(mut args: MarginAccountNewOtoArgs) -> anyhow::Re
                         args.working_type = Some(selected);
                     }
                     if args.working_side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", MarginAccountNewOtoWorkingSideEnum::Buy),
                             ("SELL", MarginAccountNewOtoWorkingSideEnum::Sell),
                         ];
@@ -3949,7 +3974,7 @@ async fn margin_account_new_oto(mut args: MarginAccountNewOtoArgs) -> anyhow::Re
                         args.working_iceberg_qty = Some(working_iceberg_qty);
                     }
                     if args.pending_type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("LIMIT", MarginAccountNewOtoPendingTypeEnum::Limit),
                             ("MARKET", MarginAccountNewOtoPendingTypeEnum::Market),
                             ("STOP_LOSS", MarginAccountNewOtoPendingTypeEnum::StopLoss),
@@ -3986,7 +4011,7 @@ async fn margin_account_new_oto(mut args: MarginAccountNewOtoArgs) -> anyhow::Re
                         args.pending_type = Some(selected);
                     }
                     if args.pending_side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", MarginAccountNewOtoPendingSideEnum::Buy),
                             ("SELL", MarginAccountNewOtoPendingSideEnum::Sell),
                         ];
@@ -4017,21 +4042,21 @@ async fn margin_account_new_oto(mut args: MarginAccountNewOtoArgs) -> anyhow::Re
                     args.symbol
                         .ok_or_else(|| anyhow::anyhow!("symbol is required"))?,
                     args.working_type
-                        .ok_or_else(|| anyhow::anyhow!("working_type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("working-type is required"))?,
                     args.working_side
-                        .ok_or_else(|| anyhow::anyhow!("working_side is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("working-side is required"))?,
                     args.working_price
-                        .ok_or_else(|| anyhow::anyhow!("working_price is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("working-price is required"))?,
                     args.working_quantity
-                        .ok_or_else(|| anyhow::anyhow!("working_quantity is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("working-quantity is required"))?,
                     args.working_iceberg_qty
-                        .ok_or_else(|| anyhow::anyhow!("working_iceberg_qty is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("working-iceberg-qty is required"))?,
                     args.pending_type
-                        .ok_or_else(|| anyhow::anyhow!("pending_type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("pending-type is required"))?,
                     args.pending_side
-                        .ok_or_else(|| anyhow::anyhow!("pending_side is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("pending-side is required"))?,
                     args.pending_quantity
-                        .ok_or_else(|| anyhow::anyhow!("pending_quantity is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("pending-quantity is required"))?,
                 )
                 .is_isolated(args.is_isolated)
                 .list_client_order_id(args.list_client_order_id)
@@ -4078,7 +4103,7 @@ async fn margin_account_new_otoco(mut args: MarginAccountNewOtocoArgs) -> anyhow
                         args.symbol = Some(symbol);
                     }
                     if args.working_type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("LIMIT", MarginAccountNewOtocoWorkingTypeEnum::Limit),
                             (
                                 "LIMIT_MAKER",
@@ -4101,7 +4126,7 @@ async fn margin_account_new_otoco(mut args: MarginAccountNewOtocoArgs) -> anyhow
                         args.working_type = Some(selected);
                     }
                     if args.working_side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", MarginAccountNewOtocoWorkingSideEnum::Buy),
                             ("SELL", MarginAccountNewOtocoWorkingSideEnum::Sell),
                         ];
@@ -4135,7 +4160,7 @@ async fn margin_account_new_otoco(mut args: MarginAccountNewOtocoArgs) -> anyhow
                         args.working_quantity = Some(working_quantity);
                     }
                     if args.pending_side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", MarginAccountNewOtocoPendingSideEnum::Buy),
                             ("SELL", MarginAccountNewOtocoPendingSideEnum::Sell),
                         ];
@@ -4162,7 +4187,7 @@ async fn margin_account_new_otoco(mut args: MarginAccountNewOtocoArgs) -> anyhow
                         args.pending_quantity = Some(pending_quantity);
                     }
                     if args.pending_above_type.is_none() {
-                        let options = vec![
+                        let options = [
                             (
                                 "LIMIT_MAKER",
                                 MarginAccountNewOtocoPendingAboveTypeEnum::LimitMaker,
@@ -4196,19 +4221,19 @@ async fn margin_account_new_otoco(mut args: MarginAccountNewOtocoArgs) -> anyhow
                     args.symbol
                         .ok_or_else(|| anyhow::anyhow!("symbol is required"))?,
                     args.working_type
-                        .ok_or_else(|| anyhow::anyhow!("working_type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("working-type is required"))?,
                     args.working_side
-                        .ok_or_else(|| anyhow::anyhow!("working_side is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("working-side is required"))?,
                     args.working_price
-                        .ok_or_else(|| anyhow::anyhow!("working_price is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("working-price is required"))?,
                     args.working_quantity
-                        .ok_or_else(|| anyhow::anyhow!("working_quantity is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("working-quantity is required"))?,
                     args.pending_side
-                        .ok_or_else(|| anyhow::anyhow!("pending_side is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("pending-side is required"))?,
                     args.pending_quantity
-                        .ok_or_else(|| anyhow::anyhow!("pending_quantity is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("pending-quantity is required"))?,
                     args.pending_above_type
-                        .ok_or_else(|| anyhow::anyhow!("pending_above_type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("pending-above-type is required"))?,
                 )
                 .is_isolated(args.is_isolated)
                 .side_effect_type(args.side_effect_type)
@@ -4255,31 +4280,29 @@ async fn margin_manual_liquidation(mut args: MarginManualLiquidationArgs) -> any
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.r#type.is_none() {
-                        let options = vec![
-                            ("MARGIN", MarginManualLiquidationTypeEnum::Margin),
-                            ("ISOLATED", MarginManualLiquidationTypeEnum::Isolated),
-                        ];
+                if args.interactive && args.r#type.is_none() {
+                    let options = [
+                        ("MARGIN", MarginManualLiquidationTypeEnum::Margin),
+                        ("ISOLATED", MarginManualLiquidationTypeEnum::Isolated),
+                    ];
 
-                        let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
+                    let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
 
-                        let selected = Select::new()
-                            .with_prompt("Please select the r#type")
-                            .items(&labels)
-                            .default(0)
-                            .interact()?;
+                    let selected = Select::new()
+                        .with_prompt("Please select the r#type")
+                        .items(&labels)
+                        .default(0)
+                        .interact()?;
 
-                        let selected = options[selected].1.clone();
+                    let selected = options[selected].1.clone();
 
-                        println!("Selected option: {:?}", selected);
+                    println!("Selected option: {:?}", selected);
 
-                        args.r#type = Some(selected);
-                    }
+                    args.r#type = Some(selected);
                 }
                 MarginManualLiquidationParams::builder(
                     args.r#type
-                        .ok_or_else(|| anyhow::anyhow!("r#type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("rtype is required"))?,
                 )
                 .symbol(args.symbol)
                 .recv_window(args.recv_window)
@@ -4427,13 +4450,11 @@ async fn query_margin_accounts_all_orders(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 QueryMarginAccountsAllOrdersParams::builder(
                     args.symbol
@@ -4545,6 +4566,35 @@ async fn query_margin_accounts_open_orders(
     Ok(())
 }
 
+async fn query_margin_accounts_open_otootoco_order_lists(
+    args: QueryMarginAccountsOpenOtootocoOrderListsArgs,
+) -> anyhow::Result<()> {
+    let rest_client = get_client(args.profile.as_deref(), true)?;
+
+    let params = match read_stdin_as::<QueryMarginAccountsOpenOtootocoOrderListsParams>() {
+        Some(params) => params,
+        None => match args.json {
+            Some(json) => read_json_as::<QueryMarginAccountsOpenOtootocoOrderListsParams>(json)
+                .ok_or_else(|| {
+                    io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
+                })?,
+            None => QueryMarginAccountsOpenOtootocoOrderListsParams::builder()
+                .symbol(args.symbol)
+                .recv_window(args.recv_window)
+                .build()?,
+        },
+    };
+
+    // Make the API call
+    let response = rest_client
+        .query_margin_accounts_open_otootoco_order_lists(params)
+        .await?;
+
+    let data = response.data().await?;
+    println!("{}", serde_json::to_string_pretty(&data).unwrap());
+    Ok(())
+}
+
 async fn query_margin_accounts_order(mut args: QueryMarginAccountsOrderArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
@@ -4557,13 +4607,11 @@ async fn query_margin_accounts_order(mut args: QueryMarginAccountsOrderArgs) -> 
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 QueryMarginAccountsOrderParams::builder(
                     args.symbol
@@ -4600,13 +4648,11 @@ async fn query_margin_accounts_trade_list(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 QueryMarginAccountsTradeListParams::builder(
                     args.symbol
@@ -4642,13 +4688,11 @@ async fn query_prevented_matches(mut args: QueryPreventedMatchesArgs) -> anyhow:
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 QueryPreventedMatchesParams::builder(
                     args.symbol
@@ -4730,18 +4774,16 @@ async fn small_liability_exchange(mut args: SmallLiabilityExchangeArgs) -> anyho
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.asset_names.is_none() {
-                        let asset_names: String = Input::new()
-                            .with_prompt("Input asset_names:")
-                            .interact_text()?;
+                if args.interactive && args.asset_names.is_none() {
+                    let asset_names: String = Input::new()
+                        .with_prompt("Input asset_names:")
+                        .interact_text()?;
 
-                        args.asset_names = Some(asset_names);
-                    }
+                    args.asset_names = Some(asset_names);
                 }
                 SmallLiabilityExchangeParams::builder(
                     args.asset_names
-                        .ok_or_else(|| anyhow::anyhow!("asset_names is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("asset-names is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -4807,13 +4849,10 @@ async fn query_max_transfer_out_amount(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.asset.is_none() {
-                        let asset: String =
-                            Input::new().with_prompt("Input asset:").interact_text()?;
+                if args.interactive && args.asset.is_none() {
+                    let asset: String = Input::new().with_prompt("Input asset:").interact_text()?;
 
-                        args.asset = Some(asset);
-                    }
+                    args.asset = Some(asset);
                 }
                 QueryMaxTransferOutAmountParams::builder(
                     args.asset
@@ -4855,18 +4894,16 @@ async fn keepalive_user_data_stream(mut args: KeepaliveUserDataStreamArgs) -> an
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.listen_key.is_none() {
-                        let listen_key: String = Input::new()
-                            .with_prompt("Input listen_key:")
-                            .interact_text()?;
+                if args.interactive && args.listen_key.is_none() {
+                    let listen_key: String = Input::new()
+                        .with_prompt("Input listen_key:")
+                        .interact_text()?;
 
-                        args.listen_key = Some(listen_key);
-                    }
+                    args.listen_key = Some(listen_key);
                 }
                 KeepaliveUserDataStreamParams::builder(
                     args.listen_key
-                        .ok_or_else(|| anyhow::anyhow!("listen_key is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("listen-key is required"))?,
                 )
                 .build()?
             }

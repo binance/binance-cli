@@ -46,9 +46,7 @@ fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> 
         }
     }
 
-    let rest_conf = builder
-        .build()
-        .map_err(|err| Error::new(ErrorKind::Other, err))?;
+    let rest_conf = builder.build().map_err(Error::other)?;
 
     Ok(DerivativesTradingOptionsRestApi::from_config(rest_conf))
 }
@@ -915,7 +913,7 @@ Security Type: TRADE"#, false),
     )]
     SetMarketMakerProtectionConfig(SetMarketMakerProtectionConfigArgs),
     #[command(
-        about = decode_selected_entities(r#"Get trades for a specific account and symbol.
+        about = decode_selected_entities(r#"Get trades for a specific account and symbol. Only supports querying trades in the past 3 months; a `startTime`/`endTime` outside that window returns `-6073 SEARCH_WINDOW_RESTRICTED`.
 
 Weight(IP): 5
 
@@ -1255,24 +1253,22 @@ async fn account_funding_flow(mut args: AccountFundingFlowArgs) -> anyhow::Resul
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.currency.is_none() {
-                        let options = vec![("USDT", AccountFundingFlowCurrencyEnum::Usdt)];
+                if args.interactive && args.currency.is_none() {
+                    let options = [("USDT", AccountFundingFlowCurrencyEnum::Usdt)];
 
-                        let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
+                    let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
 
-                        let selected = Select::new()
-                            .with_prompt("Please select the currency")
-                            .items(&labels)
-                            .default(0)
-                            .interact()?;
+                    let selected = Select::new()
+                        .with_prompt("Please select the currency")
+                        .items(&labels)
+                        .default(0)
+                        .interact()?;
 
-                        let selected = options[selected].1.clone();
+                    let selected = options[selected].1.clone();
 
-                        println!("Selected option: {:?}", selected);
+                    println!("Selected option: {:?}", selected);
 
-                        args.currency = Some(selected);
-                    }
+                    args.currency = Some(selected);
                 }
                 AccountFundingFlowParams::builder(
                     args.currency
@@ -1385,14 +1381,12 @@ async fn index_price(mut args: IndexPriceArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.underlying.is_none() {
-                        let underlying: String = Input::new()
-                            .with_prompt("Input underlying:")
-                            .interact_text()?;
+                if args.interactive && args.underlying.is_none() {
+                    let underlying: String = Input::new()
+                        .with_prompt("Input underlying:")
+                        .interact_text()?;
 
-                        args.underlying = Some(underlying);
-                    }
+                    args.underlying = Some(underlying);
                 }
                 IndexPriceParams::builder(
                     args.underlying
@@ -1512,7 +1506,7 @@ async fn open_interest(mut args: OpenInterestArgs) -> anyhow::Result<()> {
                 }
                 OpenInterestParams::builder(
                     args.underlying_asset
-                        .ok_or_else(|| anyhow::anyhow!("underlying_asset is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("underlying-asset is required"))?,
                     args.expiration
                         .ok_or_else(|| anyhow::anyhow!("expiration is required"))?,
                 )
@@ -1562,13 +1556,11 @@ async fn order_book(mut args: OrderBookArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 OrderBookParams::builder(
                     args.symbol
@@ -1622,13 +1614,11 @@ async fn recent_trades_list(mut args: RecentTradesListArgs) -> anyhow::Result<()
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 RecentTradesListParams::builder(
                     args.symbol
@@ -1698,18 +1688,16 @@ async fn accept_block_trade_order(mut args: AcceptBlockTradeOrderArgs) -> anyhow
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.block_order_matching_key.is_none() {
-                        let block_order_matching_key: String = Input::new()
-                            .with_prompt("Input block_order_matching_key:")
-                            .interact_text()?;
+                if args.interactive && args.block_order_matching_key.is_none() {
+                    let block_order_matching_key: String = Input::new()
+                        .with_prompt("Input block_order_matching_key:")
+                        .interact_text()?;
 
-                        args.block_order_matching_key = Some(block_order_matching_key);
-                    }
+                    args.block_order_matching_key = Some(block_order_matching_key);
                 }
                 AcceptBlockTradeOrderParams::builder(
                     args.block_order_matching_key
-                        .ok_or_else(|| anyhow::anyhow!("block_order_matching_key is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("block-order-matching-key is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -1761,18 +1749,16 @@ async fn cancel_block_trade_order(mut args: CancelBlockTradeOrderArgs) -> anyhow
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.block_order_matching_key.is_none() {
-                        let block_order_matching_key: String = Input::new()
-                            .with_prompt("Input block_order_matching_key:")
-                            .interact_text()?;
+                if args.interactive && args.block_order_matching_key.is_none() {
+                    let block_order_matching_key: String = Input::new()
+                        .with_prompt("Input block_order_matching_key:")
+                        .interact_text()?;
 
-                        args.block_order_matching_key = Some(block_order_matching_key);
-                    }
+                    args.block_order_matching_key = Some(block_order_matching_key);
                 }
                 CancelBlockTradeOrderParams::builder(
                     args.block_order_matching_key
-                        .ok_or_else(|| anyhow::anyhow!("block_order_matching_key is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("block-order-matching-key is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -1798,18 +1784,16 @@ async fn extend_block_trade_order(mut args: ExtendBlockTradeOrderArgs) -> anyhow
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.block_order_matching_key.is_none() {
-                        let block_order_matching_key: String = Input::new()
-                            .with_prompt("Input block_order_matching_key:")
-                            .interact_text()?;
+                if args.interactive && args.block_order_matching_key.is_none() {
+                    let block_order_matching_key: String = Input::new()
+                        .with_prompt("Input block_order_matching_key:")
+                        .interact_text()?;
 
-                        args.block_order_matching_key = Some(block_order_matching_key);
-                    }
+                    args.block_order_matching_key = Some(block_order_matching_key);
                 }
                 ExtendBlockTradeOrderParams::builder(
                     args.block_order_matching_key
-                        .ok_or_else(|| anyhow::anyhow!("block_order_matching_key is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("block-order-matching-key is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -1837,7 +1821,7 @@ async fn new_block_trade_order(mut args: NewBlockTradeOrderArgs) -> anyhow::Resu
             None => {
                 if args.interactive {
                     if args.liquidity.is_none() {
-                        let options = vec![
+                        let options = [
                             ("MAKER", NewBlockTradeOrderLiquidityEnum::Maker),
                             ("TAKER", NewBlockTradeOrderLiquidityEnum::Taker),
                         ];
@@ -1896,18 +1880,16 @@ async fn query_block_trade_details(mut args: QueryBlockTradeDetailsArgs) -> anyh
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.block_order_matching_key.is_none() {
-                        let block_order_matching_key: String = Input::new()
-                            .with_prompt("Input block_order_matching_key:")
-                            .interact_text()?;
+                if args.interactive && args.block_order_matching_key.is_none() {
+                    let block_order_matching_key: String = Input::new()
+                        .with_prompt("Input block_order_matching_key:")
+                        .interact_text()?;
 
-                        args.block_order_matching_key = Some(block_order_matching_key);
-                    }
+                    args.block_order_matching_key = Some(block_order_matching_key);
                 }
                 QueryBlockTradeDetailsParams::builder(
                     args.block_order_matching_key
-                        .ok_or_else(|| anyhow::anyhow!("block_order_matching_key is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("block-order-matching-key is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -1960,14 +1942,12 @@ async fn auto_cancel_all_open_orders(mut args: AutoCancelAllOpenOrdersArgs) -> a
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.underlyings.is_none() {
-                        let underlyings: String = Input::new()
-                            .with_prompt("Input underlyings:")
-                            .interact_text()?;
+                if args.interactive && args.underlyings.is_none() {
+                    let underlyings: String = Input::new()
+                        .with_prompt("Input underlyings:")
+                        .interact_text()?;
 
-                        args.underlyings = Some(underlyings);
-                    }
+                    args.underlyings = Some(underlyings);
                 }
                 AutoCancelAllOpenOrdersParams::builder(
                     args.underlyings
@@ -2029,14 +2009,12 @@ async fn get_market_maker_protection_config(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.underlying.is_none() {
-                        let underlying: String = Input::new()
-                            .with_prompt("Input underlying:")
-                            .interact_text()?;
+                if args.interactive && args.underlying.is_none() {
+                    let underlying: String = Input::new()
+                        .with_prompt("Input underlying:")
+                        .interact_text()?;
 
-                        args.underlying = Some(underlying);
-                    }
+                    args.underlying = Some(underlying);
                 }
                 GetMarketMakerProtectionConfigParams::builder(
                     args.underlying
@@ -2072,14 +2050,12 @@ async fn reset_market_maker_protection_config(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.underlying.is_none() {
-                        let underlying: String = Input::new()
-                            .with_prompt("Input underlying:")
-                            .interact_text()?;
+                if args.interactive && args.underlying.is_none() {
+                    let underlying: String = Input::new()
+                        .with_prompt("Input underlying:")
+                        .interact_text()?;
 
-                        args.underlying = Some(underlying);
-                    }
+                    args.underlying = Some(underlying);
                 }
                 ResetMarketMakerProtectionConfigParams::builder(
                     args.underlying
@@ -2135,7 +2111,7 @@ async fn set_auto_cancel_all_open_orders(
                     args.underlying
                         .ok_or_else(|| anyhow::anyhow!("underlying is required"))?,
                     args.countdown_time
-                        .ok_or_else(|| anyhow::anyhow!("countdown_time is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("countdown-time is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -2206,15 +2182,15 @@ async fn set_market_maker_protection_config(
                     args.underlying
                         .ok_or_else(|| anyhow::anyhow!("underlying is required"))?,
                     args.window_time_in_milliseconds.ok_or_else(|| {
-                        anyhow::anyhow!("window_time_in_milliseconds is required")
+                        anyhow::anyhow!("window-time-in-milliseconds is required")
                     })?,
                     args.frozen_time_in_milliseconds.ok_or_else(|| {
-                        anyhow::anyhow!("frozen_time_in_milliseconds is required")
+                        anyhow::anyhow!("frozen-time-in-milliseconds is required")
                     })?,
                     args.qty_limit
-                        .ok_or_else(|| anyhow::anyhow!("qty_limit is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("qty-limit is required"))?,
                     args.delta_limit
-                        .ok_or_else(|| anyhow::anyhow!("delta_limit is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("delta-limit is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -2242,13 +2218,11 @@ async fn account_trade_list(mut args: AccountTradeListArgs) -> anyhow::Result<()
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 AccountTradeListParams::builder(
                     args.symbol
@@ -2285,14 +2259,12 @@ async fn cancel_all_option_orders_by_underlying(
                     io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
                 })?,
             None => {
-                if args.interactive {
-                    if args.underlying.is_none() {
-                        let underlying: String = Input::new()
-                            .with_prompt("Input underlying:")
-                            .interact_text()?;
+                if args.interactive && args.underlying.is_none() {
+                    let underlying: String = Input::new()
+                        .with_prompt("Input underlying:")
+                        .interact_text()?;
 
-                        args.underlying = Some(underlying);
-                    }
+                    args.underlying = Some(underlying);
                 }
                 CancelAllOptionOrdersByUnderlyingParams::builder(
                     args.underlying
@@ -2327,13 +2299,11 @@ async fn cancel_all_option_orders_on_specific_symbol(
                     io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
                 })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 CancelAllOptionOrdersOnSpecificSymbolParams::builder(
                     args.symbol
@@ -2369,13 +2339,11 @@ async fn cancel_multiple_option_orders(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 CancelMultipleOptionOrdersParams::builder(
                     args.symbol
@@ -2407,13 +2375,11 @@ async fn cancel_option_order(mut args: CancelOptionOrderArgs) -> anyhow::Result<
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 CancelOptionOrderParams::builder(
                     args.symbol
@@ -2453,7 +2419,7 @@ async fn new_order(mut args: NewOrderArgs) -> anyhow::Result<()> {
                         args.symbol = Some(symbol);
                     }
                     if args.side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", NewOrderSideEnum::Buy),
                             ("SELL", NewOrderSideEnum::Sell),
                         ];
@@ -2473,7 +2439,7 @@ async fn new_order(mut args: NewOrderArgs) -> anyhow::Result<()> {
                         args.side = Some(selected);
                     }
                     if args.r#type.is_none() {
-                        let options = vec![("LIMIT", NewOrderTypeEnum::Limit)];
+                        let options = [("LIMIT", NewOrderTypeEnum::Limit)];
 
                         let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
 
@@ -2503,7 +2469,7 @@ async fn new_order(mut args: NewOrderArgs) -> anyhow::Result<()> {
                     args.side
                         .ok_or_else(|| anyhow::anyhow!("side is required"))?,
                     args.r#type
-                        .ok_or_else(|| anyhow::anyhow!("r#type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("rtype is required"))?,
                     args.quantity
                         .ok_or_else(|| anyhow::anyhow!("quantity is required"))?,
                 )
@@ -2565,13 +2531,11 @@ async fn place_multiple_orders(mut args: PlaceMultipleOrdersArgs) -> anyhow::Res
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.orders.is_none() {
-                        let orders: String =
-                            Input::new().with_prompt("Input orders:").interact_text()?;
+                if args.interactive && args.orders.is_none() {
+                    let orders: String =
+                        Input::new().with_prompt("Input orders:").interact_text()?;
 
-                        args.orders = Some(orders);
-                    }
+                    args.orders = Some(orders);
                 }
                 PlaceMultipleOrdersParams::builder(serde_json::from_str::<
                     Vec<models::PlaceMultipleOrdersOrdersParameterInner>,
@@ -2635,13 +2599,11 @@ async fn query_option_order_history(mut args: QueryOptionOrderHistoryArgs) -> an
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 QueryOptionOrderHistoryParams::builder(
                     args.symbol
@@ -2675,13 +2637,11 @@ async fn query_single_order(mut args: QuerySingleOrderArgs) -> anyhow::Result<()
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 QuerySingleOrderParams::builder(
                     args.symbol

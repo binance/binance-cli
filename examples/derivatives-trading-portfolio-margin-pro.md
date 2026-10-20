@@ -27,7 +27,7 @@ binance-cli derivatives-portfolio-margin-pro fund-auto-collection --recv-window 
 ### [POST /sapi/v1/portfolio/asset-collection](https://developers.binance.com/en/docs/catalog/advanced-trading-derivatives-trading-portfolio-margin-pro/api/rest-api/account#fund-collection-by-asset) - Fund Collection by Asset (USER_DATA)
 
 ```bash
-binance-cli derivatives-portfolio-margin-pro fund-collection-by-asset --asset USDT --recv-window 5000
+binance-cli derivatives-portfolio-margin-pro fund-collection-by-asset --asset USDT --amount 10 --future-type UM --recv-window 5000
 ```
 
 ### [GET /sapi/v1/portfolio/repay-futures-switch](https://developers.binance.com/en/docs/catalog/advanced-trading-derivatives-trading-portfolio-margin-pro/api/rest-api/account#get-auto-repay-futures-status) - Get Auto-repay-futures Status (USER_DATA)

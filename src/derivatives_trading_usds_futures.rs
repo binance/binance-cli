@@ -50,9 +50,7 @@ fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> 
         }
     }
 
-    let rest_conf = builder
-        .build()
-        .map_err(|err| Error::new(ErrorKind::Other, err))?;
+    let rest_conf = builder.build().map_err(Error::other)?;
 
     Ok(DerivativesTradingUsdsFuturesRestApi::from_config(rest_conf))
 }
@@ -252,8 +250,6 @@ struct GetIncomeHistoryArgs {
     start_time: Option<i64>,
     #[arg(help = r#"Timestamp in milliseconds (inclusive end)."#, long)]
     end_time: Option<i64>,
-    #[arg(help = r#"Pagination page number."#, long)]
-    page: Option<i64>,
     #[arg(help = r#"Maximum number of records to return."#, long)]
     limit: Option<i64>,
     #[arg(help = r#""#, long)]
@@ -1026,7 +1022,10 @@ struct CancelOrderArgs {
 struct ChangeInitialLeverageArgs {
     #[arg(help = r#""#, long)]
     symbol: Option<String>,
-    #[arg(help = r#"target initial leverage"#, long)]
+    #[arg(
+        help = r#"Target initial leverage. The maximum is symbol-specific: use `initialLeverage` of bracket 1 from `GET /fapi/v1/leverageBracket`."#,
+        long
+    )]
     leverage: Option<i64>,
     #[arg(help = r#""#, long)]
     recv_window: Option<i64>,
@@ -1234,6 +1233,8 @@ struct ModifyOrderArgs {
         long
     )]
     modify_id: Option<i64>,
+    #[arg(help = r#"See notes below for behavior."#, long)]
+    reduce_only: Option<ModifyOrderReduceOnlyEnum>,
     #[arg(help = r#""#, long)]
     recv_window: Option<i64>,
     #[arg(short = 'i', long)]
@@ -1306,7 +1307,7 @@ struct NewAlgoOrderArgs {
     #[arg(help = r#""#, long)]
     new_order_resp_type: Option<NewAlgoOrderNewOrderRespTypeEnum>,
     #[arg(
-        help = r#"`EXPIRE_TAKER`:expire taker order when STP triggers / `EXPIRE_MAKER`:expire taker order when STP triggers/ `EXPIRE_BOTH`:expire both orders when STP triggers; default `NONE`"#,
+        help = r#"`EXPIRE_TAKER`: expire taker order when STP triggers / `EXPIRE_MAKER`: expire taker order when STP triggers/ `EXPIRE_BOTH`: expire both orders when STP triggers; default `NONE`"#,
         long
     )]
     self_trade_prevention_mode: Option<NewAlgoOrderSelfTradePreventionModeEnum>,
@@ -1358,7 +1359,7 @@ struct NewOrderArgs {
     )]
     price_match: Option<NewOrderPriceMatchEnum>,
     #[arg(
-        help = r#"`EXPIRE_TAKER`:expire taker order when STP triggers/ `EXPIRE_MAKER`:expire taker order when STP triggers/ `EXPIRE_BOTH`:expire both orders when STP triggers; default `EXPIRE_MAKER`"#,
+        help = r#"`EXPIRE_TAKER`: expire taker order when STP triggers/ `EXPIRE_MAKER`: expire taker order when STP triggers/ `EXPIRE_BOTH`: expire both orders when STP triggers; default `EXPIRE_MAKER`"#,
         long
     )]
     self_trade_prevention_mode: Option<NewOrderSelfTradePreventionModeEnum>,
@@ -1559,7 +1560,7 @@ struct TestOrderArgs {
     )]
     price_match: Option<TestOrderPriceMatchEnum>,
     #[arg(
-        help = r#"`NONE`:No STP / `EXPIRE_TAKER`:expire taker order when STP triggers/ `EXPIRE_MAKER`:expire taker order when STP triggers/ `EXPIRE_BOTH`:expire both orders when STP triggers; default `NONE`"#,
+        help = r#"`NONE`: No STP / `EXPIRE_TAKER`: expire taker order when STP triggers/ `EXPIRE_MAKER`: expire taker order when STP triggers/ `EXPIRE_BOTH`: expire both orders when STP triggers; default `NONE`"#,
         long
     )]
     self_trade_prevention_mode: Option<TestOrderSelfTradePreventionModeEnum>,
@@ -1660,7 +1661,7 @@ Security Type: USER_DATA"#, false),
     )]
     FuturesAccountConfiguration(FuturesAccountConfigurationArgs),
     #[command(
-        about = decode_selected_entities(r#"Futures trading quantitative rules indicators, for more information on this, please refer to the [Futures Trading Quantitative Rules](https://www.binance.com/en/support/faq/4f462ebe6ff445d4a170be7d9e897272)
+        about = decode_selected_entities(r#"Futures trading quantitative rules indicators, for more information on this, please refer to the Futures Trading Quantitative Rules
 
 Weight: - **1** for a single symbol
 - **10** when the symbol parameter is omitted
@@ -1912,7 +1913,7 @@ tags to be distinguished.
 Weight(IP): 20
 
 Notes:
-- support querying futures trade histories that are not older than 24 hours
+- only trade histories within the past 48 hours (counted from now) can be queried
 - If both `startTime` and `endTime` are sent, time between `startTime` and `endTime` must be less than 1 hour.
 - If `fromId`, `startTime`, and `endTime` are not sent, the most recent aggregate trades will be returned.
 - Only market trades will be aggregated and returned, which means the insurance fund trades and ADL trades won't be aggregated.
@@ -2055,7 +2056,8 @@ Weight(IP): 0
 Notes:
 - If startTime and endTime are not sent, the most recent data is returned.
 - Only the data of the latest 1 month is available.
-- IP rate limit 1000 requests/5min"#, false),
+- IP rate limit 1000 requests/5min
+- A period with no trades has no record and is omitted from the response. Such gaps are expected and are not backfilled."#, false),
     )]
     OpenInterestStatistics(OpenInterestStatisticsArgs),
     #[command(
@@ -2240,13 +2242,15 @@ Notes:
     )]
     TopTraderLongShortRatioPositions(TopTraderLongShortRatioPositionsArgs),
     #[command(
-        about = decode_selected_entities(r#"Trading session schedules for the underlying assets of TradFi Perps are provided for a one-week period forward and one-week period backward starting from the day prior to the query time, covering the U.S. equity market, Korean equity market, Hong Kong equity market, and the commodity market.
+        about = decode_selected_entities(r#"Trading session schedules for the underlying assets of TradFi Perps are provided for a one-week period forward and one-week period backward starting from the day prior to the query time, covering the U.S. equity market, Korean equity market, Hong Kong equity market, China equity market, the commodity market, and the FX market.
 
 Session types per market:
 - U.S. equity market: "PRE_MARKET", "REGULAR", "AFTER_MARKET", "OVERNIGHT", "NO_TRADING".
 - Commodity market: "REGULAR", "NO_TRADING".
 - Korean equity market: "REGULAR", "NO_TRADING".
 - Hong Kong equity market: "REGULAR", "NO_TRADING".
+- China equity market: "REGULAR", "NO_TRADING".
+- FX market: "REGULAR", "NO_TRADING".
 
 Weight(IP): 5"#, false),
     )]
@@ -2273,7 +2277,7 @@ Notes:
 - If `startTime` and `endTime` are both not sent, then the last 7 days' data will be returned.
 - The time between `startTime` and `endTime` cannot be longer than 7 days.
 - The parameter `fromId` cannot be sent with `startTime` or `endTime`.
-- Only support querying trade in the past 6 months"#, false),
+- Only support querying trade in the past 3 months"#, false),
     )]
     AccountTradeList(AccountTradeListArgs),
     #[command(
@@ -2502,7 +2506,12 @@ Notes:
 - However the order will be cancelled by the amendment in the following situations:
   - when the order is in partially filled status and the new `quantity` <= `executedQty`
   - When the order is `GTX` and the new price will cause it to be executed immediately
-- One order can only be modfied for less than 10000 times"#, false),
+- One order can only be modfied for less than 10000 times
+- `reduceOnly` behavior:
+  - `false` or omitted: behave as today — `min_notional` is enforced on the modified order.
+  - `true` and the original order's `reduceOnly` attribute is also `true` (consistent): the `min_notional` check is skipped on the modified order, matching placement semantics.
+  - `true` but the original order's `reduceOnly` attribute is `false` (inconsistent): the modify request is rejected with error code `-5047`, "The original order is not a reduce-only order".
+  - `reduceOnly` is used purely for validation — passing `true` does not change the original order's `reduceOnly` attribute; that flag remains whatever it was set to at placement time."#, false),
     )]
     ModifyOrder(ModifyOrderArgs),
     #[command(
@@ -3371,9 +3380,9 @@ async fn get_download_id_for_futures_order_history(
                 }
                 GetDownloadIdForFuturesOrderHistoryParams::builder(
                     args.start_time
-                        .ok_or_else(|| anyhow::anyhow!("start_time is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("start-time is required"))?,
                     args.end_time
-                        .ok_or_else(|| anyhow::anyhow!("end_time is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("end-time is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -3422,9 +3431,9 @@ async fn get_download_id_for_futures_trade_history(
                 }
                 GetDownloadIdForFuturesTradeHistoryParams::builder(
                     args.start_time
-                        .ok_or_else(|| anyhow::anyhow!("start_time is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("start-time is required"))?,
                     args.end_time
-                        .ok_or_else(|| anyhow::anyhow!("end_time is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("end-time is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -3473,9 +3482,9 @@ async fn get_download_id_for_futures_transaction_history(
                 }
                 GetDownloadIdForFuturesTransactionHistoryParams::builder(
                     args.start_time
-                        .ok_or_else(|| anyhow::anyhow!("start_time is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("start-time is required"))?,
                     args.end_time
-                        .ok_or_else(|| anyhow::anyhow!("end_time is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("end-time is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -3506,18 +3515,16 @@ async fn get_futures_order_history_download_link_by_id(
                     io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
                 })?,
             None => {
-                if args.interactive {
-                    if args.download_id.is_none() {
-                        let download_id: String = Input::new()
-                            .with_prompt("Input download_id:")
-                            .interact_text()?;
+                if args.interactive && args.download_id.is_none() {
+                    let download_id: String = Input::new()
+                        .with_prompt("Input download_id:")
+                        .interact_text()?;
 
-                        args.download_id = Some(download_id);
-                    }
+                    args.download_id = Some(download_id);
                 }
                 GetFuturesOrderHistoryDownloadLinkByIdParams::builder(
                     args.download_id
-                        .ok_or_else(|| anyhow::anyhow!("download_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("download-id is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -3549,18 +3556,16 @@ async fn get_futures_trade_download_link_by_id(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.download_id.is_none() {
-                        let download_id: String = Input::new()
-                            .with_prompt("Input download_id:")
-                            .interact_text()?;
+                if args.interactive && args.download_id.is_none() {
+                    let download_id: String = Input::new()
+                        .with_prompt("Input download_id:")
+                        .interact_text()?;
 
-                        args.download_id = Some(download_id);
-                    }
+                    args.download_id = Some(download_id);
                 }
                 GetFuturesTradeDownloadLinkByIdParams::builder(
                     args.download_id
-                        .ok_or_else(|| anyhow::anyhow!("download_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("download-id is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -3591,18 +3596,16 @@ async fn get_futures_transaction_history_download_link_by_id(
                     io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
                 })?,
             None => {
-                if args.interactive {
-                    if args.download_id.is_none() {
-                        let download_id: String = Input::new()
-                            .with_prompt("Input download_id:")
-                            .interact_text()?;
+                if args.interactive && args.download_id.is_none() {
+                    let download_id: String = Input::new()
+                        .with_prompt("Input download_id:")
+                        .interact_text()?;
 
-                        args.download_id = Some(download_id);
-                    }
+                    args.download_id = Some(download_id);
                 }
                 GetFuturesTransactionHistoryDownloadLinkByIdParams::builder(
                     args.download_id
-                        .ok_or_else(|| anyhow::anyhow!("download_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("download-id is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -3634,7 +3637,6 @@ async fn get_income_history(args: GetIncomeHistoryArgs) -> anyhow::Result<()> {
                 .income_type(args.income_type)
                 .start_time(args.start_time)
                 .end_time(args.end_time)
-                .page(args.page)
                 .limit(args.limit)
                 .recv_window(args.recv_window)
                 .build()?,
@@ -3738,18 +3740,16 @@ async fn toggle_bnb_burn_on_futures_trade(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.fee_burn.is_none() {
-                        let fee_burn: String = Input::new()
-                            .with_prompt("Input fee_burn:")
-                            .interact_text()?;
+                if args.interactive && args.fee_burn.is_none() {
+                    let fee_burn: String = Input::new()
+                        .with_prompt("Input fee_burn:")
+                        .interact_text()?;
 
-                        args.fee_burn = Some(fee_burn);
-                    }
+                    args.fee_burn = Some(fee_burn);
                 }
                 ToggleBnbBurnOnFuturesTradeParams::builder(
                     args.fee_burn
-                        .ok_or_else(|| anyhow::anyhow!("fee_burn is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("fee-burn is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -3775,13 +3775,11 @@ async fn user_commission_rate(mut args: UserCommissionRateArgs) -> anyhow::Resul
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 UserCommissionRateParams::builder(
                     args.symbol
@@ -3811,18 +3809,16 @@ async fn accept_the_offered_quote(mut args: AcceptTheOfferedQuoteArgs) -> anyhow
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.quote_id.is_none() {
-                        let quote_id: String = Input::new()
-                            .with_prompt("Input quote_id:")
-                            .interact_text()?;
+                if args.interactive && args.quote_id.is_none() {
+                    let quote_id: String = Input::new()
+                        .with_prompt("Input quote_id:")
+                        .interact_text()?;
 
-                        args.quote_id = Some(quote_id);
-                    }
+                    args.quote_id = Some(quote_id);
                 }
                 AcceptTheOfferedQuoteParams::builder(
                     args.quote_id
-                        .ok_or_else(|| anyhow::anyhow!("quote_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("quote-id is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -3914,9 +3910,9 @@ async fn send_quote_request(mut args: SendQuoteRequestArgs) -> anyhow::Result<()
                 }
                 SendQuoteRequestParams::builder(
                     args.from_asset
-                        .ok_or_else(|| anyhow::anyhow!("from_asset is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("from-asset is required"))?,
                     args.to_asset
-                        .ok_or_else(|| anyhow::anyhow!("to_asset is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("to-asset is required"))?,
                 )
                 .from_amount(args.from_amount)
                 .to_amount(args.to_amount)
@@ -3995,7 +3991,7 @@ async fn basis(mut args: BasisArgs) -> anyhow::Result<()> {
                         args.pair = Some(pair);
                     }
                     if args.contract_type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("PERPETUAL", BasisContractTypeEnum::Perpetual),
                             ("CURRENT_QUARTER", BasisContractTypeEnum::CurrentQuarter),
                             ("NEXT_QUARTER", BasisContractTypeEnum::NextQuarter),
@@ -4047,7 +4043,7 @@ async fn basis(mut args: BasisArgs) -> anyhow::Result<()> {
                     args.pair
                         .ok_or_else(|| anyhow::anyhow!("pair is required"))?,
                     args.contract_type
-                        .ok_or_else(|| anyhow::anyhow!("contract_type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("contract-type is required"))?,
                     args.period
                         .ok_or_else(|| anyhow::anyhow!("period is required"))?,
                 )
@@ -4121,13 +4117,11 @@ async fn compressed_aggregate_trades_list(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 CompressedAggregateTradesListParams::builder(
                     args.symbol
@@ -4172,12 +4166,10 @@ async fn continuous_contract_kline_candlestick_data(
                             args.pair = Some(pair);
                         }
                         if args.contract_type.is_none() {
-                            let options = vec![
-                        ("PERPETUAL", ContinuousContractKlineCandlestickDataContractTypeEnum::Perpetual),
+                            let options = [("PERPETUAL", ContinuousContractKlineCandlestickDataContractTypeEnum::Perpetual),
                         ("CURRENT_QUARTER", ContinuousContractKlineCandlestickDataContractTypeEnum::CurrentQuarter),
                         ("NEXT_QUARTER", ContinuousContractKlineCandlestickDataContractTypeEnum::NextQuarter),
-                        ("TRADIFI_PERPETUAL", ContinuousContractKlineCandlestickDataContractTypeEnum::TradifiPerpetual),
-                    ];
+                        ("TRADIFI_PERPETUAL", ContinuousContractKlineCandlestickDataContractTypeEnum::TradifiPerpetual)];
 
                             let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
 
@@ -4232,7 +4224,7 @@ async fn continuous_contract_kline_candlestick_data(
                         args.pair
                             .ok_or_else(|| anyhow::anyhow!("pair is required"))?,
                         args.contract_type
-                            .ok_or_else(|| anyhow::anyhow!("contract_type is required"))?,
+                            .ok_or_else(|| anyhow::anyhow!("contract-type is required"))?,
                         args.interval
                             .ok_or_else(|| anyhow::anyhow!("interval is required"))?,
                     )
@@ -4650,13 +4642,11 @@ async fn old_trades_lookup(mut args: OldTradesLookupArgs) -> anyhow::Result<()> 
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 OldTradesLookupParams::builder(
                     args.symbol
@@ -4687,13 +4677,11 @@ async fn open_interest(mut args: OpenInterestArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 OpenInterestParams::builder(
                     args.symbol
@@ -4789,13 +4777,11 @@ async fn order_book(mut args: OrderBookArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 OrderBookParams::builder(
                     args.symbol
@@ -4902,13 +4888,10 @@ async fn quarterly_contract_settlement_price(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.pair.is_none() {
-                        let pair: String =
-                            Input::new().with_prompt("Input pair:").interact_text()?;
+                if args.interactive && args.pair.is_none() {
+                    let pair: String = Input::new().with_prompt("Input pair:").interact_text()?;
 
-                        args.pair = Some(pair);
-                    }
+                    args.pair = Some(pair);
                 }
                 QuarterlyContractSettlementPriceParams::builder(
                     args.pair
@@ -4943,13 +4926,11 @@ async fn query_index_price_constituents(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 QueryIndexPriceConstituentsParams::builder(
                     args.symbol
@@ -5006,13 +4987,11 @@ async fn recent_trades_list(mut args: RecentTradesListArgs) -> anyhow::Result<()
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 RecentTradesListParams::builder(
                     args.symbol
@@ -5042,13 +5021,11 @@ async fn rpi_order_book(mut args: RpiOrderBookArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 RpiOrderBookParams::builder(
                     args.symbol
@@ -5414,13 +5391,10 @@ async fn classic_portfolio_margin_account_information(
                     io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
                 })?,
             None => {
-                if args.interactive {
-                    if args.asset.is_none() {
-                        let asset: String =
-                            Input::new().with_prompt("Input asset:").interact_text()?;
+                if args.interactive && args.asset.is_none() {
+                    let asset: String = Input::new().with_prompt("Input asset:").interact_text()?;
 
-                        args.asset = Some(asset);
-                    }
+                    args.asset = Some(asset);
                 }
                 ClassicPortfolioMarginAccountInformationParams::builder(
                     args.asset
@@ -5452,13 +5426,11 @@ async fn account_trade_list(mut args: AccountTradeListArgs) -> anyhow::Result<()
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 AccountTradeListParams::builder(
                     args.symbol
@@ -5483,7 +5455,7 @@ async fn account_trade_list(mut args: AccountTradeListArgs) -> anyhow::Result<()
     Ok(())
 }
 
-async fn all_orders(mut args: AllOrdersArgs) -> anyhow::Result<()> {
+async fn all_orders(args: AllOrdersArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
     let params = match read_stdin_as::<AllOrdersParams>() {
@@ -5492,26 +5464,14 @@ async fn all_orders(mut args: AllOrdersArgs) -> anyhow::Result<()> {
             Some(json) => read_json_as::<AllOrdersParams>(json).ok_or_else(|| {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
-            None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
-
-                        args.symbol = Some(symbol);
-                    }
-                }
-                AllOrdersParams::builder(
-                    args.symbol
-                        .ok_or_else(|| anyhow::anyhow!("symbol is required"))?,
-                )
+            None => AllOrdersParams::builder()
+                .symbol(args.symbol)
                 .order_id(args.order_id)
                 .start_time(args.start_time)
                 .end_time(args.end_time)
                 .limit(args.limit)
                 .recv_window(args.recv_window)
-                .build()?
-            }
+                .build()?,
         },
     };
 
@@ -5552,7 +5512,7 @@ async fn auto_cancel_all_open_orders(mut args: AutoCancelAllOpenOrdersArgs) -> a
                     args.symbol
                         .ok_or_else(|| anyhow::anyhow!("symbol is required"))?,
                     args.countdown_time
-                        .ok_or_else(|| anyhow::anyhow!("countdown_time is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("countdown-time is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -5603,13 +5563,11 @@ async fn cancel_all_algo_open_orders(mut args: CancelAllAlgoOpenOrdersArgs) -> a
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 CancelAllAlgoOpenOrdersParams::builder(
                     args.symbol
@@ -5639,13 +5597,11 @@ async fn cancel_all_open_orders(mut args: CancelAllOpenOrdersArgs) -> anyhow::Re
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 CancelAllOpenOrdersParams::builder(
                     args.symbol
@@ -5675,13 +5631,11 @@ async fn cancel_multiple_orders(mut args: CancelMultipleOrdersArgs) -> anyhow::R
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 CancelMultipleOrdersParams::builder(
                     args.symbol
@@ -5713,13 +5667,11 @@ async fn cancel_order(mut args: CancelOrderArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 CancelOrderParams::builder(
                     args.symbol
@@ -5804,7 +5756,7 @@ async fn change_margin_type(mut args: ChangeMarginTypeArgs) -> anyhow::Result<()
                         args.symbol = Some(symbol);
                     }
                     if args.margin_type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("ISOLATED", ChangeMarginTypeMarginTypeEnum::Isolated),
                             ("CROSSED", ChangeMarginTypeMarginTypeEnum::Crossed),
                         ];
@@ -5828,7 +5780,7 @@ async fn change_margin_type(mut args: ChangeMarginTypeArgs) -> anyhow::Result<()
                     args.symbol
                         .ok_or_else(|| anyhow::anyhow!("symbol is required"))?,
                     args.margin_type
-                        .ok_or_else(|| anyhow::anyhow!("margin_type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("margin-type is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -5854,18 +5806,16 @@ async fn change_multi_assets_mode(mut args: ChangeMultiAssetsModeArgs) -> anyhow
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.multi_assets_margin.is_none() {
-                        let multi_assets_margin: String = Input::new()
-                            .with_prompt("Input multi_assets_margin:")
-                            .interact_text()?;
+                if args.interactive && args.multi_assets_margin.is_none() {
+                    let multi_assets_margin: String = Input::new()
+                        .with_prompt("Input multi_assets_margin:")
+                        .interact_text()?;
 
-                        args.multi_assets_margin = Some(multi_assets_margin);
-                    }
+                    args.multi_assets_margin = Some(multi_assets_margin);
                 }
                 ChangeMultiAssetsModeParams::builder(
                     args.multi_assets_margin
-                        .ok_or_else(|| anyhow::anyhow!("multi_assets_margin is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("multi-assets-margin is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -5891,18 +5841,16 @@ async fn change_position_mode(mut args: ChangePositionModeArgs) -> anyhow::Resul
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.dual_side_position.is_none() {
-                        let dual_side_position: String = Input::new()
-                            .with_prompt("Input dual_side_position:")
-                            .interact_text()?;
+                if args.interactive && args.dual_side_position.is_none() {
+                    let dual_side_position: String = Input::new()
+                        .with_prompt("Input dual_side_position:")
+                        .interact_text()?;
 
-                        args.dual_side_position = Some(dual_side_position);
-                    }
+                    args.dual_side_position = Some(dual_side_position);
                 }
                 ChangePositionModeParams::builder(
                     args.dual_side_position
-                        .ok_or_else(|| anyhow::anyhow!("dual_side_position is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("dual-side-position is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -6005,13 +5953,11 @@ async fn get_order_modify_history(mut args: GetOrderModifyHistoryArgs) -> anyhow
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 GetOrderModifyHistoryParams::builder(
                     args.symbol
@@ -6050,13 +5996,11 @@ async fn get_position_margin_change_history(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 GetPositionMarginChangeHistoryParams::builder(
                     args.symbol
@@ -6122,7 +6066,7 @@ async fn modify_isolated_position_margin(
                     args.amount
                         .ok_or_else(|| anyhow::anyhow!("amount is required"))?,
                     args.r#type
-                        .ok_or_else(|| anyhow::anyhow!("r#type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("rtype is required"))?,
                 )
                 .position_side(args.position_side)
                 .recv_window(args.recv_window)
@@ -6149,21 +6093,19 @@ async fn modify_multiple_orders(mut args: ModifyMultipleOrdersArgs) -> anyhow::R
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.batch_orders.is_none() {
-                        let batch_orders: String = Input::new()
-                            .with_prompt("Input batch_orders:")
-                            .interact_text()?;
+                if args.interactive && args.batch_orders.is_none() {
+                    let batch_orders: String = Input::new()
+                        .with_prompt("Input batch_orders:")
+                        .interact_text()?;
 
-                        args.batch_orders = Some(batch_orders);
-                    }
+                    args.batch_orders = Some(batch_orders);
                 }
                 ModifyMultipleOrdersParams::builder(serde_json::from_str::<
                     Vec<models::ModifyMultipleOrdersBatchOrdersParameterInner>,
                 >(
                     &args
                         .batch_orders
-                        .ok_or_else(|| anyhow::anyhow!("batch_orders is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("batch-orders is required"))?,
                 )?)
                 .recv_window(args.recv_window)
                 .build()?
@@ -6197,7 +6139,7 @@ async fn modify_order(mut args: ModifyOrderArgs) -> anyhow::Result<()> {
                         args.symbol = Some(symbol);
                     }
                     if args.side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", ModifyOrderSideEnum::Buy),
                             ("SELL", ModifyOrderSideEnum::Sell),
                         ];
@@ -6244,6 +6186,7 @@ async fn modify_order(mut args: ModifyOrderArgs) -> anyhow::Result<()> {
                 .orig_client_order_id(args.orig_client_order_id)
                 .price_match(args.price_match)
                 .modify_id(args.modify_id)
+                .reduce_only(args.reduce_only)
                 .recv_window(args.recv_window)
                 .build()?
             }
@@ -6270,7 +6213,7 @@ async fn new_algo_order(mut args: NewAlgoOrderArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.algo_type.is_none() {
-                        let options = vec![("CONDITIONAL", NewAlgoOrderAlgoTypeEnum::Conditional)];
+                        let options = [("CONDITIONAL", NewAlgoOrderAlgoTypeEnum::Conditional)];
 
                         let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
 
@@ -6293,7 +6236,7 @@ async fn new_algo_order(mut args: NewAlgoOrderArgs) -> anyhow::Result<()> {
                         args.symbol = Some(symbol);
                     }
                     if args.side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", NewAlgoOrderSideEnum::Buy),
                             ("SELL", NewAlgoOrderSideEnum::Sell),
                         ];
@@ -6313,7 +6256,7 @@ async fn new_algo_order(mut args: NewAlgoOrderArgs) -> anyhow::Result<()> {
                         args.side = Some(selected);
                     }
                     if args.r#type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("LIMIT", NewAlgoOrderTypeEnum::Limit),
                             ("MARKET", NewAlgoOrderTypeEnum::Market),
                             ("STOP", NewAlgoOrderTypeEnum::Stop),
@@ -6343,13 +6286,13 @@ async fn new_algo_order(mut args: NewAlgoOrderArgs) -> anyhow::Result<()> {
                 }
                 NewAlgoOrderParams::builder(
                     args.algo_type
-                        .ok_or_else(|| anyhow::anyhow!("algo_type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("algo-type is required"))?,
                     args.symbol
                         .ok_or_else(|| anyhow::anyhow!("symbol is required"))?,
                     args.side
                         .ok_or_else(|| anyhow::anyhow!("side is required"))?,
                     args.r#type
-                        .ok_or_else(|| anyhow::anyhow!("r#type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("rtype is required"))?,
                 )
                 .position_side(args.position_side)
                 .time_in_force(args.time_in_force)
@@ -6399,7 +6342,7 @@ async fn new_order(mut args: NewOrderArgs) -> anyhow::Result<()> {
                         args.symbol = Some(symbol);
                     }
                     if args.side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", NewOrderSideEnum::Buy),
                             ("SELL", NewOrderSideEnum::Sell),
                         ];
@@ -6419,7 +6362,7 @@ async fn new_order(mut args: NewOrderArgs) -> anyhow::Result<()> {
                         args.side = Some(selected);
                     }
                     if args.r#type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("LIMIT", NewOrderTypeEnum::Limit),
                             ("MARKET", NewOrderTypeEnum::Market),
                             ("STOP", NewOrderTypeEnum::Stop),
@@ -6450,7 +6393,7 @@ async fn new_order(mut args: NewOrderArgs) -> anyhow::Result<()> {
                     args.side
                         .ok_or_else(|| anyhow::anyhow!("side is required"))?,
                     args.r#type
-                        .ok_or_else(|| anyhow::anyhow!("r#type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("rtype is required"))?,
                 )
                 .position_side(args.position_side)
                 .time_in_force(args.time_in_force)
@@ -6486,21 +6429,19 @@ async fn place_multiple_orders(mut args: PlaceMultipleOrdersArgs) -> anyhow::Res
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.batch_orders.is_none() {
-                        let batch_orders: String = Input::new()
-                            .with_prompt("Input batch_orders:")
-                            .interact_text()?;
+                if args.interactive && args.batch_orders.is_none() {
+                    let batch_orders: String = Input::new()
+                        .with_prompt("Input batch_orders:")
+                        .interact_text()?;
 
-                        args.batch_orders = Some(batch_orders);
-                    }
+                    args.batch_orders = Some(batch_orders);
                 }
                 PlaceMultipleOrdersParams::builder(serde_json::from_str::<
                     Vec<models::PlaceMultipleOrdersBatchOrdersParameterInner>,
                 >(
                     &args
                         .batch_orders
-                        .ok_or_else(|| anyhow::anyhow!("batch_orders is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("batch-orders is required"))?,
                 )?)
                 .recv_window(args.recv_window)
                 .build()?
@@ -6627,13 +6568,11 @@ async fn query_all_algo_orders(mut args: QueryAllAlgoOrdersArgs) -> anyhow::Resu
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 QueryAllAlgoOrdersParams::builder(
                     args.symbol
@@ -6667,13 +6606,11 @@ async fn query_current_open_order(mut args: QueryCurrentOpenOrderArgs) -> anyhow
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 QueryCurrentOpenOrderParams::builder(
                     args.symbol
@@ -6705,13 +6642,11 @@ async fn query_order(mut args: QueryOrderArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 QueryOrderParams::builder(
                     args.symbol
@@ -6751,7 +6686,7 @@ async fn test_order(mut args: TestOrderArgs) -> anyhow::Result<()> {
                         args.symbol = Some(symbol);
                     }
                     if args.side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", TestOrderSideEnum::Buy),
                             ("SELL", TestOrderSideEnum::Sell),
                         ];
@@ -6771,7 +6706,7 @@ async fn test_order(mut args: TestOrderArgs) -> anyhow::Result<()> {
                         args.side = Some(selected);
                     }
                     if args.r#type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("LIMIT", TestOrderTypeEnum::Limit),
                             ("MARKET", TestOrderTypeEnum::Market),
                             ("STOP", TestOrderTypeEnum::Stop),
@@ -6805,7 +6740,7 @@ async fn test_order(mut args: TestOrderArgs) -> anyhow::Result<()> {
                     args.side
                         .ok_or_else(|| anyhow::anyhow!("side is required"))?,
                     args.r#type
-                        .ok_or_else(|| anyhow::anyhow!("r#type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("rtype is required"))?,
                 )
                 .position_side(args.position_side)
                 .reduce_only(args.reduce_only)

@@ -48,9 +48,7 @@ fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> 
         }
     }
 
-    let rest_conf = builder
-        .build()
-        .map_err(|err| Error::new(ErrorKind::Other, err))?;
+    let rest_conf = builder.build().map_err(Error::other)?;
 
     Ok(DerivativesTradingPortfolioMarginRestApi::from_config(
         rest_conf,
@@ -144,7 +142,10 @@ struct ChangeCmPositionModeArgs {
 struct ChangeUmInitialLeverageArgs {
     #[arg(help = r#""#, long)]
     symbol: Option<String>,
-    #[arg(help = r#"target initial leverage"#, long)]
+    #[arg(
+        help = r#"Target initial leverage. The maximum is symbol-specific: use `initialLeverage` of bracket 1 from `GET /papi/v1/um/leverageBracket`."#,
+        long
+    )]
     leverage: Option<i64>,
     #[arg(help = r#""#, long)]
     recv_window: Option<i64>,
@@ -196,6 +197,16 @@ struct FundAutoCollectionArgs {
 struct FundCollectionByAssetArgs {
     #[arg(help = r#""#, long)]
     asset: Option<String>,
+    #[arg(
+        help = r#"Amount to collect. When provided, `futureType` is required."#,
+        long
+    )]
+    amount: Option<rust_decimal::Decimal>,
+    #[arg(
+        help = r#"Target wallet for the collection. `OPTION` is for SPAN only. Cannot be sent without `amount`. `amount` and `futureType` must be provided together. If neither is provided, existing behavior is unchanged (query all wallets + transfer)."#,
+        long
+    )]
+    future_type: Option<FundCollectionByAssetFutureTypeEnum>,
     #[arg(help = r#""#, long)]
     recv_window: Option<i64>,
     #[arg(short = 'i', long)]
@@ -714,19 +725,6 @@ struct CancelAllUmAlgoOpenOrdersArgs {
     profile: Option<String>,
 }
 #[derive(Args, Debug)]
-struct CancelAllUmOpenConditionalOrdersArgs {
-    #[arg(help = r#"Symbol"#, long)]
-    symbol: Option<String>,
-    #[arg(help = r#""#, long)]
-    recv_window: Option<i64>,
-    #[arg(short = 'i', long)]
-    interactive: bool,
-    #[arg(help = r#"Send all fields as JSON"#, long)]
-    json: Option<String>,
-    #[arg(help = r#"Select a profile"#, long)]
-    profile: Option<String>,
-}
-#[derive(Args, Debug)]
 struct CancelAllUmOpenOrdersArgs {
     #[arg(help = r#"Symbol"#, long)]
     symbol: Option<String>,
@@ -836,23 +834,6 @@ struct CancelUmAlgoOrderArgs {
     algo_id: Option<i64>,
     #[arg(help = r#"Client algo order ID"#, long)]
     client_algo_id: Option<String>,
-    #[arg(help = r#""#, long)]
-    recv_window: Option<i64>,
-    #[arg(short = 'i', long)]
-    interactive: bool,
-    #[arg(help = r#"Send all fields as JSON"#, long)]
-    json: Option<String>,
-    #[arg(help = r#"Select a profile"#, long)]
-    profile: Option<String>,
-}
-#[derive(Args, Debug)]
-struct CancelUmConditionalOrderArgs {
-    #[arg(help = r#"Symbol"#, long)]
-    symbol: Option<String>,
-    #[arg(help = r#""#, long)]
-    strategy_id: Option<i64>,
-    #[arg(help = r#""#, long)]
-    new_client_strategy_id: Option<String>,
     #[arg(help = r#""#, long)]
     recv_window: Option<i64>,
     #[arg(short = 'i', long)]
@@ -1253,7 +1234,7 @@ struct NewMarginOrderArgs {
     #[arg(help = r#""#, long)]
     time_in_force: Option<NewMarginOrderTimeInForceEnum>,
     #[arg(
-        help = r#"`NONE`:No STP / `EXPIRE_TAKER`:expire taker order when STP triggers/ `EXPIRE_MAKER`:expire taker order when STP triggers/ `EXPIRE_BOTH`:expire both orders when STP triggers"#,
+        help = r#"`NONE`: No STP / `EXPIRE_TAKER`: expire taker order when STP triggers/ `EXPIRE_MAKER`: expire taker order when STP triggers/ `EXPIRE_BOTH`: expire both orders when STP triggers"#,
         long
     )]
     self_trade_prevention_mode: Option<NewMarginOrderSelfTradePreventionModeEnum>,
@@ -1278,8 +1259,6 @@ struct NewUmAlgoOrderArgs {
     side: Option<NewUmAlgoOrderSideEnum>,
     #[arg(help = r#"Conditional order type"#, long)]
     r#type: Option<NewUmAlgoOrderTypeEnum>,
-    #[arg(help = r#"Order quantity"#, long)]
-    quantity: Option<rust_decimal::Decimal>,
     #[arg(
         help = r#"Default `BOTH` for One-way Mode; `LONG` or `SHORT` for Hedge Mode"#,
         long
@@ -1287,6 +1266,11 @@ struct NewUmAlgoOrderArgs {
     position_side: Option<NewUmAlgoOrderPositionSideEnum>,
     #[arg(help = r#""#, long)]
     time_in_force: Option<NewUmAlgoOrderTimeInForceEnum>,
+    #[arg(
+        help = r#"Order quantity. Cannot be sent with `closePosition`=`true`(Close-All)"#,
+        long
+    )]
+    quantity: Option<rust_decimal::Decimal>,
     #[arg(help = r#"Order price"#, long)]
     price: Option<rust_decimal::Decimal>,
     #[arg(help = r#"Trigger price"#, long)]
@@ -1295,9 +1279,17 @@ struct NewUmAlgoOrderArgs {
     working_type: Option<NewUmAlgoOrderWorkingTypeEnum>,
     #[arg(help = r#"Can't be passed together with `price`"#, long)]
     price_match: Option<NewUmAlgoOrderPriceMatchEnum>,
+    #[arg(
+        help = r#"Close-All, used with `STOP_MARKET` or `TAKE_PROFIT_MARKET`."#,
+        long
+    )]
+    close_position: Option<NewUmAlgoOrderClosePositionEnum>,
     #[arg(help = r#"Price protection. Default `false`"#, long)]
     price_protect: Option<NewUmAlgoOrderPriceProtectEnum>,
-    #[arg(help = r#"Cannot be sent in Hedge Mode"#, long)]
+    #[arg(
+        help = r#"Cannot be sent in Hedge Mode; cannot be sent with `closePosition`=`true`"#,
+        long
+    )]
     reduce_only: Option<NewUmAlgoOrderReduceOnlyEnum>,
     #[arg(
         help = r#"Used with `TRAILING_STOP_MARKET`, default as latest price"#,
@@ -1320,78 +1312,6 @@ struct NewUmAlgoOrderArgs {
     self_trade_prevention_mode: Option<NewUmAlgoOrderSelfTradePreventionModeEnum>,
     #[arg(
         help = r#"Order cancel time for `GTD` timeInForce, mandatory when timeInForce is `GTD`"#,
-        long
-    )]
-    good_till_date: Option<i64>,
-    #[arg(help = r#""#, long)]
-    recv_window: Option<i64>,
-    #[arg(short = 'i', long)]
-    interactive: bool,
-    #[arg(help = r#"Send all fields as JSON"#, long)]
-    json: Option<String>,
-    #[arg(help = r#"Select a profile"#, long)]
-    profile: Option<String>,
-}
-#[derive(Args, Debug)]
-struct NewUmConditionalOrderArgs {
-    #[arg(help = r#"Symbol"#, long)]
-    symbol: Option<String>,
-    #[arg(help = r#""#, long)]
-    side: Option<NewUmConditionalOrderSideEnum>,
-    #[arg(help = r#""#, long)]
-    strategy_type: Option<NewUmConditionalOrderStrategyTypeEnum>,
-    #[arg(
-        help = r#"Default `BOTH` for One-way Mode ; `LONG` or `SHORT` for Hedge Mode. It must be sent in Hedge Mode."#,
-        long
-    )]
-    position_side: Option<NewUmConditionalOrderPositionSideEnum>,
-    #[arg(help = r#""#, long)]
-    time_in_force: Option<NewUmConditionalOrderTimeInForceEnum>,
-    #[arg(help = r#""#, long)]
-    quantity: Option<rust_decimal::Decimal>,
-    #[arg(
-        help = r#""true" or "false". Cannot be sent in Hedge Mode ; cannot be sent with `closePosition`=`true`"#,
-        long
-    )]
-    reduce_only: Option<NewUmConditionalOrderReduceOnlyEnum>,
-    #[arg(help = r#""#, long)]
-    price: Option<rust_decimal::Decimal>,
-    #[arg(
-        help = r#"stopPrice triggered by: "MARK_PRICE", "CONTRACT_PRICE". Default "CONTRACT_PRICE""#,
-        long
-    )]
-    working_type: Option<NewUmConditionalOrderWorkingTypeEnum>,
-    #[arg(
-        help = r#""true" or "false". Used with `STOP/STOP_MARKET` or `TAKE_PROFIT/TAKE_PROFIT_MARKET` orders"#,
-        long
-    )]
-    price_protect: Option<NewUmConditionalOrderPriceProtectEnum>,
-    #[arg(
-        help = r#"A unique id among open orders. Automatically generated if not sent. Can only be string following the rule: `^[\.A-Z\:/a-z0-9_-]{1,32}$`"#,
-        long
-    )]
-    new_client_strategy_id: Option<String>,
-    #[arg(
-        help = r#"Used with `STOP/STOP_MARKET` or `TAKE_PROFIT/TAKE_PROFIT_MARKET` orders."#,
-        long
-    )]
-    stop_price: Option<rust_decimal::Decimal>,
-    #[arg(help = r#"Used with `TRAILING_STOP_MARKET` orders."#, long)]
-    activation_price: Option<rust_decimal::Decimal>,
-    #[arg(help = r#"Used with `TRAILING_STOP_MARKET` orders."#, long)]
-    callback_rate: Option<rust_decimal::Decimal>,
-    #[arg(
-        help = r#"only avaliable for `LIMIT`/`STOP`/`TAKE_PROFIT` order; can be set to `OPPONENT`/ `OPPONENT_5`/ `OPPONENT_10`/ `OPPONENT_20`: /`QUEUE`/ `QUEUE_5`/ `QUEUE_10`/ `QUEUE_20`; Can't be passed together with `price`"#,
-        long
-    )]
-    price_match: Option<NewUmConditionalOrderPriceMatchEnum>,
-    #[arg(
-        help = r#"`NONE`:No STP / `EXPIRE_TAKER`:expire taker order when STP triggers/ `EXPIRE_MAKER`:expire taker order when STP triggers/ `EXPIRE_BOTH`:expire both orders when STP triggers"#,
-        long
-    )]
-    self_trade_prevention_mode: Option<NewUmConditionalOrderSelfTradePreventionModeEnum>,
-    #[arg(
-        help = r#"order cancel time for timeInForce `GTD`, mandatory when `timeInforce` set to `GTD`; order the timestamp only retains second-level precision, ms part will be ignored; The goodTillDate timestamp must be greater than the current time plus 600 seconds and smaller than 253402300799000Mode. It must be sent in Hedge Mode."#,
         long
     )]
     good_till_date: Option<i64>,
@@ -1441,7 +1361,7 @@ struct NewUmOrderArgs {
     )]
     price_match: Option<NewUmOrderPriceMatchEnum>,
     #[arg(
-        help = r#"`NONE`:No STP / `EXPIRE_TAKER`:expire taker order when STP triggers/ `EXPIRE_MAKER`:expire taker order when STP triggers/ `EXPIRE_BOTH`:expire both orders when STP triggers"#,
+        help = r#"`EXPIRE_TAKER`: expire taker order when STP triggers/ `EXPIRE_MAKER`: expire taker order when STP triggers/ `EXPIRE_BOTH`: expire both orders when STP triggers"#,
         long
     )]
     self_trade_prevention_mode: Option<NewUmOrderSelfTradePreventionModeEnum>,
@@ -1549,19 +1469,6 @@ struct QueryAllCurrentUmOpenAlgoOrdersArgs {
     profile: Option<String>,
 }
 #[derive(Args, Debug)]
-struct QueryAllCurrentUmOpenConditionalOrdersArgs {
-    #[arg(help = r#""#, long)]
-    symbol: Option<String>,
-    #[arg(help = r#""#, long)]
-    recv_window: Option<i64>,
-    #[arg(short = 'i', long)]
-    interactive: bool,
-    #[arg(help = r#"Send all fields as JSON"#, long)]
-    json: Option<String>,
-    #[arg(help = r#"Select a profile"#, long)]
-    profile: Option<String>,
-}
-#[derive(Args, Debug)]
 struct QueryAllCurrentUmOpenOrdersArgs {
     #[arg(help = r#""#, long)]
     symbol: Option<String>,
@@ -1587,27 +1494,6 @@ struct QueryAllMarginAccountOrdersArgs {
     #[arg(help = r#"Number of results returned."#, long)]
     limit: Option<i64>,
     #[arg(help = r#"Value cannot be greater than 60000"#, long)]
-    recv_window: Option<i64>,
-    #[arg(short = 'i', long)]
-    interactive: bool,
-    #[arg(help = r#"Send all fields as JSON"#, long)]
-    json: Option<String>,
-    #[arg(help = r#"Select a profile"#, long)]
-    profile: Option<String>,
-}
-#[derive(Args, Debug)]
-struct QueryAllUmConditionalOrdersArgs {
-    #[arg(help = r#""#, long)]
-    symbol: Option<String>,
-    #[arg(help = r#""#, long)]
-    strategy_id: Option<i64>,
-    #[arg(help = r#"Timestamp in ms to get funding from INCLUSIVE."#, long)]
-    start_time: Option<i64>,
-    #[arg(help = r#"Timestamp in ms to get funding until INCLUSIVE."#, long)]
-    end_time: Option<i64>,
-    #[arg(help = r#"Number of results returned."#, long)]
-    limit: Option<i64>,
-    #[arg(help = r#""#, long)]
     recv_window: Option<i64>,
     #[arg(short = 'i', long)]
     interactive: bool,
@@ -1757,23 +1643,6 @@ struct QueryCurrentUmOpenAlgoOrderArgs {
     profile: Option<String>,
 }
 #[derive(Args, Debug)]
-struct QueryCurrentUmOpenConditionalOrderArgs {
-    #[arg(help = r#"Symbol"#, long)]
-    symbol: Option<String>,
-    #[arg(help = r#""#, long)]
-    strategy_id: Option<i64>,
-    #[arg(help = r#""#, long)]
-    new_client_strategy_id: Option<String>,
-    #[arg(help = r#""#, long)]
-    recv_window: Option<i64>,
-    #[arg(short = 'i', long)]
-    interactive: bool,
-    #[arg(help = r#"Send all fields as JSON"#, long)]
-    json: Option<String>,
-    #[arg(help = r#"Select a profile"#, long)]
-    profile: Option<String>,
-}
-#[derive(Args, Debug)]
 struct QueryCurrentUmOpenOrderArgs {
     #[arg(help = r#"Symbol"#, long)]
     symbol: Option<String>,
@@ -1870,23 +1739,6 @@ struct QueryUmAlgoOrderHistoryArgs {
     end_time: Option<i64>,
     #[arg(help = r#"Default 500; max 1000"#, long)]
     limit: Option<i64>,
-    #[arg(help = r#""#, long)]
-    recv_window: Option<i64>,
-    #[arg(short = 'i', long)]
-    interactive: bool,
-    #[arg(help = r#"Send all fields as JSON"#, long)]
-    json: Option<String>,
-    #[arg(help = r#"Select a profile"#, long)]
-    profile: Option<String>,
-}
-#[derive(Args, Debug)]
-struct QueryUmConditionalOrderHistoryArgs {
-    #[arg(help = r#"Symbol"#, long)]
-    symbol: Option<String>,
-    #[arg(help = r#""#, long)]
-    strategy_id: Option<i64>,
-    #[arg(help = r#""#, long)]
-    new_client_strategy_id: Option<String>,
     #[arg(help = r#""#, long)]
     recv_window: Option<i64>,
     #[arg(short = 'i', long)]
@@ -2532,14 +2384,6 @@ Security Type: TRADE"#, false),
     )]
     CancelAllUmAlgoOpenOrders(CancelAllUmAlgoOpenOrdersArgs),
     #[command(
-        about = decode_selected_entities(r#"Cancel All UM Open Conditional Orders
-
-Weight(IP): 1
-
-Security Type: TRADE"#, false),
-    )]
-    CancelAllUmOpenConditionalOrders(CancelAllUmOpenConditionalOrdersArgs),
-    #[command(
         about = decode_selected_entities(r#"Cancel all active LIMIT orders on specific symbol
 
 Weight(IP): 1
@@ -2610,17 +2454,6 @@ Notes:
 - Either `algoId` or `clientAlgoId` must be sent."#, false),
     )]
     CancelUmAlgoOrder(CancelUmAlgoOrderArgs),
-    #[command(
-        about = decode_selected_entities(r#"Cancel UM Conditional Order
-
-Weight(IP): 1
-
-Security Type: TRADE
-
-Notes:
-- Either `strategyId` or `newClientStrategyId` must be sent."#, false),
-    )]
-    CancelUmConditionalOrder(CancelUmConditionalOrderArgs),
     #[command(
         about = decode_selected_entities(r#"Cancel an active UM LIMIT order
 
@@ -2831,32 +2664,10 @@ Notes:
 - `STOP`, `STOP_MARKET`: BUY: latest price >= `triggerPrice`; SELL: latest price <= `triggerPrice`.
 - `TAKE_PROFIT`, `TAKE_PROFIT_MARKET`: BUY: latest price <= `triggerPrice`; SELL: latest price >= `triggerPrice`.
 - `TRAILING_STOP_MARKET`: BUY: lowest price after order placed <= `activatePrice`, and latest price >= lowest price * (1 + `callbackRate`); SELL: highest price after order placed >= `activatePrice`, and latest price <= highest price * (1 - `callbackRate`).
+- `STOP_MARKET`, `TAKE_PROFIT_MARKET` with `closePosition`=`true`: follow the same rules for conditional orders; if triggered, close all current long position (if `SELL`) or current short position (if `BUY`); cannot be used with `quantity` parameter; cannot be used with `reduceOnly` parameter; in Hedge Mode, cannot be used with `BUY` orders in `LONG` position side, and cannot be used with `SELL` orders in `SHORT` position side.
 - `selfTradePreventionMode` is only effective when `timeInForce` set to `IOC` or `GTC` or `GTD`."#, false),
     )]
     NewUmAlgoOrder(NewUmAlgoOrderArgs),
-    #[command(
-        about = decode_selected_entities(r#"Place new UM conditional order
-
-Weight(IP): 1
-
-Security Type: TRADE
-
-Notes:
-- Additional mandatory parameters based on type:
-  - Order with type `STOP/TAKE_PROFIT`, parameter `timeInForce` can be sent ( default `GTC`).
-  - Condition orders will be triggered when:
-  - `STOP`, `STOP_MARKET`:
-  - BUY: "MARK_PRICE" >= `stopPrice`
-  - SELL: "MARK_PRICE" = `stopPrice`
-  - `TRAILING_STOP_MARKET`:
-  - BUY: the lowest mark price after order placed ``= the lowest mark price
-  - (1 + `callbackRate`)
-  - SELL: the highest mark price after order placed >= `activationPrice`, and the latest mark price = `stopPrice`
-  - SELL: latest price ("MARK_PRICE" or "CONTRACT_PRICE") = `stopPrice`
-  - `selfTradePreventionMode` is only effective when `timeInForce` set to `IOC` or `GTC` or `GTD`.
-  - In extreme market conditions, timeInForce `GTD` order auto cancel time might be delayed comparing to `goodTillDate`"#, false),
-    )]
-    NewUmConditionalOrder(NewUmConditionalOrderArgs),
     #[command(
         about = decode_selected_entities(r#"Place new UM order
 
@@ -2940,18 +2751,6 @@ Notes:
     )]
     QueryAllCurrentUmOpenAlgoOrders(QueryAllCurrentUmOpenAlgoOrdersArgs),
     #[command(
-        about = decode_selected_entities(r#"Get all open conditional orders on a symbol.
-
-Weight: - 1 for a single `symbol`
-- 40 when `symbol` is omitted
-
-Security Type: USER_DATA
-
-Notes:
-- If `symbol` is not provided, conditional open orders for all symbols are returned."#, false),
-    )]
-    QueryAllCurrentUmOpenConditionalOrders(QueryAllCurrentUmOpenConditionalOrdersArgs),
-    #[command(
         about = decode_selected_entities(r#"Get all open orders on a symbol.
 
 Weight: - 1 for a single `symbol`
@@ -2975,21 +2774,6 @@ Notes:
 - For some historical orders, `cummulativeQuoteQty < 0` means the data is unavailable at this time."#, false),
     )]
     QueryAllMarginAccountOrders(QueryAllMarginAccountOrdersArgs),
-    #[command(
-        about = decode_selected_entities(r#"Query All UM Conditional Orders
-
-Weight: - 1 for a single `symbol`
-- 40 when `symbol` is omitted
-
-Security Type: USER_DATA
-
-Notes:
-- These orders will not be found:
-  - order strategyStatus is `CANCELED` or `EXPIRED`, **AND**
-  - order has NO filled trade, **AND**
-  - created time + 7 days  * The query time period must be less than 7 days( default as the recent 7 days)."#, false),
-    )]
-    QueryAllUmConditionalOrders(QueryAllUmConditionalOrdersArgs),
     #[command(
         about = decode_selected_entities(r#"Get all account UM orders; active, canceled, or filled.
 
@@ -3092,18 +2876,6 @@ Notes:
     )]
     QueryCurrentUmOpenAlgoOrder(QueryCurrentUmOpenAlgoOrderArgs),
     #[command(
-        about = decode_selected_entities(r#"Query Current UM Open Conditional Order
-
-Weight(IP): 1
-
-Security Type: USER_DATA
-
-Notes:
-- Either `strategyId` or `newClientStrategyId` must be sent.
-- If the queried order has been `CANCELED`, `TRIGGERED` or `EXPIRED`, the error message "Order does not exist" will be returned."#, false),
-    )]
-    QueryCurrentUmOpenConditionalOrder(QueryCurrentUmOpenConditionalOrderArgs),
-    #[command(
         about = decode_selected_entities(r#"Query current UM open order
 
 Weight(IP): 1
@@ -3164,22 +2936,6 @@ Notes:
     )]
     QueryUmAlgoOrderHistory(QueryUmAlgoOrderHistoryArgs),
     #[command(
-        about = decode_selected_entities(r#"Query UM Conditional Order History
-
-Weight(IP): 1
-
-Security Type: USER_DATA
-
-Notes:
-- Either `strategyId` or `newClientStrategyId` must be sent.
-- `NEW` orders will not be found.
-- These orders will not be found:
-  - order status is `CANCELED` or `EXPIRED`, **AND**
-  - order has NO filled trade, **AND**
-  - created time + 7 days < current time"#, false),
-    )]
-    QueryUmConditionalOrderHistory(QueryUmConditionalOrderHistoryArgs),
-    #[command(
         about = decode_selected_entities(r#"Get order modification history
 
 Weight(IP): 1
@@ -3220,6 +2976,8 @@ Notes:
     QueryUsersCmForceOrders(QueryUsersCmForceOrdersArgs),
     #[command(
         about = decode_selected_entities(r#"Query user's margin force orders
+
+> **Note:** Portfolio Margin accounts liquidated through the Risk-Based Liquidation Adjustment flow will not have any order or trade records returned by this endpoint. Query the capital flow endpoint instead: Query Cross Isolated Margin Capital Flow.
 
 Weight(IP): 1
 
@@ -3403,8 +3161,6 @@ pub async fn handle_derivatives_trading_portfolio_margin_command(
 
           DerivativesTradingPortfolioMarginCommands::CancelAllUmAlgoOpenOrders (args) => cancel_all_um_algo_open_orders(args).await,
 
-          DerivativesTradingPortfolioMarginCommands::CancelAllUmOpenConditionalOrders (args) => cancel_all_um_open_conditional_orders(args).await,
-
           DerivativesTradingPortfolioMarginCommands::CancelAllUmOpenOrders (args) => cancel_all_um_open_orders(args).await,
 
           DerivativesTradingPortfolioMarginCommands::CancelCmConditionalOrder (args) => cancel_cm_conditional_order(args).await,
@@ -3418,8 +3174,6 @@ pub async fn handle_derivatives_trading_portfolio_margin_command(
           DerivativesTradingPortfolioMarginCommands::CancelMarginAccountOrder (args) => cancel_margin_account_order(args).await,
 
           DerivativesTradingPortfolioMarginCommands::CancelUmAlgoOrder (args) => cancel_um_algo_order(args).await,
-
-          DerivativesTradingPortfolioMarginCommands::CancelUmConditionalOrder (args) => cancel_um_conditional_order(args).await,
 
           DerivativesTradingPortfolioMarginCommands::CancelUmOrder (args) => cancel_um_order(args).await,
 
@@ -3453,8 +3207,6 @@ pub async fn handle_derivatives_trading_portfolio_margin_command(
 
           DerivativesTradingPortfolioMarginCommands::NewUmAlgoOrder (args) => new_um_algo_order(args).await,
 
-          DerivativesTradingPortfolioMarginCommands::NewUmConditionalOrder (args) => new_um_conditional_order(args).await,
-
           DerivativesTradingPortfolioMarginCommands::NewUmOrder (args) => new_um_order(args).await,
 
           DerivativesTradingPortfolioMarginCommands::QueryAllCmConditionalOrders (args) => query_all_cm_conditional_orders(args).await,
@@ -3467,13 +3219,9 @@ pub async fn handle_derivatives_trading_portfolio_margin_command(
 
           DerivativesTradingPortfolioMarginCommands::QueryAllCurrentUmOpenAlgoOrders (args) => query_all_current_um_open_algo_orders(args).await,
 
-          DerivativesTradingPortfolioMarginCommands::QueryAllCurrentUmOpenConditionalOrders (args) => query_all_current_um_open_conditional_orders(args).await,
-
           DerivativesTradingPortfolioMarginCommands::QueryAllCurrentUmOpenOrders (args) => query_all_current_um_open_orders(args).await,
 
           DerivativesTradingPortfolioMarginCommands::QueryAllMarginAccountOrders (args) => query_all_margin_account_orders(args).await,
-
-          DerivativesTradingPortfolioMarginCommands::QueryAllUmConditionalOrders (args) => query_all_um_conditional_orders(args).await,
 
           DerivativesTradingPortfolioMarginCommands::QueryAllUmOrders (args) => query_all_um_orders(args).await,
 
@@ -3491,8 +3239,6 @@ pub async fn handle_derivatives_trading_portfolio_margin_command(
 
           DerivativesTradingPortfolioMarginCommands::QueryCurrentUmOpenAlgoOrder (args) => query_current_um_open_algo_order(args).await,
 
-          DerivativesTradingPortfolioMarginCommands::QueryCurrentUmOpenConditionalOrder (args) => query_current_um_open_conditional_order(args).await,
-
           DerivativesTradingPortfolioMarginCommands::QueryCurrentUmOpenOrder (args) => query_current_um_open_order(args).await,
 
           DerivativesTradingPortfolioMarginCommands::QueryMarginAccountOrder (args) => query_margin_account_order(args).await,
@@ -3504,8 +3250,6 @@ pub async fn handle_derivatives_trading_portfolio_margin_command(
           DerivativesTradingPortfolioMarginCommands::QueryMarginAccountsOpenOco (args) => query_margin_accounts_open_oco(args).await,
 
           DerivativesTradingPortfolioMarginCommands::QueryUmAlgoOrderHistory (args) => query_um_algo_order_history(args).await,
-
-          DerivativesTradingPortfolioMarginCommands::QueryUmConditionalOrderHistory (args) => query_um_conditional_order_history(args).await,
 
           DerivativesTradingPortfolioMarginCommands::QueryUmModifyOrderHistory (args) => query_um_modify_order_history(args).await,
 
@@ -3597,7 +3341,7 @@ async fn bnb_transfer(mut args: BnbTransferArgs) -> anyhow::Result<()> {
                         args.amount = Some(amount);
                     }
                     if args.transfer_side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("TO_UM", BnbTransferTransferSideEnum::ToUm),
                             ("FROM_UM", BnbTransferTransferSideEnum::FromUm),
                         ];
@@ -3621,7 +3365,7 @@ async fn bnb_transfer(mut args: BnbTransferArgs) -> anyhow::Result<()> {
                     args.amount
                         .ok_or_else(|| anyhow::anyhow!("amount is required"))?,
                     args.transfer_side
-                        .ok_or_else(|| anyhow::anyhow!("transfer_side is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("transfer-side is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -3651,31 +3395,29 @@ async fn change_auto_repay_futures_status(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.auto_repay.is_none() {
-                        let options = vec![
-                            ("true", ChangeAutoRepayFuturesStatusAutoRepayEnum::True),
-                            ("false", ChangeAutoRepayFuturesStatusAutoRepayEnum::False),
-                        ];
+                if args.interactive && args.auto_repay.is_none() {
+                    let options = [
+                        ("true", ChangeAutoRepayFuturesStatusAutoRepayEnum::True),
+                        ("false", ChangeAutoRepayFuturesStatusAutoRepayEnum::False),
+                    ];
 
-                        let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
+                    let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
 
-                        let selected = Select::new()
-                            .with_prompt("Please select the auto_repay")
-                            .items(&labels)
-                            .default(0)
-                            .interact()?;
+                    let selected = Select::new()
+                        .with_prompt("Please select the auto_repay")
+                        .items(&labels)
+                        .default(0)
+                        .interact()?;
 
-                        let selected = options[selected].1.clone();
+                    let selected = options[selected].1.clone();
 
-                        println!("Selected option: {:?}", selected);
+                    println!("Selected option: {:?}", selected);
 
-                        args.auto_repay = Some(selected);
-                    }
+                    args.auto_repay = Some(selected);
                 }
                 ChangeAutoRepayFuturesStatusParams::builder(
                     args.auto_repay
-                        .ok_or_else(|| anyhow::anyhow!("auto_repay is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("auto-repay is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -3746,31 +3488,29 @@ async fn change_cm_position_mode(mut args: ChangeCmPositionModeArgs) -> anyhow::
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.dual_side_position.is_none() {
-                        let options = vec![
-                            ("true", ChangeCmPositionModeDualSidePositionEnum::True),
-                            ("false", ChangeCmPositionModeDualSidePositionEnum::False),
-                        ];
+                if args.interactive && args.dual_side_position.is_none() {
+                    let options = [
+                        ("true", ChangeCmPositionModeDualSidePositionEnum::True),
+                        ("false", ChangeCmPositionModeDualSidePositionEnum::False),
+                    ];
 
-                        let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
+                    let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
 
-                        let selected = Select::new()
-                            .with_prompt("Please select the dual_side_position")
-                            .items(&labels)
-                            .default(0)
-                            .interact()?;
+                    let selected = Select::new()
+                        .with_prompt("Please select the dual_side_position")
+                        .items(&labels)
+                        .default(0)
+                        .interact()?;
 
-                        let selected = options[selected].1.clone();
+                    let selected = options[selected].1.clone();
 
-                        println!("Selected option: {:?}", selected);
+                    println!("Selected option: {:?}", selected);
 
-                        args.dual_side_position = Some(selected);
-                    }
+                    args.dual_side_position = Some(selected);
                 }
                 ChangeCmPositionModeParams::builder(
                     args.dual_side_position
-                        .ok_or_else(|| anyhow::anyhow!("dual_side_position is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("dual-side-position is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -3841,31 +3581,29 @@ async fn change_um_position_mode(mut args: ChangeUmPositionModeArgs) -> anyhow::
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.dual_side_position.is_none() {
-                        let options = vec![
-                            ("true", ChangeUmPositionModeDualSidePositionEnum::True),
-                            ("false", ChangeUmPositionModeDualSidePositionEnum::False),
-                        ];
+                if args.interactive && args.dual_side_position.is_none() {
+                    let options = [
+                        ("true", ChangeUmPositionModeDualSidePositionEnum::True),
+                        ("false", ChangeUmPositionModeDualSidePositionEnum::False),
+                    ];
 
-                        let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
+                    let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
 
-                        let selected = Select::new()
-                            .with_prompt("Please select the dual_side_position")
-                            .items(&labels)
-                            .default(0)
-                            .interact()?;
+                    let selected = Select::new()
+                        .with_prompt("Please select the dual_side_position")
+                        .items(&labels)
+                        .default(0)
+                        .interact()?;
 
-                        let selected = options[selected].1.clone();
+                    let selected = options[selected].1.clone();
 
-                        println!("Selected option: {:?}", selected);
+                    println!("Selected option: {:?}", selected);
 
-                        args.dual_side_position = Some(selected);
-                    }
+                    args.dual_side_position = Some(selected);
                 }
                 ChangeUmPositionModeParams::builder(
                     args.dual_side_position
-                        .ok_or_else(|| anyhow::anyhow!("dual_side_position is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("dual-side-position is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -3944,18 +3682,17 @@ async fn fund_collection_by_asset(mut args: FundCollectionByAssetArgs) -> anyhow
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.asset.is_none() {
-                        let asset: String =
-                            Input::new().with_prompt("Input asset:").interact_text()?;
+                if args.interactive && args.asset.is_none() {
+                    let asset: String = Input::new().with_prompt("Input asset:").interact_text()?;
 
-                        args.asset = Some(asset);
-                    }
+                    args.asset = Some(asset);
                 }
                 FundCollectionByAssetParams::builder(
                     args.asset
                         .ok_or_else(|| anyhow::anyhow!("asset is required"))?,
                 )
+                .amount(args.amount)
+                .future_type(args.future_type)
                 .recv_window(args.recv_window)
                 .build()?
             }
@@ -4103,9 +3840,9 @@ async fn get_download_id_for_um_futures_order_history(
                 }
                 GetDownloadIdForUmFuturesOrderHistoryParams::builder(
                     args.start_time
-                        .ok_or_else(|| anyhow::anyhow!("start_time is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("start-time is required"))?,
                     args.end_time
-                        .ok_or_else(|| anyhow::anyhow!("end_time is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("end-time is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -4154,9 +3891,9 @@ async fn get_download_id_for_um_futures_trade_history(
                 }
                 GetDownloadIdForUmFuturesTradeHistoryParams::builder(
                     args.start_time
-                        .ok_or_else(|| anyhow::anyhow!("start_time is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("start-time is required"))?,
                     args.end_time
-                        .ok_or_else(|| anyhow::anyhow!("end_time is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("end-time is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -4205,9 +3942,9 @@ async fn get_download_id_for_um_futures_transaction_history(
                 }
                 GetDownloadIdForUmFuturesTransactionHistoryParams::builder(
                     args.start_time
-                        .ok_or_else(|| anyhow::anyhow!("start_time is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("start-time is required"))?,
                     args.end_time
-                        .ok_or_else(|| anyhow::anyhow!("end_time is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("end-time is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -4343,18 +4080,16 @@ async fn get_um_futures_order_download_link_by_id(
                     io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
                 })?,
             None => {
-                if args.interactive {
-                    if args.download_id.is_none() {
-                        let download_id: String = Input::new()
-                            .with_prompt("Input download_id:")
-                            .interact_text()?;
+                if args.interactive && args.download_id.is_none() {
+                    let download_id: String = Input::new()
+                        .with_prompt("Input download_id:")
+                        .interact_text()?;
 
-                        args.download_id = Some(download_id);
-                    }
+                    args.download_id = Some(download_id);
                 }
                 GetUmFuturesOrderDownloadLinkByIdParams::builder(
                     args.download_id
-                        .ok_or_else(|| anyhow::anyhow!("download_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("download-id is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -4385,18 +4120,16 @@ async fn get_um_futures_trade_download_link_by_id(
                     io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
                 })?,
             None => {
-                if args.interactive {
-                    if args.download_id.is_none() {
-                        let download_id: String = Input::new()
-                            .with_prompt("Input download_id:")
-                            .interact_text()?;
+                if args.interactive && args.download_id.is_none() {
+                    let download_id: String = Input::new()
+                        .with_prompt("Input download_id:")
+                        .interact_text()?;
 
-                        args.download_id = Some(download_id);
-                    }
+                    args.download_id = Some(download_id);
                 }
                 GetUmFuturesTradeDownloadLinkByIdParams::builder(
                     args.download_id
-                        .ok_or_else(|| anyhow::anyhow!("download_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("download-id is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -4427,18 +4160,16 @@ async fn get_um_futures_transaction_download_link_by_id(
                     io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
                 })?,
             None => {
-                if args.interactive {
-                    if args.download_id.is_none() {
-                        let download_id: String = Input::new()
-                            .with_prompt("Input download_id:")
-                            .interact_text()?;
+                if args.interactive && args.download_id.is_none() {
+                    let download_id: String = Input::new()
+                        .with_prompt("Input download_id:")
+                        .interact_text()?;
 
-                        args.download_id = Some(download_id);
-                    }
+                    args.download_id = Some(download_id);
                 }
                 GetUmFuturesTransactionDownloadLinkByIdParams::builder(
                     args.download_id
-                        .ok_or_else(|| anyhow::anyhow!("download_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("download-id is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -4499,13 +4230,11 @@ async fn get_user_commission_rate_for_cm(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 GetUserCommissionRateForCmParams::builder(
                     args.symbol
@@ -4539,13 +4268,11 @@ async fn get_user_commission_rate_for_um(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 GetUserCommissionRateForUmParams::builder(
                     args.symbol
@@ -4575,13 +4302,10 @@ async fn margin_max_borrow(mut args: MarginMaxBorrowArgs) -> anyhow::Result<()> 
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.asset.is_none() {
-                        let asset: String =
-                            Input::new().with_prompt("Input asset:").interact_text()?;
+                if args.interactive && args.asset.is_none() {
+                    let asset: String = Input::new().with_prompt("Input asset:").interact_text()?;
 
-                        args.asset = Some(asset);
-                    }
+                    args.asset = Some(asset);
                 }
                 MarginMaxBorrowParams::builder(
                     args.asset
@@ -4670,13 +4394,10 @@ async fn query_margin_loan_record(mut args: QueryMarginLoanRecordArgs) -> anyhow
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.asset.is_none() {
-                        let asset: String =
-                            Input::new().with_prompt("Input asset:").interact_text()?;
+                if args.interactive && args.asset.is_none() {
+                    let asset: String = Input::new().with_prompt("Input asset:").interact_text()?;
 
-                        args.asset = Some(asset);
-                    }
+                    args.asset = Some(asset);
                 }
                 QueryMarginLoanRecordParams::builder(
                     args.asset
@@ -4712,13 +4433,10 @@ async fn query_margin_max_withdraw(mut args: QueryMarginMaxWithdrawArgs) -> anyh
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.asset.is_none() {
-                        let asset: String =
-                            Input::new().with_prompt("Input asset:").interact_text()?;
+                if args.interactive && args.asset.is_none() {
+                    let asset: String = Input::new().with_prompt("Input asset:").interact_text()?;
 
-                        args.asset = Some(asset);
-                    }
+                    args.asset = Some(asset);
                 }
                 QueryMarginMaxWithdrawParams::builder(
                     args.asset
@@ -4748,13 +4466,10 @@ async fn query_margin_repay_record(mut args: QueryMarginRepayRecordArgs) -> anyh
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.asset.is_none() {
-                        let asset: String =
-                            Input::new().with_prompt("Input asset:").interact_text()?;
+                if args.interactive && args.asset.is_none() {
+                    let asset: String = Input::new().with_prompt("Input asset:").interact_text()?;
 
-                        args.asset = Some(asset);
-                    }
+                    args.asset = Some(asset);
                 }
                 QueryMarginRepayRecordParams::builder(
                     args.asset
@@ -4871,9 +4586,9 @@ async fn query_user_negative_balance_auto_exchange_record(
                 }
                 QueryUserNegativeBalanceAutoExchangeRecordParams::builder(
                     args.start_time
-                        .ok_or_else(|| anyhow::anyhow!("start_time is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("start-time is required"))?,
                     args.end_time
-                        .ok_or_else(|| anyhow::anyhow!("end_time is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("end-time is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -5051,13 +4766,11 @@ async fn cancel_all_cm_open_conditional_orders(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 CancelAllCmOpenConditionalOrdersParams::builder(
                     args.symbol
@@ -5089,13 +4802,11 @@ async fn cancel_all_cm_open_orders(mut args: CancelAllCmOpenOrdersArgs) -> anyho
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 CancelAllCmOpenOrdersParams::builder(
                     args.symbol
@@ -5129,13 +4840,11 @@ async fn cancel_all_um_algo_open_orders(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 CancelAllUmAlgoOpenOrdersParams::builder(
                     args.symbol
@@ -5155,48 +4864,6 @@ async fn cancel_all_um_algo_open_orders(
     Ok(())
 }
 
-async fn cancel_all_um_open_conditional_orders(
-    mut args: CancelAllUmOpenConditionalOrdersArgs,
-) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref(), true)?;
-
-    let params = match read_stdin_as::<CancelAllUmOpenConditionalOrdersParams>() {
-        Some(params) => params,
-        None => match args.json {
-            Some(json) => {
-                read_json_as::<CancelAllUmOpenConditionalOrdersParams>(json).ok_or_else(|| {
-                    io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
-                })?
-            }
-            None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
-
-                        args.symbol = Some(symbol);
-                    }
-                }
-                CancelAllUmOpenConditionalOrdersParams::builder(
-                    args.symbol
-                        .ok_or_else(|| anyhow::anyhow!("symbol is required"))?,
-                )
-                .recv_window(args.recv_window)
-                .build()?
-            }
-        },
-    };
-
-    // Make the API call
-    let response = rest_client
-        .cancel_all_um_open_conditional_orders(params)
-        .await?;
-
-    let data = response.data().await?;
-    println!("{}", serde_json::to_string_pretty(&data).unwrap());
-    Ok(())
-}
-
 async fn cancel_all_um_open_orders(mut args: CancelAllUmOpenOrdersArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
@@ -5207,13 +4874,11 @@ async fn cancel_all_um_open_orders(mut args: CancelAllUmOpenOrdersArgs) -> anyho
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 CancelAllUmOpenOrdersParams::builder(
                     args.symbol
@@ -5245,13 +4910,11 @@ async fn cancel_cm_conditional_order(mut args: CancelCmConditionalOrderArgs) -> 
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 CancelCmConditionalOrderParams::builder(
                     args.symbol
@@ -5283,13 +4946,11 @@ async fn cancel_cm_order(mut args: CancelCmOrderArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 CancelCmOrderParams::builder(
                     args.symbol
@@ -5324,13 +4985,11 @@ async fn cancel_margin_account_all_open_orders_on_a_symbol(
                     io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
                 })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 CancelMarginAccountAllOpenOrdersOnASymbolParams::builder(
                     args.symbol
@@ -5366,13 +5025,11 @@ async fn cancel_margin_account_oco_orders(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 CancelMarginAccountOcoOrdersParams::builder(
                     args.symbol
@@ -5407,13 +5064,11 @@ async fn cancel_margin_account_order(mut args: CancelMarginAccountOrderArgs) -> 
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 CancelMarginAccountOrderParams::builder(
                     args.symbol
@@ -5461,46 +5116,6 @@ async fn cancel_um_algo_order(args: CancelUmAlgoOrderArgs) -> anyhow::Result<()>
     Ok(())
 }
 
-async fn cancel_um_conditional_order(mut args: CancelUmConditionalOrderArgs) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref(), true)?;
-
-    let params = match read_stdin_as::<CancelUmConditionalOrderParams>() {
-        Some(params) => params,
-        None => match args.json {
-            Some(json) => {
-                read_json_as::<CancelUmConditionalOrderParams>(json).ok_or_else(|| {
-                    io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
-                })?
-            }
-            None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
-
-                        args.symbol = Some(symbol);
-                    }
-                }
-                CancelUmConditionalOrderParams::builder(
-                    args.symbol
-                        .ok_or_else(|| anyhow::anyhow!("symbol is required"))?,
-                )
-                .strategy_id(args.strategy_id)
-                .new_client_strategy_id(args.new_client_strategy_id)
-                .recv_window(args.recv_window)
-                .build()?
-            }
-        },
-    };
-
-    // Make the API call
-    let response = rest_client.cancel_um_conditional_order(params).await?;
-
-    let data = response.data().await?;
-    println!("{}", serde_json::to_string_pretty(&data).unwrap());
-    Ok(())
-}
-
 async fn cancel_um_order(mut args: CancelUmOrderArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
@@ -5511,13 +5126,11 @@ async fn cancel_um_order(mut args: CancelUmOrderArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 CancelUmOrderParams::builder(
                     args.symbol
@@ -5710,7 +5323,7 @@ async fn margin_account_new_oco(mut args: MarginAccountNewOcoArgs) -> anyhow::Re
                         args.symbol = Some(symbol);
                     }
                     if args.side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", MarginAccountNewOcoSideEnum::Buy),
                             ("SELL", MarginAccountNewOcoSideEnum::Sell),
                         ];
@@ -5760,7 +5373,7 @@ async fn margin_account_new_oco(mut args: MarginAccountNewOcoArgs) -> anyhow::Re
                     args.price
                         .ok_or_else(|| anyhow::anyhow!("price is required"))?,
                     args.stop_price
-                        .ok_or_else(|| anyhow::anyhow!("stop_price is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("stop-price is required"))?,
                 )
                 .list_client_order_id(args.list_client_order_id)
                 .limit_client_order_id(args.limit_client_order_id)
@@ -5839,13 +5452,10 @@ async fn margin_account_repay_debt(mut args: MarginAccountRepayDebtArgs) -> anyh
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.asset.is_none() {
-                        let asset: String =
-                            Input::new().with_prompt("Input asset:").interact_text()?;
+                if args.interactive && args.asset.is_none() {
+                    let asset: String = Input::new().with_prompt("Input asset:").interact_text()?;
 
-                        args.asset = Some(asset);
-                    }
+                    args.asset = Some(asset);
                 }
                 MarginAccountRepayDebtParams::builder(
                     args.asset
@@ -5877,13 +5487,11 @@ async fn margin_account_trade_list(mut args: MarginAccountTradeListArgs) -> anyh
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 MarginAccountTradeListParams::builder(
                     args.symbol
@@ -5926,7 +5534,7 @@ async fn modify_cm_order(mut args: ModifyCmOrderArgs) -> anyhow::Result<()> {
                         args.symbol = Some(symbol);
                     }
                     if args.side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", ModifyCmOrderSideEnum::Buy),
                             ("SELL", ModifyCmOrderSideEnum::Sell),
                         ];
@@ -6005,7 +5613,7 @@ async fn modify_um_order(mut args: ModifyUmOrderArgs) -> anyhow::Result<()> {
                         args.symbol = Some(symbol);
                     }
                     if args.side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", ModifyUmOrderSideEnum::Buy),
                             ("SELL", ModifyUmOrderSideEnum::Sell),
                         ];
@@ -6084,7 +5692,7 @@ async fn new_cm_conditional_order(mut args: NewCmConditionalOrderArgs) -> anyhow
                         args.symbol = Some(symbol);
                     }
                     if args.side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", NewCmConditionalOrderSideEnum::Buy),
                             ("SELL", NewCmConditionalOrderSideEnum::Sell),
                         ];
@@ -6104,7 +5712,7 @@ async fn new_cm_conditional_order(mut args: NewCmConditionalOrderArgs) -> anyhow
                         args.side = Some(selected);
                     }
                     if args.strategy_type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("STOP", NewCmConditionalOrderStrategyTypeEnum::Stop),
                             (
                                 "STOP_MARKET",
@@ -6145,7 +5753,7 @@ async fn new_cm_conditional_order(mut args: NewCmConditionalOrderArgs) -> anyhow
                     args.side
                         .ok_or_else(|| anyhow::anyhow!("side is required"))?,
                     args.strategy_type
-                        .ok_or_else(|| anyhow::anyhow!("strategy_type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("strategy-type is required"))?,
                 )
                 .position_side(args.position_side)
                 .time_in_force(args.time_in_force)
@@ -6190,7 +5798,7 @@ async fn new_cm_order(mut args: NewCmOrderArgs) -> anyhow::Result<()> {
                         args.symbol = Some(symbol);
                     }
                     if args.side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", NewCmOrderSideEnum::Buy),
                             ("SELL", NewCmOrderSideEnum::Sell),
                         ];
@@ -6210,7 +5818,7 @@ async fn new_cm_order(mut args: NewCmOrderArgs) -> anyhow::Result<()> {
                         args.side = Some(selected);
                     }
                     if args.r#type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("LIMIT", NewCmOrderTypeEnum::Limit),
                             ("MARKET", NewCmOrderTypeEnum::Market),
                         ];
@@ -6236,7 +5844,7 @@ async fn new_cm_order(mut args: NewCmOrderArgs) -> anyhow::Result<()> {
                     args.side
                         .ok_or_else(|| anyhow::anyhow!("side is required"))?,
                     args.r#type
-                        .ok_or_else(|| anyhow::anyhow!("r#type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("rtype is required"))?,
                 )
                 .position_side(args.position_side)
                 .time_in_force(args.time_in_force)
@@ -6278,7 +5886,7 @@ async fn new_margin_order(mut args: NewMarginOrderArgs) -> anyhow::Result<()> {
                         args.symbol = Some(symbol);
                     }
                     if args.side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", NewMarginOrderSideEnum::Buy),
                             ("SELL", NewMarginOrderSideEnum::Sell),
                         ];
@@ -6298,7 +5906,7 @@ async fn new_margin_order(mut args: NewMarginOrderArgs) -> anyhow::Result<()> {
                         args.side = Some(selected);
                     }
                     if args.r#type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("LIMIT", NewMarginOrderTypeEnum::Limit),
                             ("MARKET", NewMarginOrderTypeEnum::Market),
                             ("STOP_LOSS", NewMarginOrderTypeEnum::StopLoss),
@@ -6329,7 +5937,7 @@ async fn new_margin_order(mut args: NewMarginOrderArgs) -> anyhow::Result<()> {
                     args.side
                         .ok_or_else(|| anyhow::anyhow!("side is required"))?,
                     args.r#type
-                        .ok_or_else(|| anyhow::anyhow!("r#type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("rtype is required"))?,
                 )
                 .quantity(args.quantity)
                 .quote_order_qty(args.quote_order_qty)
@@ -6368,8 +5976,7 @@ async fn new_um_algo_order(mut args: NewUmAlgoOrderArgs) -> anyhow::Result<()> {
             None => {
                 if args.interactive {
                     if args.algo_type.is_none() {
-                        let options =
-                            vec![("CONDITIONAL", NewUmAlgoOrderAlgoTypeEnum::Conditional)];
+                        let options = [("CONDITIONAL", NewUmAlgoOrderAlgoTypeEnum::Conditional)];
 
                         let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
 
@@ -6392,7 +5999,7 @@ async fn new_um_algo_order(mut args: NewUmAlgoOrderArgs) -> anyhow::Result<()> {
                         args.symbol = Some(symbol);
                     }
                     if args.side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", NewUmAlgoOrderSideEnum::Buy),
                             ("SELL", NewUmAlgoOrderSideEnum::Sell),
                         ];
@@ -6412,7 +6019,7 @@ async fn new_um_algo_order(mut args: NewUmAlgoOrderArgs) -> anyhow::Result<()> {
                         args.side = Some(selected);
                     }
                     if args.r#type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("STOP", NewUmAlgoOrderTypeEnum::Stop),
                             ("TAKE_PROFIT", NewUmAlgoOrderTypeEnum::TakeProfit),
                             ("STOP_MARKET", NewUmAlgoOrderTypeEnum::StopMarket),
@@ -6440,32 +6047,25 @@ async fn new_um_algo_order(mut args: NewUmAlgoOrderArgs) -> anyhow::Result<()> {
 
                         args.r#type = Some(selected);
                     }
-                    if args.quantity.is_none() {
-                        let quantity: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Input quantity:")
-                            .interact_text()?;
-
-                        args.quantity = Some(quantity);
-                    }
                 }
                 NewUmAlgoOrderParams::builder(
                     args.algo_type
-                        .ok_or_else(|| anyhow::anyhow!("algo_type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("algo-type is required"))?,
                     args.symbol
                         .ok_or_else(|| anyhow::anyhow!("symbol is required"))?,
                     args.side
                         .ok_or_else(|| anyhow::anyhow!("side is required"))?,
                     args.r#type
-                        .ok_or_else(|| anyhow::anyhow!("r#type is required"))?,
-                    args.quantity
-                        .ok_or_else(|| anyhow::anyhow!("quantity is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("rtype is required"))?,
                 )
                 .position_side(args.position_side)
                 .time_in_force(args.time_in_force)
+                .quantity(args.quantity)
                 .price(args.price)
                 .trigger_price(args.trigger_price)
                 .working_type(args.working_type)
                 .price_match(args.price_match)
+                .close_position(args.close_position)
                 .price_protect(args.price_protect)
                 .reduce_only(args.reduce_only)
                 .activate_price(args.activate_price)
@@ -6482,115 +6082,6 @@ async fn new_um_algo_order(mut args: NewUmAlgoOrderArgs) -> anyhow::Result<()> {
 
     // Make the API call
     let response = rest_client.new_um_algo_order(params).await?;
-
-    let data = response.data().await?;
-    println!("{}", serde_json::to_string_pretty(&data).unwrap());
-    Ok(())
-}
-
-async fn new_um_conditional_order(mut args: NewUmConditionalOrderArgs) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref(), true)?;
-
-    let params = match read_stdin_as::<NewUmConditionalOrderParams>() {
-        Some(params) => params,
-        None => match args.json {
-            Some(json) => read_json_as::<NewUmConditionalOrderParams>(json).ok_or_else(|| {
-                io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
-            })?,
-            None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
-
-                        args.symbol = Some(symbol);
-                    }
-                    if args.side.is_none() {
-                        let options = vec![
-                            ("BUY", NewUmConditionalOrderSideEnum::Buy),
-                            ("SELL", NewUmConditionalOrderSideEnum::Sell),
-                        ];
-
-                        let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
-
-                        let selected = Select::new()
-                            .with_prompt("Please select the side")
-                            .items(&labels)
-                            .default(0)
-                            .interact()?;
-
-                        let selected = options[selected].1.clone();
-
-                        println!("Selected option: {:?}", selected);
-
-                        args.side = Some(selected);
-                    }
-                    if args.strategy_type.is_none() {
-                        let options = vec![
-                            ("STOP", NewUmConditionalOrderStrategyTypeEnum::Stop),
-                            (
-                                "STOP_MARKET",
-                                NewUmConditionalOrderStrategyTypeEnum::StopMarket,
-                            ),
-                            (
-                                "TAKE_PROFIT",
-                                NewUmConditionalOrderStrategyTypeEnum::TakeProfit,
-                            ),
-                            (
-                                "TAKE_PROFIT_MARKET",
-                                NewUmConditionalOrderStrategyTypeEnum::TakeProfitMarket,
-                            ),
-                            (
-                                "TRAILING_STOP_MARKET",
-                                NewUmConditionalOrderStrategyTypeEnum::TrailingStopMarket,
-                            ),
-                        ];
-
-                        let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
-
-                        let selected = Select::new()
-                            .with_prompt("Please select the strategy_type")
-                            .items(&labels)
-                            .default(0)
-                            .interact()?;
-
-                        let selected = options[selected].1.clone();
-
-                        println!("Selected option: {:?}", selected);
-
-                        args.strategy_type = Some(selected);
-                    }
-                }
-                NewUmConditionalOrderParams::builder(
-                    args.symbol
-                        .ok_or_else(|| anyhow::anyhow!("symbol is required"))?,
-                    args.side
-                        .ok_or_else(|| anyhow::anyhow!("side is required"))?,
-                    args.strategy_type
-                        .ok_or_else(|| anyhow::anyhow!("strategy_type is required"))?,
-                )
-                .position_side(args.position_side)
-                .time_in_force(args.time_in_force)
-                .quantity(args.quantity)
-                .reduce_only(args.reduce_only)
-                .price(args.price)
-                .working_type(args.working_type)
-                .price_protect(args.price_protect)
-                .new_client_strategy_id(args.new_client_strategy_id)
-                .stop_price(args.stop_price)
-                .activation_price(args.activation_price)
-                .callback_rate(args.callback_rate)
-                .price_match(args.price_match)
-                .self_trade_prevention_mode(args.self_trade_prevention_mode)
-                .good_till_date(args.good_till_date)
-                .recv_window(args.recv_window)
-                .build()?
-            }
-        },
-    };
-
-    // Make the API call
-    let response = rest_client.new_um_conditional_order(params).await?;
 
     let data = response.data().await?;
     println!("{}", serde_json::to_string_pretty(&data).unwrap());
@@ -6615,7 +6106,7 @@ async fn new_um_order(mut args: NewUmOrderArgs) -> anyhow::Result<()> {
                         args.symbol = Some(symbol);
                     }
                     if args.side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", NewUmOrderSideEnum::Buy),
                             ("SELL", NewUmOrderSideEnum::Sell),
                         ];
@@ -6635,7 +6126,7 @@ async fn new_um_order(mut args: NewUmOrderArgs) -> anyhow::Result<()> {
                         args.side = Some(selected);
                     }
                     if args.r#type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("LIMIT", NewUmOrderTypeEnum::Limit),
                             ("MARKET", NewUmOrderTypeEnum::Market),
                         ];
@@ -6661,7 +6152,7 @@ async fn new_um_order(mut args: NewUmOrderArgs) -> anyhow::Result<()> {
                     args.side
                         .ok_or_else(|| anyhow::anyhow!("side is required"))?,
                     args.r#type
-                        .ok_or_else(|| anyhow::anyhow!("r#type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("rtype is required"))?,
                 )
                 .position_side(args.position_side)
                 .time_in_force(args.time_in_force)
@@ -6838,35 +6329,6 @@ async fn query_all_current_um_open_algo_orders(
     Ok(())
 }
 
-async fn query_all_current_um_open_conditional_orders(
-    args: QueryAllCurrentUmOpenConditionalOrdersArgs,
-) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref(), true)?;
-
-    let params = match read_stdin_as::<QueryAllCurrentUmOpenConditionalOrdersParams>() {
-        Some(params) => params,
-        None => match args.json {
-            Some(json) => read_json_as::<QueryAllCurrentUmOpenConditionalOrdersParams>(json)
-                .ok_or_else(|| {
-                    io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
-                })?,
-            None => QueryAllCurrentUmOpenConditionalOrdersParams::builder()
-                .symbol(args.symbol)
-                .recv_window(args.recv_window)
-                .build()?,
-        },
-    };
-
-    // Make the API call
-    let response = rest_client
-        .query_all_current_um_open_conditional_orders(params)
-        .await?;
-
-    let data = response.data().await?;
-    println!("{}", serde_json::to_string_pretty(&data).unwrap());
-    Ok(())
-}
-
 async fn query_all_current_um_open_orders(
     args: QueryAllCurrentUmOpenOrdersArgs,
 ) -> anyhow::Result<()> {
@@ -6909,13 +6371,11 @@ async fn query_all_margin_account_orders(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 QueryAllMarginAccountOrdersParams::builder(
                     args.symbol
@@ -6939,38 +6399,6 @@ async fn query_all_margin_account_orders(
     Ok(())
 }
 
-async fn query_all_um_conditional_orders(
-    args: QueryAllUmConditionalOrdersArgs,
-) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref(), true)?;
-
-    let params = match read_stdin_as::<QueryAllUmConditionalOrdersParams>() {
-        Some(params) => params,
-        None => match args.json {
-            Some(json) => {
-                read_json_as::<QueryAllUmConditionalOrdersParams>(json).ok_or_else(|| {
-                    io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
-                })?
-            }
-            None => QueryAllUmConditionalOrdersParams::builder()
-                .symbol(args.symbol)
-                .strategy_id(args.strategy_id)
-                .start_time(args.start_time)
-                .end_time(args.end_time)
-                .limit(args.limit)
-                .recv_window(args.recv_window)
-                .build()?,
-        },
-    };
-
-    // Make the API call
-    let response = rest_client.query_all_um_conditional_orders(params).await?;
-
-    let data = response.data().await?;
-    println!("{}", serde_json::to_string_pretty(&data).unwrap());
-    Ok(())
-}
-
 async fn query_all_um_orders(mut args: QueryAllUmOrdersArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
@@ -6981,13 +6409,11 @@ async fn query_all_um_orders(mut args: QueryAllUmOrdersArgs) -> anyhow::Result<(
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 QueryAllUmOrdersParams::builder(
                     args.symbol
@@ -7025,13 +6451,11 @@ async fn query_cm_conditional_order_history(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 QueryCmConditionalOrderHistoryParams::builder(
                     args.symbol
@@ -7069,13 +6493,11 @@ async fn query_cm_modify_order_history(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 QueryCmModifyOrderHistoryParams::builder(
                     args.symbol
@@ -7110,13 +6532,11 @@ async fn query_cm_order(mut args: QueryCmOrderArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 QueryCmOrderParams::builder(
                     args.symbol
@@ -7151,13 +6571,11 @@ async fn query_current_cm_open_conditional_order(
                     io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
                 })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 QueryCurrentCmOpenConditionalOrderParams::builder(
                     args.symbol
@@ -7191,13 +6609,11 @@ async fn query_current_cm_open_order(mut args: QueryCurrentCmOpenOrderArgs) -> a
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 QueryCurrentCmOpenOrderParams::builder(
                     args.symbol
@@ -7233,13 +6649,11 @@ async fn query_current_margin_open_order(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 QueryCurrentMarginOpenOrderParams::builder(
                     args.symbol
@@ -7288,49 +6702,6 @@ async fn query_current_um_open_algo_order(
     Ok(())
 }
 
-async fn query_current_um_open_conditional_order(
-    mut args: QueryCurrentUmOpenConditionalOrderArgs,
-) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref(), true)?;
-
-    let params = match read_stdin_as::<QueryCurrentUmOpenConditionalOrderParams>() {
-        Some(params) => params,
-        None => match args.json {
-            Some(json) => read_json_as::<QueryCurrentUmOpenConditionalOrderParams>(json)
-                .ok_or_else(|| {
-                    io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
-                })?,
-            None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
-
-                        args.symbol = Some(symbol);
-                    }
-                }
-                QueryCurrentUmOpenConditionalOrderParams::builder(
-                    args.symbol
-                        .ok_or_else(|| anyhow::anyhow!("symbol is required"))?,
-                )
-                .strategy_id(args.strategy_id)
-                .new_client_strategy_id(args.new_client_strategy_id)
-                .recv_window(args.recv_window)
-                .build()?
-            }
-        },
-    };
-
-    // Make the API call
-    let response = rest_client
-        .query_current_um_open_conditional_order(params)
-        .await?;
-
-    let data = response.data().await?;
-    println!("{}", serde_json::to_string_pretty(&data).unwrap());
-    Ok(())
-}
-
 async fn query_current_um_open_order(mut args: QueryCurrentUmOpenOrderArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
@@ -7341,13 +6712,11 @@ async fn query_current_um_open_order(mut args: QueryCurrentUmOpenOrderArgs) -> a
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 QueryCurrentUmOpenOrderParams::builder(
                     args.symbol
@@ -7379,13 +6748,11 @@ async fn query_margin_account_order(mut args: QueryMarginAccountOrderArgs) -> an
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 QueryMarginAccountOrderParams::builder(
                     args.symbol
@@ -7498,13 +6865,11 @@ async fn query_um_algo_order_history(mut args: QueryUmAlgoOrderHistoryArgs) -> a
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 QueryUmAlgoOrderHistoryParams::builder(
                     args.symbol
@@ -7528,50 +6893,6 @@ async fn query_um_algo_order_history(mut args: QueryUmAlgoOrderHistoryArgs) -> a
     Ok(())
 }
 
-async fn query_um_conditional_order_history(
-    mut args: QueryUmConditionalOrderHistoryArgs,
-) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref(), true)?;
-
-    let params = match read_stdin_as::<QueryUmConditionalOrderHistoryParams>() {
-        Some(params) => params,
-        None => match args.json {
-            Some(json) => {
-                read_json_as::<QueryUmConditionalOrderHistoryParams>(json).ok_or_else(|| {
-                    io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
-                })?
-            }
-            None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
-
-                        args.symbol = Some(symbol);
-                    }
-                }
-                QueryUmConditionalOrderHistoryParams::builder(
-                    args.symbol
-                        .ok_or_else(|| anyhow::anyhow!("symbol is required"))?,
-                )
-                .strategy_id(args.strategy_id)
-                .new_client_strategy_id(args.new_client_strategy_id)
-                .recv_window(args.recv_window)
-                .build()?
-            }
-        },
-    };
-
-    // Make the API call
-    let response = rest_client
-        .query_um_conditional_order_history(params)
-        .await?;
-
-    let data = response.data().await?;
-    println!("{}", serde_json::to_string_pretty(&data).unwrap());
-    Ok(())
-}
-
 async fn query_um_modify_order_history(
     mut args: QueryUmModifyOrderHistoryArgs,
 ) -> anyhow::Result<()> {
@@ -7586,13 +6907,11 @@ async fn query_um_modify_order_history(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 QueryUmModifyOrderHistoryParams::builder(
                     args.symbol
@@ -7627,13 +6946,11 @@ async fn query_um_order(mut args: QueryUmOrderArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 QueryUmOrderParams::builder(
                     args.symbol
@@ -7756,31 +7073,29 @@ async fn toggle_bnb_burn_on_um_futures_trade(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.fee_burn.is_none() {
-                        let options = vec![
-                            ("true", ToggleBnbBurnOnUmFuturesTradeFeeBurnEnum::True),
-                            ("false", ToggleBnbBurnOnUmFuturesTradeFeeBurnEnum::False),
-                        ];
+                if args.interactive && args.fee_burn.is_none() {
+                    let options = [
+                        ("true", ToggleBnbBurnOnUmFuturesTradeFeeBurnEnum::True),
+                        ("false", ToggleBnbBurnOnUmFuturesTradeFeeBurnEnum::False),
+                    ];
 
-                        let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
+                    let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
 
-                        let selected = Select::new()
-                            .with_prompt("Please select the fee_burn")
-                            .items(&labels)
-                            .default(0)
-                            .interact()?;
+                    let selected = Select::new()
+                        .with_prompt("Please select the fee_burn")
+                        .items(&labels)
+                        .default(0)
+                        .interact()?;
 
-                        let selected = options[selected].1.clone();
+                    let selected = options[selected].1.clone();
 
-                        println!("Selected option: {:?}", selected);
+                    println!("Selected option: {:?}", selected);
 
-                        args.fee_burn = Some(selected);
-                    }
+                    args.fee_burn = Some(selected);
                 }
                 ToggleBnbBurnOnUmFuturesTradeParams::builder(
                     args.fee_burn
-                        .ok_or_else(|| anyhow::anyhow!("fee_burn is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("fee-burn is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -7808,13 +7123,11 @@ async fn um_account_trade_list(mut args: UmAccountTradeListArgs) -> anyhow::Resu
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 UmAccountTradeListParams::builder(
                     args.symbol

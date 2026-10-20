@@ -43,9 +43,7 @@ fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> 
         }
     }
 
-    let rest_conf = builder
-        .build()
-        .map_err(|err| Error::new(ErrorKind::Other, err))?;
+    let rest_conf = builder.build().map_err(Error::other)?;
 
     Ok(FiatRestApi::from_config(rest_conf))
 }
@@ -247,7 +245,7 @@ async fn deposit(mut args: DepositArgs) -> anyhow::Result<()> {
                     }
 
                     if args.api_payment_method.is_none() {
-                        let options = vec![("pix", DepositApiPaymentMethodEnum::Pix)];
+                        let options = [("pix", DepositApiPaymentMethodEnum::Pix)];
 
                         let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
 
@@ -314,7 +312,7 @@ async fn fiat_withdraw(mut args: FiatWithdrawArgs) -> anyhow::Result<()> {
                     }
 
                     if args.api_payment_method.is_none() {
-                        let options = vec![(
+                        let options = [(
                             "bank_transfer",
                             FiatWithdrawApiPaymentMethodEnum::BankTransfer,
                         )];
@@ -391,14 +389,12 @@ async fn get_fiat_deposit_withdraw_history(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.transaction_type.is_none() {
-                        let transaction_type: String = Input::new()
-                            .with_prompt("Please enter the transaction_type name")
-                            .interact_text()?;
+                if args.interactive && args.transaction_type.is_none() {
+                    let transaction_type: String = Input::new()
+                        .with_prompt("Please enter the transaction_type name")
+                        .interact_text()?;
 
-                        args.transaction_type = Some(transaction_type);
-                    }
+                    args.transaction_type = Some(transaction_type);
                 }
                 GetFiatDepositWithdrawHistoryParams::builder(
                     args.transaction_type
@@ -434,14 +430,12 @@ async fn get_fiat_payments_history(mut args: GetFiatPaymentsHistoryArgs) -> anyh
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.transaction_type.is_none() {
-                        let transaction_type: String = Input::new()
-                            .with_prompt("Please enter the transaction_type name")
-                            .interact_text()?;
+                if args.interactive && args.transaction_type.is_none() {
+                    let transaction_type: String = Input::new()
+                        .with_prompt("Please enter the transaction_type name")
+                        .interact_text()?;
 
-                        args.transaction_type = Some(transaction_type);
-                    }
+                    args.transaction_type = Some(transaction_type);
                 }
                 GetFiatPaymentsHistoryParams::builder(
                     args.transaction_type
@@ -475,14 +469,12 @@ async fn get_order_detail(mut args: GetOrderDetailArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.order_no.is_none() {
-                        let order_no: String = Input::new()
-                            .with_prompt("Please enter the order_no name")
-                            .interact_text()?;
+                if args.interactive && args.order_no.is_none() {
+                    let order_no: String = Input::new()
+                        .with_prompt("Please enter the order_no name")
+                        .interact_text()?;
 
-                        args.order_no = Some(order_no);
-                    }
+                    args.order_no = Some(order_no);
                 }
                 GetOrderDetailParams::builder(
                     args.order_no

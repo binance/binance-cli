@@ -2,6 +2,7 @@ mod algo;
 mod alpha;
 mod alpha_ws_streams;
 mod c2c;
+mod cms_ws_streams;
 mod convert;
 mod copy_trading;
 mod crypto_loan;
@@ -29,16 +30,20 @@ mod simple_earn;
 mod spot;
 mod spot_ws_streams;
 mod staking;
+mod stocks;
+mod stocks_ws_streams;
 mod sub_account;
 mod utils;
 mod vip_loan;
 mod w3w_prediction;
+mod w3w_prediction_ws_streams;
 mod wallet;
 
 use crate::algo::{AlgoCommands, handle_algo_command};
 use crate::alpha::{AlphaCommands, handle_alpha_command};
 use crate::alpha_ws_streams::{AlphaWebsocketStreamsCommands, handle_alpha_ws_streams_command};
 use crate::c2c::{C2CCommands, handle_c2c_command};
+use crate::cms_ws_streams::{CmsWebsocketStreamsCommands, handle_cms_ws_streams_command};
 use crate::convert::{ConvertCommands, handle_convert_command};
 use crate::copy_trading::{CopyTradingCommands, handle_copy_trading_command};
 use crate::crypto_loan::{CryptoLoanCommands, handle_crypto_loan_command};
@@ -93,9 +98,14 @@ use crate::simple_earn::{SimpleEarnCommands, handle_simple_earn_command};
 use crate::spot::{SpotCommands, handle_spot_command};
 use crate::spot_ws_streams::{SpotWebsocketStreamsCommands, handle_spot_ws_streams_command};
 use crate::staking::{StakingCommands, handle_staking_command};
+use crate::stocks::{StocksCommands, handle_stocks_command};
+use crate::stocks_ws_streams::{StocksWebsocketStreamsCommands, handle_stocks_ws_streams_command};
 use crate::sub_account::{SubAccountCommands, handle_sub_account_command};
 use crate::vip_loan::{VIPLoanCommands, handle_vip_loan_command};
 use crate::w3w_prediction::{W3WPredictionCommands, handle_w3w_prediction_command};
+use crate::w3w_prediction_ws_streams::{
+    W3WPredictionWebsocketStreamsCommands, handle_w3w_prediction_ws_streams_command,
+};
 use crate::wallet::{WalletCommands, handle_wallet_command};
 
 use crate::profile::{ProfileCommand, handle_profile_command};
@@ -138,6 +148,11 @@ enum Commands {
     C2C {
         #[command(subcommand)]
         command: C2CCommands,
+    },
+    #[command(about = "Binance CMS Websocket Streams")]
+    CmsStreams {
+        #[command(subcommand)]
+        command: CmsWebsocketStreamsCommands,
     },
     #[command(about = "Binance Convert REST API")]
     Convert {
@@ -264,6 +279,16 @@ enum Commands {
         #[command(subcommand)]
         command: StakingCommands,
     },
+    #[command(about = "Binance Stocks REST API")]
+    Stocks {
+        #[command(subcommand)]
+        command: StocksCommands,
+    },
+    #[command(about = "Binance Stocks Websocket Streams")]
+    StocksStreams {
+        #[command(subcommand)]
+        command: StocksWebsocketStreamsCommands,
+    },
     #[command(about = "Binance Sub Account REST API")]
     SubAccount {
         #[command(subcommand)]
@@ -278,6 +303,11 @@ enum Commands {
     W3WPrediction {
         #[command(subcommand)]
         command: W3WPredictionCommands,
+    },
+    #[command(about = "Binance W3W Prediction Websocket Streams")]
+    W3WPredictionStreams {
+        #[command(subcommand)]
+        command: W3WPredictionWebsocketStreamsCommands,
     },
     #[command(about = "Binance Wallet REST API")]
     Wallet {
@@ -308,6 +338,9 @@ async fn main() -> anyhow::Result<()> {
         }
         Commands::AlphaStreams { command } => {
             handle_alpha_ws_streams_command(command).await?;
+        }
+        Commands::CmsStreams { command } => {
+            handle_cms_ws_streams_command(command).await?;
         }
         Commands::C2C { command } => {
             handle_c2c_command(command).await?;
@@ -387,6 +420,12 @@ async fn main() -> anyhow::Result<()> {
         Commands::Staking { command } => {
             handle_staking_command(command).await?;
         }
+        Commands::Stocks { command } => {
+            handle_stocks_command(command).await?;
+        }
+        Commands::StocksStreams { command } => {
+            handle_stocks_ws_streams_command(command).await?;
+        }
         Commands::SubAccount { command } => {
             handle_sub_account_command(command).await?;
         }
@@ -395,6 +434,9 @@ async fn main() -> anyhow::Result<()> {
         }
         Commands::W3WPrediction { command } => {
             handle_w3w_prediction_command(command).await?;
+        }
+        Commands::W3WPredictionStreams { command } => {
+            handle_w3w_prediction_ws_streams_command(command).await?;
         }
         Commands::Wallet { command } => {
             handle_wallet_command(command).await?;
