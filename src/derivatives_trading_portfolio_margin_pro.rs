@@ -50,9 +50,7 @@ fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> 
         }
     }
 
-    let rest_conf = builder
-        .build()
-        .map_err(|err| Error::new(ErrorKind::Other, err))?;
+    let rest_conf = builder.build().map_err(Error::other)?;
 
     Ok(DerivativesTradingPortfolioMarginProRestApi::from_config(
         rest_conf,
@@ -116,6 +114,16 @@ struct FundAutoCollectionArgs {
 struct FundCollectionByAssetArgs {
     #[arg(help = r#""#, long)]
     asset: Option<String>,
+    #[arg(
+        help = r#"Amount to collect. When provided, `futureType` is required."#,
+        long
+    )]
+    amount: Option<rust_decimal::Decimal>,
+    #[arg(
+        help = r#"Target wallet for the collection. `OPTION` is for SPAN only. Cannot be sent without `amount`. `amount` and `futureType` must be provided together. If neither is provided, existing behavior is unchanged (query all wallets + transfer)."#,
+        long
+    )]
+    future_type: Option<FundCollectionByAssetFutureTypeEnum>,
     #[arg(help = r#""#, long)]
     recv_window: Option<i64>,
     #[arg(short = 'i', long)]
@@ -529,7 +537,7 @@ Security Type: USER_DATA"#, false),
     )]
     RepayFuturesNegativeBalance(RepayFuturesNegativeBalanceArgs),
     #[command(
-        about = decode_selected_entities(r#"Set the margin call level for a Portfolio Margin account. When the account's uniMMR drops to the specified level, a notification will be sent via email and SMS.
+        about = decode_selected_entities(r#"Set the margin call level for a Portfolio Margin account. When the account's uniMMR drops to the specified level, a notification will be sent via email and push/inbox.
 
 Weight(IP): 1500
 
@@ -661,7 +669,7 @@ async fn bnb_transfer(mut args: BnbTransferArgs) -> anyhow::Result<()> {
                         args.amount = Some(amount);
                     }
                     if args.transfer_side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("TO_UM", BnbTransferTransferSideEnum::ToUm),
                             ("FROM_UM", BnbTransferTransferSideEnum::FromUm),
                         ];
@@ -685,7 +693,7 @@ async fn bnb_transfer(mut args: BnbTransferArgs) -> anyhow::Result<()> {
                     args.amount
                         .ok_or_else(|| anyhow::anyhow!("amount is required"))?,
                     args.transfer_side
-                        .ok_or_else(|| anyhow::anyhow!("transfer_side is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("transfer-side is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -715,31 +723,29 @@ async fn change_auto_repay_futures_status(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.auto_repay.is_none() {
-                        let options = vec![
-                            ("true", ChangeAutoRepayFuturesStatusAutoRepayEnum::True),
-                            ("false", ChangeAutoRepayFuturesStatusAutoRepayEnum::False),
-                        ];
+                if args.interactive && args.auto_repay.is_none() {
+                    let options = [
+                        ("true", ChangeAutoRepayFuturesStatusAutoRepayEnum::True),
+                        ("false", ChangeAutoRepayFuturesStatusAutoRepayEnum::False),
+                    ];
 
-                        let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
+                    let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
 
-                        let selected = Select::new()
-                            .with_prompt("Please select the auto_repay")
-                            .items(&labels)
-                            .default(0)
-                            .interact()?;
+                    let selected = Select::new()
+                        .with_prompt("Please select the auto_repay")
+                        .items(&labels)
+                        .default(0)
+                        .interact()?;
 
-                        let selected = options[selected].1.clone();
+                    let selected = options[selected].1.clone();
 
-                        println!("Selected option: {:?}", selected);
+                    println!("Selected option: {:?}", selected);
 
-                        args.auto_repay = Some(selected);
-                    }
+                    args.auto_repay = Some(selected);
                 }
                 ChangeAutoRepayFuturesStatusParams::builder(
                     args.auto_repay
-                        .ok_or_else(|| anyhow::anyhow!("auto_repay is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("auto-repay is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -811,18 +817,17 @@ async fn fund_collection_by_asset(mut args: FundCollectionByAssetArgs) -> anyhow
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.asset.is_none() {
-                        let asset: String =
-                            Input::new().with_prompt("Input asset:").interact_text()?;
+                if args.interactive && args.asset.is_none() {
+                    let asset: String = Input::new().with_prompt("Input asset:").interact_text()?;
 
-                        args.asset = Some(asset);
-                    }
+                    args.asset = Some(asset);
                 }
                 FundCollectionByAssetParams::builder(
                     args.asset
                         .ok_or_else(|| anyhow::anyhow!("asset is required"))?,
                 )
+                .amount(args.amount)
+                .future_type(args.future_type)
                 .recv_window(args.recv_window)
                 .build()?
             }
@@ -1017,10 +1022,8 @@ async fn get_transferable_earn_asset_balance_for_portfolio_margin(
                         args.asset = Some(asset);
                     }
                     if args.transfer_type.is_none() {
-                        let options = vec![
-                        ("EARN_TO_FUTURE", GetTransferableEarnAssetBalanceForPortfolioMarginTransferTypeEnum::EarnToFuture),
-                        ("FUTURE_TO_EARN", GetTransferableEarnAssetBalanceForPortfolioMarginTransferTypeEnum::FutureToEarn),
-                    ];
+                        let options = [("EARN_TO_FUTURE", GetTransferableEarnAssetBalanceForPortfolioMarginTransferTypeEnum::EarnToFuture),
+                        ("FUTURE_TO_EARN", GetTransferableEarnAssetBalanceForPortfolioMarginTransferTypeEnum::FutureToEarn)];
 
                         let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
 
@@ -1041,7 +1044,7 @@ async fn get_transferable_earn_asset_balance_for_portfolio_margin(
                     args.asset
                         .ok_or_else(|| anyhow::anyhow!("asset is required"))?,
                     args.transfer_type
-                        .ok_or_else(|| anyhow::anyhow!("transfer_type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("transfer-type is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -1223,18 +1226,16 @@ async fn set_margin_call_level(mut args: SetMarginCallLevelArgs) -> anyhow::Resu
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.margin_call_level.is_none() {
-                        let margin_call_level: rust_decimal::Decimal = Input::new()
-                            .with_prompt("Input margin_call_level:")
-                            .interact_text()?;
+                if args.interactive && args.margin_call_level.is_none() {
+                    let margin_call_level: rust_decimal::Decimal = Input::new()
+                        .with_prompt("Input margin_call_level:")
+                        .interact_text()?;
 
-                        args.margin_call_level = Some(margin_call_level);
-                    }
+                    args.margin_call_level = Some(margin_call_level);
                 }
                 SetMarginCallLevelParams::builder(
                     args.margin_call_level
-                        .ok_or_else(|| anyhow::anyhow!("margin_call_level is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("margin-call-level is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -1260,31 +1261,29 @@ async fn switch_delta_mode(mut args: SwitchDeltaModeArgs) -> anyhow::Result<()> 
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.delta_enabled.is_none() {
-                        let options = vec![
-                            ("true", SwitchDeltaModeDeltaEnabledEnum::True),
-                            ("false", SwitchDeltaModeDeltaEnabledEnum::False),
-                        ];
+                if args.interactive && args.delta_enabled.is_none() {
+                    let options = [
+                        ("true", SwitchDeltaModeDeltaEnabledEnum::True),
+                        ("false", SwitchDeltaModeDeltaEnabledEnum::False),
+                    ];
 
-                        let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
+                    let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
 
-                        let selected = Select::new()
-                            .with_prompt("Please select the delta_enabled")
-                            .items(&labels)
-                            .default(0)
-                            .interact()?;
+                    let selected = Select::new()
+                        .with_prompt("Please select the delta_enabled")
+                        .items(&labels)
+                        .default(0)
+                        .interact()?;
 
-                        let selected = options[selected].1.clone();
+                    let selected = options[selected].1.clone();
 
-                        println!("Selected option: {:?}", selected);
+                    println!("Selected option: {:?}", selected);
 
-                        args.delta_enabled = Some(selected);
-                    }
+                    args.delta_enabled = Some(selected);
                 }
                 SwitchDeltaModeParams::builder(
                     args.delta_enabled
-                        .ok_or_else(|| anyhow::anyhow!("delta_enabled is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("delta-enabled is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -1316,7 +1315,7 @@ async fn transfer_ldusdt_rwusd_for_portfolio_margin(
                 None => {
                     if args.interactive {
                         if args.asset.is_none() {
-                            let options = vec![
+                            let options = [
                                 (
                                     "LDUSDT",
                                     TransferLdusdtRwusdForPortfolioMarginAssetEnum::Ldusdt,
@@ -1342,10 +1341,8 @@ async fn transfer_ldusdt_rwusd_for_portfolio_margin(
                             args.asset = Some(selected);
                         }
                         if args.transfer_type.is_none() {
-                            let options = vec![
-                        ("EARN_TO_FUTURE", TransferLdusdtRwusdForPortfolioMarginTransferTypeEnum::EarnToFuture),
-                        ("FUTURE_TO_EARN", TransferLdusdtRwusdForPortfolioMarginTransferTypeEnum::FutureToEarn),
-                    ];
+                            let options = [("EARN_TO_FUTURE", TransferLdusdtRwusdForPortfolioMarginTransferTypeEnum::EarnToFuture),
+                        ("FUTURE_TO_EARN", TransferLdusdtRwusdForPortfolioMarginTransferTypeEnum::FutureToEarn)];
 
                             let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
 
@@ -1372,7 +1369,7 @@ async fn transfer_ldusdt_rwusd_for_portfolio_margin(
                         args.asset
                             .ok_or_else(|| anyhow::anyhow!("asset is required"))?,
                         args.transfer_type
-                            .ok_or_else(|| anyhow::anyhow!("transfer_type is required"))?,
+                            .ok_or_else(|| anyhow::anyhow!("transfer-type is required"))?,
                         args.amount
                             .ok_or_else(|| anyhow::anyhow!("amount is required"))?,
                     )

@@ -104,6 +104,12 @@ binance-cli wallet get-cloud-mining-payment-and-refund-history --start-time 1623
 binance-cli wallet get-open-symbol-list
 ```
 
+### [GET /sapi/v1/spot/asset/tags](https://developers.binance.com/en/docs/catalog/core-trading-wallet/api/rest-api/asset#get-spot-asset-tags) - Get Spot Asset Tags (MARKET_DATA)
+
+```bash
+binance-cli wallet get-spot-asset-tags --tag Layer1_Layer2,BSC
+```
+
 ### [GET /sapi/v1/asset/custody/transfer-history](https://developers.binance.com/en/docs/catalog/core-trading-wallet/api/rest-api/asset#query-user-delegation-history) - Query User Delegation History(For Master Account) (USER_DATA)
 
 ```bash
@@ -119,7 +125,7 @@ binance-cli wallet query-user-universal-transfer-history --rtype r#type_example 
 ### [GET /sapi/v1/asset/wallet/balance](https://developers.binance.com/en/docs/catalog/core-trading-wallet/api/rest-api/asset#query-user-wallet-balance) - Query User Wallet Balance (USER_DATA)
 
 ```bash
-binance-cli wallet query-user-wallet-balance --quote-asset BTC --recv-window 5000
+binance-cli wallet query-user-wallet-balance --quote-asset BTC --need-balance-detail false --recv-window 5000
 ```
 
 ### [POST /sapi/v1/bnbBurn](https://developers.binance.com/en/docs/catalog/core-trading-wallet/api/rest-api/asset#toggle-bnb-burn-on-spot-trade-and-margin-interest) - Toggle BNB Burn On Spot Trade And Margin Interest (USER_DATA)

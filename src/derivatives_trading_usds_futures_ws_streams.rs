@@ -29,7 +29,9 @@ fn get_client(profile: Option<&str>) -> Result<WebsocketStreamsHandle, Error> {
     let base_path = client_config
         .base_path_ws_streams
         .unwrap_or(match api_env.as_str() {
-            "testnet" => DERIVATIVES_TRADING_USDS_FUTURES_WS_STREAMS_TESTNET_URL.to_string(),
+            "testnet" | "demo" => {
+                DERIVATIVES_TRADING_USDS_FUTURES_WS_STREAMS_TESTNET_URL.to_string()
+            }
             "prod" => DERIVATIVES_TRADING_USDS_FUTURES_WS_STREAMS_PROD_URL.to_string(),
             _ => {
                 return Err(Error::new(
@@ -41,9 +43,7 @@ fn get_client(profile: Option<&str>) -> Result<WebsocketStreamsHandle, Error> {
 
     let builder = ConfigurationWebsocketStreams::builder().ws_url(base_path);
 
-    let ws_config = builder
-        .build()
-        .map_err(|err| Error::new(ErrorKind::Other, err))?;
+    let ws_config = builder.build().map_err(Error::other)?;
 
     Ok(DerivativesTradingUsdsFuturesWsStreams::from_config(
         ws_config,
@@ -666,7 +666,7 @@ Update Speed: 3s or 1s"#, false),
     )]
     MarkPriceStreamForAllMarket(MarkPriceStreamForAllMarketArgs),
     #[command(
-        about = decode_selected_entities(r#"Trading session information for the underlying assets of TradFi Perpetual contracts, covering the U.S. equity market, Korean equity market, Hong Kong equity market, and the commodity market, is updated every second. Trading session information for different underlying markets is pushed in separate messages.
+        about = decode_selected_entities(r#"Trading session information for the underlying assets of TradFi Perpetual contracts, covering the U.S. equity market, Korean equity market, Hong Kong equity market, China equity market, the commodity market, and the FX market, is updated every second. Trading session information for different underlying markets is pushed in separate messages.
 
 **Event type:**
 
@@ -674,6 +674,8 @@ Update Speed: 3s or 1s"#, false),
 - `CommodityUpdate`: Session types for the commodity market include "REGULAR" and "NO_TRADING".
 - `KR_EquityUpdate`: Session types for the Korean equity market include "REGULAR" and "NO_TRADING".
 - `HK_EquityUpdate`: Session types for the Hong Kong equity market include "REGULAR" and "NO_TRADING".
+- `CN_EquityUpdate`: Session types for the China equity market include "REGULAR" and "NO_TRADING".
+- `FXUpdate`: Session types for the FX market include "REGULAR" and "NO_TRADING".
 
 Update Speed: 1s"#, false),
     )]
@@ -789,7 +791,7 @@ pub async fn handle_derivatives_trading_usds_futures_ws_streams_command(
 }
 
 async fn aggregate_trade_streams(mut args: AggregateTradeStreamsArgs) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref())?;
+    let ws_client = get_client(args.profile.as_deref())?;
 
     let params = match read_stdin_as::<AggregateTradeStreamsParams>() {
         Some(params) => params,
@@ -798,13 +800,11 @@ async fn aggregate_trade_streams(mut args: AggregateTradeStreamsArgs) -> anyhow:
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 AggregateTradeStreamsParams::builder(
                     args.symbol
@@ -816,7 +816,7 @@ async fn aggregate_trade_streams(mut args: AggregateTradeStreamsArgs) -> anyhow:
         },
     };
 
-    let connection = rest_client.connect().await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
     let stream = connection.aggregate_trade_streams(params).await?;
@@ -883,7 +883,7 @@ async fn aggregate_trade_streams(mut args: AggregateTradeStreamsArgs) -> anyhow:
 async fn all_market_liquidation_order_streams(
     args: AllMarketLiquidationOrderStreamsArgs,
 ) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref())?;
+    let ws_client = get_client(args.profile.as_deref())?;
 
     let params = match read_stdin_as::<AllMarketLiquidationOrderStreamsParams>() {
         Some(params) => params,
@@ -899,7 +899,7 @@ async fn all_market_liquidation_order_streams(
         },
     };
 
-    let connection = rest_client.connect().await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
     let stream = connection
@@ -968,7 +968,7 @@ async fn all_market_liquidation_order_streams(
 async fn all_market_mini_tickers_stream(
     args: AllMarketMiniTickersStreamArgs,
 ) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref())?;
+    let ws_client = get_client(args.profile.as_deref())?;
 
     let params = match read_stdin_as::<AllMarketMiniTickersStreamParams>() {
         Some(params) => params,
@@ -984,7 +984,7 @@ async fn all_market_mini_tickers_stream(
         },
     };
 
-    let connection = rest_client.connect().await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
     let stream = connection.all_market_mini_tickers_stream(params).await?;
@@ -1049,7 +1049,7 @@ async fn all_market_mini_tickers_stream(
 }
 
 async fn all_market_tickers_streams(args: AllMarketTickersStreamsArgs) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref())?;
+    let ws_client = get_client(args.profile.as_deref())?;
 
     let params = match read_stdin_as::<AllMarketTickersStreamsParams>() {
         Some(params) => params,
@@ -1063,7 +1063,7 @@ async fn all_market_tickers_streams(args: AllMarketTickersStreamsArgs) -> anyhow
         },
     };
 
-    let connection = rest_client.connect().await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
     let stream = connection.all_market_tickers_streams(params).await?;
@@ -1128,7 +1128,7 @@ async fn all_market_tickers_streams(args: AllMarketTickersStreamsArgs) -> anyhow
 }
 
 async fn asset_index(args: AssetIndexArgs) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref())?;
+    let ws_client = get_client(args.profile.as_deref())?;
 
     let params = match read_stdin_as::<AssetIndexParams>() {
         Some(params) => params,
@@ -1140,7 +1140,7 @@ async fn asset_index(args: AssetIndexArgs) -> anyhow::Result<()> {
         },
     };
 
-    let connection = rest_client.connect().await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
     let stream = connection.asset_index(params).await?;
@@ -1207,7 +1207,7 @@ async fn asset_index(args: AssetIndexArgs) -> anyhow::Result<()> {
 async fn composite_index_symbol_information_streams(
     mut args: CompositeIndexSymbolInformationStreamsArgs,
 ) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref())?;
+    let ws_client = get_client(args.profile.as_deref())?;
 
     let params = match read_stdin_as::<CompositeIndexSymbolInformationStreamsParams>() {
         Some(params) => params,
@@ -1217,13 +1217,11 @@ async fn composite_index_symbol_information_streams(
                     io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
                 })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 CompositeIndexSymbolInformationStreamsParams::builder(
                     args.symbol
@@ -1235,7 +1233,7 @@ async fn composite_index_symbol_information_streams(
         },
     };
 
-    let connection = rest_client.connect().await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
     let stream = connection
@@ -1304,7 +1302,7 @@ async fn composite_index_symbol_information_streams(
 async fn continuous_contract_kline_candlestick_streams(
     mut args: ContinuousContractKlineCandlestickStreamsArgs,
 ) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref())?;
+    let ws_client = get_client(args.profile.as_deref())?;
 
     let params = match read_stdin_as::<ContinuousContractKlineCandlestickStreamsParams>() {
         Some(params) => params,
@@ -1322,12 +1320,10 @@ async fn continuous_contract_kline_candlestick_streams(
                         args.pair = Some(pair);
                     }
                     if args.contract_type.is_none() {
-                        let options = vec![
-                        ("perpetual", ContinuousContractKlineCandlestickStreamsContractTypeEnum::Perpetual),
+                        let options = [("perpetual", ContinuousContractKlineCandlestickStreamsContractTypeEnum::Perpetual),
                         ("current_quarter", ContinuousContractKlineCandlestickStreamsContractTypeEnum::CurrentQuarter),
                         ("next_quarter", ContinuousContractKlineCandlestickStreamsContractTypeEnum::NextQuarter),
-                        ("tradifi_perpetual", ContinuousContractKlineCandlestickStreamsContractTypeEnum::TradifiPerpetual),
-                    ];
+                        ("tradifi_perpetual", ContinuousContractKlineCandlestickStreamsContractTypeEnum::TradifiPerpetual)];
 
                         let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
 
@@ -1383,7 +1379,7 @@ async fn continuous_contract_kline_candlestick_streams(
                     args.pair
                         .ok_or_else(|| anyhow::anyhow!("pair is required"))?,
                     args.contract_type
-                        .ok_or_else(|| anyhow::anyhow!("contract_type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("contract-type is required"))?,
                     args.interval
                         .ok_or_else(|| anyhow::anyhow!("interval is required"))?,
                 )
@@ -1393,7 +1389,7 @@ async fn continuous_contract_kline_candlestick_streams(
         },
     };
 
-    let connection = rest_client.connect().await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
     let stream = connection
@@ -1460,7 +1456,7 @@ async fn continuous_contract_kline_candlestick_streams(
 }
 
 async fn contract_info_stream(args: ContractInfoStreamArgs) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref())?;
+    let ws_client = get_client(args.profile.as_deref())?;
 
     let params = match read_stdin_as::<ContractInfoStreamParams>() {
         Some(params) => params,
@@ -1472,7 +1468,7 @@ async fn contract_info_stream(args: ContractInfoStreamArgs) -> anyhow::Result<()
         },
     };
 
-    let connection = rest_client.connect().await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
     let stream = connection.contract_info_stream(params).await?;
@@ -1539,7 +1535,7 @@ async fn contract_info_stream(args: ContractInfoStreamArgs) -> anyhow::Result<()
 async fn individual_symbol_mini_ticker_stream(
     mut args: IndividualSymbolMiniTickerStreamArgs,
 ) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref())?;
+    let ws_client = get_client(args.profile.as_deref())?;
 
     let params = match read_stdin_as::<IndividualSymbolMiniTickerStreamParams>() {
         Some(params) => params,
@@ -1550,13 +1546,11 @@ async fn individual_symbol_mini_ticker_stream(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 IndividualSymbolMiniTickerStreamParams::builder(
                     args.symbol
@@ -1568,7 +1562,7 @@ async fn individual_symbol_mini_ticker_stream(
         },
     };
 
-    let connection = rest_client.connect().await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
     let stream = connection
@@ -1637,7 +1631,7 @@ async fn individual_symbol_mini_ticker_stream(
 async fn individual_symbol_ticker_streams(
     mut args: IndividualSymbolTickerStreamsArgs,
 ) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref())?;
+    let ws_client = get_client(args.profile.as_deref())?;
 
     let params = match read_stdin_as::<IndividualSymbolTickerStreamsParams>() {
         Some(params) => params,
@@ -1648,13 +1642,11 @@ async fn individual_symbol_ticker_streams(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 IndividualSymbolTickerStreamsParams::builder(
                     args.symbol
@@ -1666,7 +1658,7 @@ async fn individual_symbol_ticker_streams(
         },
     };
 
-    let connection = rest_client.connect().await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
     let stream = connection.individual_symbol_ticker_streams(params).await?;
@@ -1731,7 +1723,7 @@ async fn individual_symbol_ticker_streams(
 }
 
 async fn kline_candlestick_streams(mut args: KlineCandlestickStreamsArgs) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref())?;
+    let ws_client = get_client(args.profile.as_deref())?;
 
     let params = match read_stdin_as::<KlineCandlestickStreamsParams>() {
         Some(params) => params,
@@ -1793,7 +1785,7 @@ async fn kline_candlestick_streams(mut args: KlineCandlestickStreamsArgs) -> any
         },
     };
 
-    let connection = rest_client.connect().await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
     let stream = connection.kline_candlestick_streams(params).await?;
@@ -1858,7 +1850,7 @@ async fn kline_candlestick_streams(mut args: KlineCandlestickStreamsArgs) -> any
 }
 
 async fn liquidation_order_streams(mut args: LiquidationOrderStreamsArgs) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref())?;
+    let ws_client = get_client(args.profile.as_deref())?;
 
     let params = match read_stdin_as::<LiquidationOrderStreamsParams>() {
         Some(params) => params,
@@ -1867,13 +1859,11 @@ async fn liquidation_order_streams(mut args: LiquidationOrderStreamsArgs) -> any
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 LiquidationOrderStreamsParams::builder(
                     args.symbol
@@ -1885,7 +1875,7 @@ async fn liquidation_order_streams(mut args: LiquidationOrderStreamsArgs) -> any
         },
     };
 
-    let connection = rest_client.connect().await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
     let stream = connection.liquidation_order_streams(params).await?;
@@ -1950,7 +1940,7 @@ async fn liquidation_order_streams(mut args: LiquidationOrderStreamsArgs) -> any
 }
 
 async fn mark_price_stream(mut args: MarkPriceStreamArgs) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref())?;
+    let ws_client = get_client(args.profile.as_deref())?;
 
     let params = match read_stdin_as::<MarkPriceStreamParams>() {
         Some(params) => params,
@@ -1959,13 +1949,11 @@ async fn mark_price_stream(mut args: MarkPriceStreamArgs) -> anyhow::Result<()> 
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 MarkPriceStreamParams::builder(
                     args.symbol
@@ -1978,7 +1966,7 @@ async fn mark_price_stream(mut args: MarkPriceStreamArgs) -> anyhow::Result<()> 
         },
     };
 
-    let connection = rest_client.connect().await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
     let stream = connection.mark_price_stream(params).await?;
@@ -2045,7 +2033,7 @@ async fn mark_price_stream(mut args: MarkPriceStreamArgs) -> anyhow::Result<()> 
 async fn mark_price_stream_for_all_market(
     args: MarkPriceStreamForAllMarketArgs,
 ) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref())?;
+    let ws_client = get_client(args.profile.as_deref())?;
 
     let params = match read_stdin_as::<MarkPriceStreamForAllMarketParams>() {
         Some(params) => params,
@@ -2062,7 +2050,7 @@ async fn mark_price_stream_for_all_market(
         },
     };
 
-    let connection = rest_client.connect().await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
     let stream = connection.mark_price_stream_for_all_market(params).await?;
@@ -2127,7 +2115,7 @@ async fn mark_price_stream_for_all_market(
 }
 
 async fn trading_session_stream(args: TradingSessionStreamArgs) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref())?;
+    let ws_client = get_client(args.profile.as_deref())?;
 
     let params = match read_stdin_as::<TradingSessionStreamParams>() {
         Some(params) => params,
@@ -2139,7 +2127,7 @@ async fn trading_session_stream(args: TradingSessionStreamArgs) -> anyhow::Resul
         },
     };
 
-    let connection = rest_client.connect().await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
     let stream = connection.trading_session_stream(params).await?;
@@ -2204,7 +2192,7 @@ async fn trading_session_stream(args: TradingSessionStreamArgs) -> anyhow::Resul
 }
 
 async fn all_book_tickers_stream(args: AllBookTickersStreamArgs) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref())?;
+    let ws_client = get_client(args.profile.as_deref())?;
 
     let params = match read_stdin_as::<AllBookTickersStreamParams>() {
         Some(params) => params,
@@ -2216,7 +2204,7 @@ async fn all_book_tickers_stream(args: AllBookTickersStreamArgs) -> anyhow::Resu
         },
     };
 
-    let connection = rest_client.connect().await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
     let stream = connection.all_book_tickers_stream(params).await?;
@@ -2281,7 +2269,7 @@ async fn all_book_tickers_stream(args: AllBookTickersStreamArgs) -> anyhow::Resu
 }
 
 async fn diff_book_depth_streams(mut args: DiffBookDepthStreamsArgs) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref())?;
+    let ws_client = get_client(args.profile.as_deref())?;
 
     let params = match read_stdin_as::<DiffBookDepthStreamsParams>() {
         Some(params) => params,
@@ -2290,13 +2278,11 @@ async fn diff_book_depth_streams(mut args: DiffBookDepthStreamsArgs) -> anyhow::
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 DiffBookDepthStreamsParams::builder(
                     args.symbol
@@ -2309,7 +2295,7 @@ async fn diff_book_depth_streams(mut args: DiffBookDepthStreamsArgs) -> anyhow::
         },
     };
 
-    let connection = rest_client.connect().await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
     let stream = connection.diff_book_depth_streams(params).await?;
@@ -2376,7 +2362,7 @@ async fn diff_book_depth_streams(mut args: DiffBookDepthStreamsArgs) -> anyhow::
 async fn individual_symbol_book_ticker_streams(
     mut args: IndividualSymbolBookTickerStreamsArgs,
 ) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref())?;
+    let ws_client = get_client(args.profile.as_deref())?;
 
     let params = match read_stdin_as::<IndividualSymbolBookTickerStreamsParams>() {
         Some(params) => params,
@@ -2386,13 +2372,11 @@ async fn individual_symbol_book_ticker_streams(
                     io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
                 })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 IndividualSymbolBookTickerStreamsParams::builder(
                     args.symbol
@@ -2404,7 +2388,7 @@ async fn individual_symbol_book_ticker_streams(
         },
     };
 
-    let connection = rest_client.connect().await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
     let stream = connection
@@ -2471,7 +2455,7 @@ async fn individual_symbol_book_ticker_streams(
 }
 
 async fn partial_book_depth_streams(mut args: PartialBookDepthStreamsArgs) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref())?;
+    let ws_client = get_client(args.profile.as_deref())?;
 
     let params = match read_stdin_as::<PartialBookDepthStreamsParams>() {
         Some(params) => params,
@@ -2488,7 +2472,7 @@ async fn partial_book_depth_streams(mut args: PartialBookDepthStreamsArgs) -> an
                         args.symbol = Some(symbol);
                     }
                     if args.levels.is_none() {
-                        let options = vec![
+                        let options = [
                             ("5", PartialBookDepthStreamsLevelsEnum::Levels5),
                             ("10", PartialBookDepthStreamsLevelsEnum::Levels10),
                             ("20", PartialBookDepthStreamsLevelsEnum::Levels20),
@@ -2522,7 +2506,7 @@ async fn partial_book_depth_streams(mut args: PartialBookDepthStreamsArgs) -> an
         },
     };
 
-    let connection = rest_client.connect().await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
     let stream = connection.partial_book_depth_streams(params).await?;
@@ -2587,7 +2571,7 @@ async fn partial_book_depth_streams(mut args: PartialBookDepthStreamsArgs) -> an
 }
 
 async fn rpi_diff_book_depth_streams(mut args: RpiDiffBookDepthStreamsArgs) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref())?;
+    let ws_client = get_client(args.profile.as_deref())?;
 
     let params = match read_stdin_as::<RpiDiffBookDepthStreamsParams>() {
         Some(params) => params,
@@ -2596,13 +2580,11 @@ async fn rpi_diff_book_depth_streams(mut args: RpiDiffBookDepthStreamsArgs) -> a
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 RpiDiffBookDepthStreamsParams::builder(
                     args.symbol
@@ -2614,7 +2596,7 @@ async fn rpi_diff_book_depth_streams(mut args: RpiDiffBookDepthStreamsArgs) -> a
         },
     };
 
-    let connection = rest_client.connect().await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
     let stream = connection.rpi_diff_book_depth_streams(params).await?;
@@ -2710,25 +2692,23 @@ pub struct UserDataArgs {
 }
 
 async fn user_data(mut args: UserDataArgs) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref())?;
+    let ws_client = get_client(args.profile.as_deref())?;
 
-    if args.interactive {
-        if args.listen_key.is_none() {
-            let listen_key: String = Input::new()
-                .with_prompt("Input listenKey")
-                .interact_text()?;
+    if args.interactive && args.listen_key.is_none() {
+        let listen_key: String = Input::new()
+            .with_prompt("Input listenKey")
+            .interact_text()?;
 
-            args.listen_key = Some(listen_key);
-        }
+        args.listen_key = Some(listen_key);
     }
 
-    let connection = rest_client.connect().await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
     let stream = connection
         .user_data(
             args.listen_key
-                .ok_or_else(|| anyhow::anyhow!("listen_key is required"))?,
+                .ok_or_else(|| anyhow::anyhow!("listen-key is required"))?,
             args.id,
         )
         .await?;

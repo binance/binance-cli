@@ -43,9 +43,7 @@ fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> 
         }
     }
 
-    let rest_conf = builder
-        .build()
-        .map_err(|err| Error::new(ErrorKind::Other, err))?;
+    let rest_conf = builder.build().map_err(Error::other)?;
 
     Ok(SubAccountRestApi::from_config(rest_conf))
 }
@@ -109,7 +107,7 @@ struct GetFuturesPositionRiskOfSubAccountArgs {
 struct GetFuturesPositionRiskOfSubAccountV2Args {
     #[arg(help = r#""#, long)]
     email: Option<String>,
-    #[arg(help = r#"1:USDT-margined Futures，2: Coin-margined Futures"#, long)]
+    #[arg(help = r#"1: USDT-margined Futures，2: Coin-margined Futures"#, long)]
     futures_type: Option<i64>,
     #[arg(help = r#""#, long)]
     recv_window: Option<i64>,
@@ -334,7 +332,7 @@ struct FuturesTransferForSubAccountArgs {
     #[arg(
         help = r#"1: transfer from subaccount's spot account to its USDT-margined futures account 2: transfer from
 subaccount's USDT-margined futures account to its spot account 3: transfer from subaccount's spot
-account to its COIN-margined futures account 4:transfer from subaccount's COIN-margined futures
+account to its COIN-margined futures account 4: transfer from subaccount's COIN-margined futures
 account to its spot account"#,
         long
     )]
@@ -365,7 +363,7 @@ struct GetDetailOnSubAccountsFuturesAccountArgs {
 struct GetDetailOnSubAccountsFuturesAccountV2Args {
     #[arg(help = r#""#, long)]
     email: Option<String>,
-    #[arg(help = r#"1:USDT-margined Futures，2: Coin-margined Futures"#, long)]
+    #[arg(help = r#"1: USDT-margined Futures，2: Coin-margined Futures"#, long)]
     futures_type: Option<i64>,
     #[arg(help = r#""#, long)]
     recv_window: Option<i64>,
@@ -395,8 +393,10 @@ struct GetMovePositionHistoryForSubAccountArgs {
     symbol: Option<String>,
     #[arg(help = r#""#, long)]
     page: Option<i64>,
-    #[arg(help = r#""#, long)]
+    #[arg(help = r#"Max 100."#, long)]
     rows: Option<i64>,
+    #[arg(help = r#"Default UM."#, long)]
+    product_type: Option<GetMovePositionHistoryForSubAccountProductTypeEnum>,
     #[arg(help = r#""#, long)]
     start_time: Option<i64>,
     #[arg(help = r#""#, long)]
@@ -481,7 +481,7 @@ struct GetSummaryOfSubAccountsFuturesAccountArgs {
 }
 #[derive(Args, Debug)]
 struct GetSummaryOfSubAccountsFuturesAccountV2Args {
-    #[arg(help = r#"1:USDT-margined Futures，2: Coin-margined Futures"#, long)]
+    #[arg(help = r#"1: USDT-margined Futures，2: Coin-margined Futures"#, long)]
     futures_type: Option<i64>,
     #[arg(help = r#""#, long)]
     page: Option<i64>,
@@ -536,7 +536,7 @@ struct MovePositionForSubAccountArgs {
     from_user_email: Option<String>,
     #[arg(help = r#""#, long)]
     to_user_email: Option<String>,
-    #[arg(help = r#""#, long)]
+    #[arg(help = r#"A single request cannot mix UM and OPTION positions."#, long)]
     product_type: Option<MovePositionForSubAccountProductTypeEnum>,
     #[arg(
         help = r#"Max 10 positions supported. When input request parameter,orderArgs.symbol should be STRING,
@@ -588,7 +588,7 @@ struct QuerySubAccountAssetsAssetManagementArgs {
 struct QuerySubAccountFuturesAssetTransferHistoryArgs {
     #[arg(help = r#""#, long)]
     email: Option<String>,
-    #[arg(help = r#"1:USDT-margined Futures，2: Coin-margined Futures"#, long)]
+    #[arg(help = r#"1: USDT-margined Futures，2: Coin-margined Futures"#, long)]
     futures_type: Option<i64>,
     #[arg(help = r#"Cannot be earlier than 1 month ago"#, long)]
     start_time: Option<i64>,
@@ -678,7 +678,7 @@ struct SubAccountFuturesAssetTransferArgs {
     from_email: Option<String>,
     #[arg(help = r#"Recipient email"#, long)]
     to_email: Option<String>,
-    #[arg(help = r#"1:USDT-margined Futures，2: Coin-margined Futures"#, long)]
+    #[arg(help = r#"1: USDT-margined Futures，2: Coin-margined Futures"#, long)]
     futures_type: Option<i64>,
     #[arg(help = r#""#, long)]
     asset: Option<String>,
@@ -1205,7 +1205,7 @@ Weight(IP): 1
 Security Type: USER_DATA
 
 Notes:
-- If `startTime` and `endTime` are both omitted, records from the last 90 days are returned by default (up to 1000 records).
+- If `startTime` and `endTime` are both omitted, records from the last 90 days are returned by default (up to 100 records).
 - If `startTime` is sent and `endTime` is omitted, records in `[max(startTime, now-90d), now]` are returned.
 - If `startTime` is omitted and `endTime` is sent, records in `[max(now, endTime-90d), endTime]` are returned."#, false),
     )]
@@ -1488,7 +1488,7 @@ Managed Sub-Account. A Managed Sub-Account is an account type for investors who 
 allocation and account application, while delegating trades to a professional trading team.
 
 Please refer to
-[link](https://www.binance.com/en/support/faq/how-to-get-started-with-managed-sub-account-functions-and-frequently-asked-questions-0594748722704383a7c369046e489459)
+link
 
 Weight(IP): 1
 
@@ -1505,7 +1505,7 @@ team of Managed Sub-Account. A Managed Sub-Account is an account type for invest
 asset allocation and account application, while delegating trades to a professional trading team.
 
 Please refer to
-[link](https://www.binance.com/en/support/faq/how-to-get-started-with-managed-sub-account-functions-and-frequently-asked-questions-0594748722704383a7c369046e489459)
+link
 
 Weight(UID): 60
 
@@ -1737,18 +1737,16 @@ async fn create_a_virtual_sub_account(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.sub_account_string.is_none() {
-                        let sub_account_string: String = Input::new()
-                            .with_prompt("Input sub_account_string:")
-                            .interact_text()?;
+                if args.interactive && args.sub_account_string.is_none() {
+                    let sub_account_string: String = Input::new()
+                        .with_prompt("Input sub_account_string:")
+                        .interact_text()?;
 
-                        args.sub_account_string = Some(sub_account_string);
-                    }
+                    args.sub_account_string = Some(sub_account_string);
                 }
                 CreateAVirtualSubAccountParams::builder(
                     args.sub_account_string
-                        .ok_or_else(|| anyhow::anyhow!("sub_account_string is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("sub-account-string is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -1778,13 +1776,10 @@ async fn enable_futures_for_sub_account(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.email.is_none() {
-                        let email: String =
-                            Input::new().with_prompt("Input email:").interact_text()?;
+                if args.interactive && args.email.is_none() {
+                    let email: String = Input::new().with_prompt("Input email:").interact_text()?;
 
-                        args.email = Some(email);
-                    }
+                    args.email = Some(email);
                 }
                 EnableFuturesForSubAccountParams::builder(
                     args.email
@@ -1818,13 +1813,10 @@ async fn enable_options_for_sub_account(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.email.is_none() {
-                        let email: String =
-                            Input::new().with_prompt("Input email:").interact_text()?;
+                if args.interactive && args.email.is_none() {
+                    let email: String = Input::new().with_prompt("Input email:").interact_text()?;
 
-                        args.email = Some(email);
-                    }
+                    args.email = Some(email);
                 }
                 EnableOptionsForSubAccountParams::builder(
                     args.email
@@ -1857,13 +1849,10 @@ async fn get_futures_position_risk_of_sub_account(
                     io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
                 })?,
             None => {
-                if args.interactive {
-                    if args.email.is_none() {
-                        let email: String =
-                            Input::new().with_prompt("Input email:").interact_text()?;
+                if args.interactive && args.email.is_none() {
+                    let email: String = Input::new().with_prompt("Input email:").interact_text()?;
 
-                        args.email = Some(email);
-                    }
+                    args.email = Some(email);
                 }
                 GetFuturesPositionRiskOfSubAccountParams::builder(
                     args.email
@@ -1917,7 +1906,7 @@ async fn get_futures_position_risk_of_sub_account_v2(
                     args.email
                         .ok_or_else(|| anyhow::anyhow!("email is required"))?,
                     args.futures_type
-                        .ok_or_else(|| anyhow::anyhow!("futures_type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("futures-type is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -2058,7 +2047,7 @@ async fn add_ip_restriction_for_sub_account_api_key(
                     args.email
                         .ok_or_else(|| anyhow::anyhow!("email is required"))?,
                     args.sub_account_api_key
-                        .ok_or_else(|| anyhow::anyhow!("sub_account_api_key is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("sub-account-api-key is required"))?,
                     args.status
                         .ok_or_else(|| anyhow::anyhow!("status is required"))?,
                 )
@@ -2114,7 +2103,7 @@ async fn create_sub_account_api_key(mut args: CreateSubAccountApiKeyArgs) -> any
                     args.email
                         .ok_or_else(|| anyhow::anyhow!("email is required"))?,
                     args.api_name
-                        .ok_or_else(|| anyhow::anyhow!("api_name is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("api-name is required"))?,
                     args.status
                         .ok_or_else(|| anyhow::anyhow!("status is required"))?,
                 )
@@ -2180,9 +2169,9 @@ async fn delete_ip_list_for_a_sub_account_api_key(
                     args.email
                         .ok_or_else(|| anyhow::anyhow!("email is required"))?,
                     args.sub_account_api_key
-                        .ok_or_else(|| anyhow::anyhow!("sub_account_api_key is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("sub-account-api-key is required"))?,
                     args.ip_address
-                        .ok_or_else(|| anyhow::anyhow!("ip_address is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("ip-address is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -2229,7 +2218,7 @@ async fn delete_sub_account_api_key(mut args: DeleteSubAccountApiKeyArgs) -> any
                     args.email
                         .ok_or_else(|| anyhow::anyhow!("email is required"))?,
                     args.sub_account_api_key
-                        .ok_or_else(|| anyhow::anyhow!("sub_account_api_key is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("sub-account-api-key is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -2277,7 +2266,7 @@ async fn get_ip_restriction_for_a_sub_account_api_key(
                     args.email
                         .ok_or_else(|| anyhow::anyhow!("email is required"))?,
                     args.sub_account_api_key
-                        .ok_or_else(|| anyhow::anyhow!("sub_account_api_key is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("sub-account-api-key is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -2328,7 +2317,7 @@ async fn modify_sub_account_api_key_permission(
                     args.email
                         .ok_or_else(|| anyhow::anyhow!("email is required"))?,
                     args.sub_account_api_key
-                        .ok_or_else(|| anyhow::anyhow!("sub_account_api_key is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("sub-account-api-key is required"))?,
                 )
                 .can_trade(args.can_trade)
                 .can_margin_loan_repay(args.can_margin_loan_repay)
@@ -2361,13 +2350,10 @@ async fn query_sub_account_api_key(mut args: QuerySubAccountApiKeyArgs) -> anyho
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.email.is_none() {
-                        let email: String =
-                            Input::new().with_prompt("Input email:").interact_text()?;
+                if args.interactive && args.email.is_none() {
+                    let email: String = Input::new().with_prompt("Input email:").interact_text()?;
 
-                        args.email = Some(email);
-                    }
+                    args.email = Some(email);
                 }
                 QuerySubAccountApiKeyParams::builder(
                     args.email
@@ -2438,7 +2424,7 @@ async fn futures_transfer_for_sub_account(
                     args.amount
                         .ok_or_else(|| anyhow::anyhow!("amount is required"))?,
                     args.r#type
-                        .ok_or_else(|| anyhow::anyhow!("r#type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("rtype is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -2467,13 +2453,10 @@ async fn get_detail_on_sub_accounts_futures_account(
                     io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
                 })?,
             None => {
-                if args.interactive {
-                    if args.email.is_none() {
-                        let email: String =
-                            Input::new().with_prompt("Input email:").interact_text()?;
+                if args.interactive && args.email.is_none() {
+                    let email: String = Input::new().with_prompt("Input email:").interact_text()?;
 
-                        args.email = Some(email);
-                    }
+                    args.email = Some(email);
                 }
                 GetDetailOnSubAccountsFuturesAccountParams::builder(
                     args.email
@@ -2527,7 +2510,7 @@ async fn get_detail_on_sub_accounts_futures_account_v2(
                     args.email
                         .ok_or_else(|| anyhow::anyhow!("email is required"))?,
                     args.futures_type
-                        .ok_or_else(|| anyhow::anyhow!("futures_type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("futures-type is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -2558,13 +2541,10 @@ async fn get_detail_on_sub_accounts_margin_account(
                     io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
                 })?,
             None => {
-                if args.interactive {
-                    if args.email.is_none() {
-                        let email: String =
-                            Input::new().with_prompt("Input email:").interact_text()?;
+                if args.interactive && args.email.is_none() {
+                    let email: String = Input::new().with_prompt("Input email:").interact_text()?;
 
-                        args.email = Some(email);
-                    }
+                    args.email = Some(email);
                 }
                 GetDetailOnSubAccountsMarginAccountParams::builder(
                     args.email
@@ -2625,6 +2605,7 @@ async fn get_move_position_history_for_sub_account(
                     args.rows
                         .ok_or_else(|| anyhow::anyhow!("rows is required"))?,
                 )
+                .product_type(args.product_type)
                 .start_time(args.start_time)
                 .end_time(args.end_time)
                 .recv_window(args.recv_window)
@@ -2707,13 +2688,10 @@ async fn get_sub_account_deposit_history(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.email.is_none() {
-                        let email: String =
-                            Input::new().with_prompt("Input email:").interact_text()?;
+                if args.interactive && args.email.is_none() {
+                    let email: String = Input::new().with_prompt("Input email:").interact_text()?;
 
-                        args.email = Some(email);
-                    }
+                    args.email = Some(email);
                 }
                 GetSubAccountDepositHistoryParams::builder(
                     args.email
@@ -2802,18 +2780,16 @@ async fn get_summary_of_sub_accounts_futures_account_v2(
                     io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
                 })?,
             None => {
-                if args.interactive {
-                    if args.futures_type.is_none() {
-                        let futures_type: i64 = Input::new()
-                            .with_prompt("Input futures_type:")
-                            .interact_text()?;
+                if args.interactive && args.futures_type.is_none() {
+                    let futures_type: i64 = Input::new()
+                        .with_prompt("Input futures_type:")
+                        .interact_text()?;
 
-                        args.futures_type = Some(futures_type);
-                    }
+                    args.futures_type = Some(futures_type);
                 }
                 GetSummaryOfSubAccountsFuturesAccountV2Params::builder(
                     args.futures_type
-                        .ok_or_else(|| anyhow::anyhow!("futures_type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("futures-type is required"))?,
                 )
                 .page(args.page)
                 .limit(args.limit)
@@ -2909,7 +2885,7 @@ async fn margin_transfer_for_sub_account(
                     args.amount
                         .ok_or_else(|| anyhow::anyhow!("amount is required"))?,
                     args.r#type
-                        .ok_or_else(|| anyhow::anyhow!("r#type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("rtype is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -2955,7 +2931,10 @@ async fn move_position_for_sub_account(
                         args.to_user_email = Some(to_user_email);
                     }
                     if args.product_type.is_none() {
-                        let options = vec![("UM", MovePositionForSubAccountProductTypeEnum::Um)];
+                        let options = [
+                            ("UM", MovePositionForSubAccountProductTypeEnum::Um),
+                            ("OPTION", MovePositionForSubAccountProductTypeEnum::Option),
+                        ];
 
                         let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
 
@@ -2981,17 +2960,17 @@ async fn move_position_for_sub_account(
                 }
                 MovePositionForSubAccountParams::builder(
                     args.from_user_email
-                        .ok_or_else(|| anyhow::anyhow!("from_user_email is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("from-user-email is required"))?,
                     args.to_user_email
-                        .ok_or_else(|| anyhow::anyhow!("to_user_email is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("to-user-email is required"))?,
                     args.product_type
-                        .ok_or_else(|| anyhow::anyhow!("product_type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("product-type is required"))?,
                     serde_json::from_str::<
                         Vec<models::MovePositionForSubAccountOrderArgsParameterInner>,
                     >(
                         &args
                             .order_args
-                            .ok_or_else(|| anyhow::anyhow!("order_args is required"))?,
+                            .ok_or_else(|| anyhow::anyhow!("order-args is required"))?,
                     )?,
                 )
                 .recv_window(args.recv_window)
@@ -3018,13 +2997,10 @@ async fn query_sub_account_assets(mut args: QuerySubAccountAssetsArgs) -> anyhow
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.email.is_none() {
-                        let email: String =
-                            Input::new().with_prompt("Input email:").interact_text()?;
+                if args.interactive && args.email.is_none() {
+                    let email: String = Input::new().with_prompt("Input email:").interact_text()?;
 
-                        args.email = Some(email);
-                    }
+                    args.email = Some(email);
                 }
                 QuerySubAccountAssetsParams::builder(
                     args.email
@@ -3057,13 +3033,10 @@ async fn query_sub_account_assets_asset_management(
                     io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
                 })?,
             None => {
-                if args.interactive {
-                    if args.email.is_none() {
-                        let email: String =
-                            Input::new().with_prompt("Input email:").interact_text()?;
+                if args.interactive && args.email.is_none() {
+                    let email: String = Input::new().with_prompt("Input email:").interact_text()?;
 
-                        args.email = Some(email);
-                    }
+                    args.email = Some(email);
                 }
                 QuerySubAccountAssetsAssetManagementParams::builder(
                     args.email
@@ -3117,7 +3090,7 @@ async fn query_sub_account_futures_asset_transfer_history(
                     args.email
                         .ok_or_else(|| anyhow::anyhow!("email is required"))?,
                     args.futures_type
-                        .ok_or_else(|| anyhow::anyhow!("futures_type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("futures-type is required"))?,
                 )
                 .start_time(args.start_time)
                 .end_time(args.end_time)
@@ -3290,11 +3263,11 @@ async fn sub_account_futures_asset_transfer(
                 }
                 SubAccountFuturesAssetTransferParams::builder(
                     args.from_email
-                        .ok_or_else(|| anyhow::anyhow!("from_email is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("from-email is required"))?,
                     args.to_email
-                        .ok_or_else(|| anyhow::anyhow!("to_email is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("to-email is required"))?,
                     args.futures_type
-                        .ok_or_else(|| anyhow::anyhow!("futures_type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("futures-type is required"))?,
                     args.asset
                         .ok_or_else(|| anyhow::anyhow!("asset is required"))?,
                     args.amount
@@ -3428,7 +3401,7 @@ async fn transfer_to_sub_account_of_same_master(
                 }
                 TransferToSubAccountOfSameMasterParams::builder(
                     args.to_email
-                        .ok_or_else(|| anyhow::anyhow!("to_email is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("to-email is required"))?,
                     args.asset
                         .ok_or_else(|| anyhow::anyhow!("asset is required"))?,
                     args.amount
@@ -3462,7 +3435,7 @@ async fn universal_transfer(mut args: UniversalTransferArgs) -> anyhow::Result<(
             None => {
                 if args.interactive {
                     if args.from_account_type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("SPOT", UniversalTransferFromAccountTypeEnum::Spot),
                             (
                                 "USDT_FUTURE",
@@ -3494,7 +3467,7 @@ async fn universal_transfer(mut args: UniversalTransferArgs) -> anyhow::Result<(
                         args.from_account_type = Some(selected);
                     }
                     if args.to_account_type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("SPOT", UniversalTransferToAccountTypeEnum::Spot),
                             (
                                 "USDT_FUTURE",
@@ -3540,9 +3513,9 @@ async fn universal_transfer(mut args: UniversalTransferArgs) -> anyhow::Result<(
                 }
                 UniversalTransferParams::builder(
                     args.from_account_type
-                        .ok_or_else(|| anyhow::anyhow!("from_account_type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("from-account-type is required"))?,
                     args.to_account_type
-                        .ok_or_else(|| anyhow::anyhow!("to_account_type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("to-account-type is required"))?,
                     args.asset
                         .ok_or_else(|| anyhow::anyhow!("asset is required"))?,
                     args.amount
@@ -3602,7 +3575,7 @@ async fn deposit_assets_into_the_managed_sub_account(
                 }
                 DepositAssetsIntoTheManagedSubAccountParams::builder(
                     args.to_email
-                        .ok_or_else(|| anyhow::anyhow!("to_email is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("to-email is required"))?,
                     args.asset
                         .ok_or_else(|| anyhow::anyhow!("asset is required"))?,
                     args.amount
@@ -3688,13 +3661,10 @@ async fn query_managed_sub_account_asset_details(
                     io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
                 })?,
             None => {
-                if args.interactive {
-                    if args.email.is_none() {
-                        let email: String =
-                            Input::new().with_prompt("Input email:").interact_text()?;
+                if args.interactive && args.email.is_none() {
+                    let email: String = Input::new().with_prompt("Input email:").interact_text()?;
 
-                        args.email = Some(email);
-                    }
+                    args.email = Some(email);
                 }
                 QueryManagedSubAccountAssetDetailsParams::builder(
                     args.email
@@ -3729,13 +3699,10 @@ async fn query_managed_sub_account_futures_asset_details(
                     io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
                 })?,
             None => {
-                if args.interactive {
-                    if args.email.is_none() {
-                        let email: String =
-                            Input::new().with_prompt("Input email:").interact_text()?;
+                if args.interactive && args.email.is_none() {
+                    let email: String = Input::new().with_prompt("Input email:").interact_text()?;
 
-                        args.email = Some(email);
-                    }
+                    args.email = Some(email);
                 }
                 QueryManagedSubAccountFuturesAssetDetailsParams::builder(
                     args.email
@@ -3800,13 +3767,10 @@ async fn query_managed_sub_account_margin_asset_details(
                     io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
                 })?,
             None => {
-                if args.interactive {
-                    if args.email.is_none() {
-                        let email: String =
-                            Input::new().with_prompt("Input email:").interact_text()?;
+                if args.interactive && args.email.is_none() {
+                    let email: String = Input::new().with_prompt("Input email:").interact_text()?;
 
-                        args.email = Some(email);
-                    }
+                    args.email = Some(email);
                 }
                 QueryManagedSubAccountMarginAssetDetailsParams::builder(
                     args.email
@@ -3850,7 +3814,7 @@ async fn query_managed_sub_account_snapshot(
                         args.email = Some(email);
                     }
                     if args.r#type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("SPOT", QueryManagedSubAccountSnapshotTypeEnum::Spot),
                             ("MARGIN", QueryManagedSubAccountSnapshotTypeEnum::Margin),
                             ("FUTURES", QueryManagedSubAccountSnapshotTypeEnum::Futures),
@@ -3875,7 +3839,7 @@ async fn query_managed_sub_account_snapshot(
                     args.email
                         .ok_or_else(|| anyhow::anyhow!("email is required"))?,
                     args.r#type
-                        .ok_or_else(|| anyhow::anyhow!("r#type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("rtype is required"))?,
                 )
                 .start_time(args.start_time)
                 .end_time(args.end_time)
@@ -3950,9 +3914,9 @@ async fn query_managed_sub_account_transfer_log_master_account_investor(
                         args.email
                             .ok_or_else(|| anyhow::anyhow!("email is required"))?,
                         args.start_time
-                            .ok_or_else(|| anyhow::anyhow!("start_time is required"))?,
+                            .ok_or_else(|| anyhow::anyhow!("start-time is required"))?,
                         args.end_time
-                            .ok_or_else(|| anyhow::anyhow!("end_time is required"))?,
+                            .ok_or_else(|| anyhow::anyhow!("end-time is required"))?,
                         args.page
                             .ok_or_else(|| anyhow::anyhow!("page is required"))?,
                         args.limit
@@ -4029,9 +3993,9 @@ async fn query_managed_sub_account_transfer_log_master_account_trading(
                         args.email
                             .ok_or_else(|| anyhow::anyhow!("email is required"))?,
                         args.start_time
-                            .ok_or_else(|| anyhow::anyhow!("start_time is required"))?,
+                            .ok_or_else(|| anyhow::anyhow!("start-time is required"))?,
                         args.end_time
-                            .ok_or_else(|| anyhow::anyhow!("end_time is required"))?,
+                            .ok_or_else(|| anyhow::anyhow!("end-time is required"))?,
                         args.page
                             .ok_or_else(|| anyhow::anyhow!("page is required"))?,
                         args.limit
@@ -4098,9 +4062,9 @@ async fn query_managed_sub_account_transfer_log_sub_account_trading(
                 }
                 QueryManagedSubAccountTransferLogSubAccountTradingParams::builder(
                     args.start_time
-                        .ok_or_else(|| anyhow::anyhow!("start_time is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("start-time is required"))?,
                     args.end_time
-                        .ok_or_else(|| anyhow::anyhow!("end_time is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("end-time is required"))?,
                     args.page
                         .ok_or_else(|| anyhow::anyhow!("page is required"))?,
                     args.limit
@@ -4160,7 +4124,7 @@ async fn withdrawl_assets_from_the_managed_sub_account(
                 }
                 WithdrawlAssetsFromTheManagedSubAccountParams::builder(
                     args.from_email
-                        .ok_or_else(|| anyhow::anyhow!("from_email is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("from-email is required"))?,
                     args.asset
                         .ok_or_else(|| anyhow::anyhow!("asset is required"))?,
                     args.amount

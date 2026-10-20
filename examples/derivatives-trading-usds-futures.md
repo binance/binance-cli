@@ -93,7 +93,7 @@ binance-cli futures-usds get-futures-transaction-history-download-link-by-id --d
 ### [GET /fapi/v1/income](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-usd-s-m-futures/api/rest-api/account#get-income-history) - Get Income History (USER_DATA)
 
 ```bash
-binance-cli futures-usds get-income-history --symbol BTCUSDT --income-type TRANSFER --start-time 1623319461670 --end-time 1641782889000 --page 1 --limit 30 --recv-window 5000
+binance-cli futures-usds get-income-history --symbol BTCUSDT --income-type TRANSFER --start-time 1623319461670 --end-time 1641782889000 --limit 30 --recv-window 5000
 ```
 
 ### [GET /fapi/v1/leverageBracket](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-usd-s-m-futures/api/rest-api/account#notional-and-leverage-brackets) - Notional and Leverage Brackets (USER_DATA)
@@ -485,7 +485,7 @@ binance-cli futures-usds modify-multiple-orders --batch-orders [] --recv-window 
 ### [PUT /fapi/v1/order](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-usd-s-m-futures/api/rest-api/trade#modify-order) - Modify Order (TRADE)
 
 ```bash
-binance-cli futures-usds modify-order --symbol BTCUSDT --side BUY --quantity 1.0 --price 30005 --order-id 20072994037 --orig-client-order-id LJ9R4QZDihCaS8UAOOLpgW --price-match OPPONENT --modify-id 1 --recv-window 5000
+binance-cli futures-usds modify-order --symbol BTCUSDT --side BUY --quantity 1.0 --price 30005 --order-id 20072994037 --orig-client-order-id LJ9R4QZDihCaS8UAOOLpgW --price-match OPPONENT --modify-id 1 --reduce-only TRUE --recv-window 5000
 ```
 
 ### [POST /fapi/v1/algoOrder](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-usd-s-m-futures/api/rest-api/trade#new-algo-order) - New Algo Order (TRADE)

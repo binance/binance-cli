@@ -43,9 +43,7 @@ fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> 
         }
     }
 
-    let rest_conf = builder
-        .build()
-        .map_err(|err| Error::new(ErrorKind::Other, err))?;
+    let rest_conf = builder.build().map_err(Error::other)?;
 
     Ok(VIPLoanRestApi::from_config(rest_conf))
 }
@@ -147,7 +145,10 @@ struct VipLoanBorrowArgs {
     loan_amount: Option<rust_decimal::Decimal>,
     #[arg(help = r#"Collateral account ID(s). Multiple split by `,`"#, long)]
     collateral_account_id: Option<String>,
-    #[arg(help = r#""#, long)]
+    #[arg(
+        help = r#"Collateral coin(s), multiple separated by `,`. Use `<ASSET>-Earn` for a Simple Earn Flexible position; it must be sent together with its Spot asset, e.g. `USDT,USDT-Earn`."#,
+        long
+    )]
     collateral_coin: Option<String>,
     #[arg(help = r#"TRUE: flexible rate; FALSE: fixed rate"#, long, num_args = 0..=1, default_missing_value = "true")]
     is_flexible_rate: Option<bool>,
@@ -179,7 +180,7 @@ struct VipLoanFixedRateBorrowArgs {
     #[arg(help = r#"Borrow receiving account UID"#, long)]
     borrow_uid: Option<i64>,
     #[arg(
-        help = r#"Collateral coin(s), multiple separated by `,`. Only coin names, no amount (VIP loan collateral amount = entire spot account balance)"#,
+        help = r#"Collateral coin(s), multiple separated by `,`. Only coin names, no amount (VIP loan collateral amount = entire Spot balance of the coin; for `<ASSET>-Earn`, the Simple Earn Flexible position of the asset). `<ASSET>-Earn` must be sent together with its Spot asset, e.g. `BNB,BNB-Earn`."#,
         long
     )]
     collateral_coin: Option<String>,
@@ -345,7 +346,10 @@ pub enum VIPLoanCommands {
 
 Weight(IP): 400
 
-Security Type: USER_DATA"#, false),
+Security Type: USER_DATA
+
+Notes:
+- Rate limit: 1 request per second per account."#, false),
     )]
     GetBorrowInterestRate(GetBorrowInterestRateArgs),
     #[command(
@@ -353,7 +357,10 @@ Security Type: USER_DATA"#, false),
 
 Weight(IP): 400
 
-Security Type: USER_DATA"#, false),
+Security Type: USER_DATA
+
+Notes:
+- Rate limit: 1 request per second per account."#, false),
     )]
     GetCollateralAssetData(GetCollateralAssetDataArgs),
     #[command(
@@ -361,7 +368,10 @@ Security Type: USER_DATA"#, false),
 
 Weight(IP): 400
 
-Security Type: USER_DATA"#, false),
+Security Type: USER_DATA
+
+Notes:
+- Rate limit: 1 request per second per account."#, false),
     )]
     GetLoanableAssetsData(GetLoanableAssetsDataArgs),
     #[command(
@@ -374,7 +384,8 @@ Security Type: USER_DATA
 Notes:
 - If `startTime` and `endTime` are not sent, recent 90-day data is returned.
 - The maximum interval between `startTime` and `endTime` is 180 days.
-- Time is based on UTC+0."#, false),
+- Time is based on UTC+0.
+- Rate limit: 1 request per second per account."#, false),
     )]
     GetVipLoanInterestRateHistory(GetVipLoanInterestRateHistoryArgs),
     #[command(
@@ -396,7 +407,10 @@ Notes:
 - `loanAccountId` refers to the loan receiving account.
 - Only master account applications are supported.
 - `loanAccountId` and `collateralAccountId` must be under the same master account.
-- `loanTerm` is mandatory if the user chooses a fixed rate (`isFlexibleRate = FALSE`)."#, false),
+- `loanTerm` is mandatory if the user chooses a fixed rate (`isFlexibleRate = FALSE`).
+- Every coin in `collateralCoin` is pledged from every account in `collateralAccountId`.
+- To pledge a Simple Earn Flexible position, add `<ASSET>-Earn` (e.g. `USDT-Earn`) to `collateralCoin` together with its Spot asset (e.g. `USDT,USDT-Earn`). Sending `<ASSET>-Earn` without its Spot asset returns `-10213`.
+- Rate limit: 1 request per second per account."#, false),
     )]
     VipLoanBorrow(VipLoanBorrowArgs),
     #[command(
@@ -408,7 +422,9 @@ Security Type: TRADE
 
 Notes:
 - **Rate limit:** 2 requests per second per account.
-- When multiple `supplyRequest` entries are provided, all `requestId` values must correspond to the same `borrowCoin` and `loanTerm` (validated by collateral facade)."#, false),
+- When multiple `supplyRequest` entries are provided, all `requestId` values must correspond to the same `borrowCoin` and `loanTerm` (validated by collateral facade).
+- Every coin in `collateralCoin` is pledged from every account in `collateralAccountId`.
+- To pledge a Simple Earn Flexible position, add `<ASSET>-Earn` (e.g. `BNB-Earn`) to `collateralCoin` together with its Spot asset (e.g. `BNB,BNB-Earn`). Sending `<ASSET>-Earn` without its Spot asset returns `-10213`."#, false),
     )]
     VipLoanFixedRateBorrow(VipLoanFixedRateBorrowArgs),
     #[command(
@@ -416,7 +432,10 @@ Notes:
 
 Weight(UID): 6000
 
-Security Type: TRADE"#, false),
+Security Type: TRADE
+
+Notes:
+- Rate limit: 1 request per second per account."#, false),
     )]
     VipLoanRenew(VipLoanRenewArgs),
     #[command(
@@ -424,7 +443,10 @@ Security Type: TRADE"#, false),
 
 Weight(UID): 6000
 
-Security Type: TRADE"#, false),
+Security Type: TRADE
+
+Notes:
+- Rate limit: 1 request per second per account."#, false),
     )]
     VipLoanRepay(VipLoanRepayArgs),
     #[command(
@@ -448,7 +470,8 @@ Security Type: USER_DATA
 
 Notes:
 - If `startTime` and `endTime` are not sent, recent 90-day data is returned.
-- The maximum interval between `startTime` and `endTime` is 90 days."#, false),
+- The maximum interval between `startTime` and `endTime` is 90 days.
+- Rate limit: 1 request per second per account."#, false),
     )]
     GetVipLoanAccruedInterest(GetVipLoanAccruedInterestArgs),
     #[command(
@@ -456,7 +479,10 @@ Notes:
 
 Weight(IP): 400
 
-Security Type: USER_DATA"#, false),
+Security Type: USER_DATA
+
+Notes:
+- Rate limit: 1 request per second per account."#, false),
     )]
     GetVipLoanOngoingOrders(GetVipLoanOngoingOrdersArgs),
     #[command(
@@ -468,7 +494,8 @@ Security Type: USER_DATA
 
 Notes:
 - If `startTime` and `endTime` are not sent, recent 90-day data is returned.
-- The maximum interval between `startTime` and `endTime` is 180 days."#, false),
+- The maximum interval between `startTime` and `endTime` is 180 days.
+- Rate limit: 1 request per second per account, shared with repayment history queries on the Binance website."#, false),
     )]
     GetVipLoanRepaymentHistory(GetVipLoanRepaymentHistoryArgs),
     #[command(
@@ -476,7 +503,10 @@ Notes:
 
 Weight(UID): 400
 
-Security Type: USER_DATA"#, false),
+Security Type: USER_DATA
+
+Notes:
+- Rate limit: 1 request per second per account."#, false),
     )]
     QueryApplicationStatus(QueryApplicationStatusArgs),
 }
@@ -533,18 +563,16 @@ async fn get_borrow_interest_rate(mut args: GetBorrowInterestRateArgs) -> anyhow
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.loan_coin.is_none() {
-                        let loan_coin: String = Input::new()
-                            .with_prompt("Input loan_coin:")
-                            .interact_text()?;
+                if args.interactive && args.loan_coin.is_none() {
+                    let loan_coin: String = Input::new()
+                        .with_prompt("Input loan_coin:")
+                        .interact_text()?;
 
-                        args.loan_coin = Some(loan_coin);
-                    }
+                    args.loan_coin = Some(loan_coin);
                 }
                 GetBorrowInterestRateParams::builder(
                     args.loan_coin
-                        .ok_or_else(|| anyhow::anyhow!("loan_coin is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("loan-coin is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -642,7 +670,7 @@ async fn get_vip_loan_interest_rate_history(
                     args.coin
                         .ok_or_else(|| anyhow::anyhow!("coin is required"))?,
                     args.recv_window
-                        .ok_or_else(|| anyhow::anyhow!("recv_window is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("recv-window is required"))?,
                 )
                 .start_time(args.start_time)
                 .end_time(args.end_time)
@@ -677,18 +705,16 @@ async fn query_vip_loan_fixed_rate_market(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.loan_coin.is_none() {
-                        let loan_coin: String = Input::new()
-                            .with_prompt("Input loan_coin:")
-                            .interact_text()?;
+                if args.interactive && args.loan_coin.is_none() {
+                    let loan_coin: String = Input::new()
+                        .with_prompt("Input loan_coin:")
+                        .interact_text()?;
 
-                        args.loan_coin = Some(loan_coin);
-                    }
+                    args.loan_coin = Some(loan_coin);
                 }
                 QueryVipLoanFixedRateMarketParams::builder(
                     args.loan_coin
-                        .ok_or_else(|| anyhow::anyhow!("loan_coin is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("loan-coin is required"))?,
                 )
                 .duration(args.duration)
                 .current(args.current)
@@ -763,17 +789,17 @@ async fn vip_loan_borrow(mut args: VipLoanBorrowArgs) -> anyhow::Result<()> {
                 }
                 VipLoanBorrowParams::builder(
                     args.loan_account_id
-                        .ok_or_else(|| anyhow::anyhow!("loan_account_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("loan-account-id is required"))?,
                     args.loan_coin
-                        .ok_or_else(|| anyhow::anyhow!("loan_coin is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("loan-coin is required"))?,
                     args.loan_amount
-                        .ok_or_else(|| anyhow::anyhow!("loan_amount is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("loan-amount is required"))?,
                     args.collateral_account_id
-                        .ok_or_else(|| anyhow::anyhow!("collateral_account_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("collateral-account-id is required"))?,
                     args.collateral_coin
-                        .ok_or_else(|| anyhow::anyhow!("collateral_coin is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("collateral-coin is required"))?,
                     args.is_flexible_rate
-                        .ok_or_else(|| anyhow::anyhow!("is_flexible_rate is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("is-flexible-rate is required"))?,
                 )
                 .loan_term(args.loan_term)
                 .recv_window(args.recv_window)
@@ -846,17 +872,17 @@ async fn vip_loan_fixed_rate_borrow(mut args: VipLoanFixedRateBorrowArgs) -> any
                 }
                 VipLoanFixedRateBorrowParams::builder(
                     args.supply_request
-                        .ok_or_else(|| anyhow::anyhow!("supply_request is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("supply-request is required"))?,
                     args.borrow_coin
-                        .ok_or_else(|| anyhow::anyhow!("borrow_coin is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("borrow-coin is required"))?,
                     args.loan_term
-                        .ok_or_else(|| anyhow::anyhow!("loan_term is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("loan-term is required"))?,
                     args.borrow_uid
-                        .ok_or_else(|| anyhow::anyhow!("borrow_uid is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("borrow-uid is required"))?,
                     args.collateral_coin
-                        .ok_or_else(|| anyhow::anyhow!("collateral_coin is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("collateral-coin is required"))?,
                     args.collateral_account_id
-                        .ok_or_else(|| anyhow::anyhow!("collateral_account_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("collateral-account-id is required"))?,
                 )
                 .auto_repay(args.auto_repay)
                 .recv_window(args.recv_window)
@@ -901,9 +927,9 @@ async fn vip_loan_renew(mut args: VipLoanRenewArgs) -> anyhow::Result<()> {
                 }
                 VipLoanRenewParams::builder(
                     args.order_id
-                        .ok_or_else(|| anyhow::anyhow!("order_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("order-id is required"))?,
                     args.loan_term
-                        .ok_or_else(|| anyhow::anyhow!("loan_term is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("loan-term is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -946,7 +972,7 @@ async fn vip_loan_repay(mut args: VipLoanRepayArgs) -> anyhow::Result<()> {
                 }
                 VipLoanRepayParams::builder(
                     args.order_id
-                        .ok_or_else(|| anyhow::anyhow!("order_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("order-id is required"))?,
                     args.amount
                         .ok_or_else(|| anyhow::anyhow!("amount is required"))?,
                 )

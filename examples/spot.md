@@ -231,7 +231,7 @@ binance-cli spot new-order --symbol BNBUSDT --side BUY --rtype MARKET --time-in-
 ### [PUT /api/v3/order/amend/keepPriority](https://developers.binance.com/en/docs/catalog/core-trading-spot-trading/api/rest-api/trade#order-amend-keep-priority) - Order Amend Keep Priority (TRADE)
 
 ```bash
-binance-cli spot order-amend-keep-priority --symbol BNBUSDT --new-qty 1 --order-id 1 --orig-client-order-id myOrder1 --new-client-order-id myOrder2 --recv-window 5000
+binance-cli spot order-amend-keep-priority --symbol BNBUSDT --new-qty 5 --order-id 1 --orig-client-order-id myOrder1 --new-client-order-id myOrder2 --recv-window 5000
 ```
 
 ### [POST /api/v3/order/cancelReplace](https://developers.binance.com/en/docs/catalog/core-trading-spot-trading/api/rest-api/trade#order-cancel-replace) - Cancel an Existing Order and Send a New Order (TRADE)
@@ -243,7 +243,7 @@ binance-cli spot order-cancel-replace --symbol BNBUSDT --side BUY --rtype MARKET
 ### [POST /api/v3/orderList/oco](https://developers.binance.com/en/docs/catalog/core-trading-spot-trading/api/rest-api/trade#order-list-oco) - New Order list - OCO (TRADE)
 
 ```bash
-binance-cli spot order-list-oco --symbol BNBUSDT --side BUY --quantity 1 --above-type STOP_LOSS_LIMIT --below-type STOP_LOSS --list-client-order-id lH1YDkuQKWiXVXHPSKYEIp --above-client-order-id aboveOrder1 --above-iceberg-qty 1 --above-price 1 --above-stop-price 1 --above-trailing-delta 1 --above-time-in-force GTC --above-strategy-id 1 --above-strategy-type 1 --above-peg-price-type PRIMARY_PEG --above-peg-offset-type PRICE_LEVEL --above-peg-offset-value 1 --below-client-order-id belowOrder1 --below-iceberg-qty 1 --below-price 1 --below-stop-price 1 --below-trailing-delta 1 --below-time-in-force GTC --below-strategy-id 1 --below-strategy-type 1 --below-peg-price-type PRIMARY_PEG --below-peg-offset-type PRICE_LEVEL --below-peg-offset-value 1 --new-order-resp-type ACK --self-trade-prevention-mode NONE --recv-window 5000
+binance-cli spot order-list-oco --symbol BNBUSDT --side BUY --quantity 1 --above-type STOP_LOSS_LIMIT --below-type STOP_LOSS --list-client-order-id lH1YDkuQKWiXVXHPSKYEIp --above-client-order-id aboveOrder1 --above-iceberg-qty 1 --above-price 1.5 --above-stop-price 1.50000001 --above-trailing-delta 1 --above-time-in-force GTC --above-strategy-id 1 --above-strategy-type 1 --above-peg-price-type PRIMARY_PEG --above-peg-offset-type PRICE_LEVEL --above-peg-offset-value 1 --below-client-order-id belowOrder1 --below-iceberg-qty 1 --below-price 1.49999999 --below-stop-price 1.50000001 --below-trailing-delta 1 --below-time-in-force GTC --below-strategy-id 1 --below-strategy-type 1 --below-peg-price-type PRIMARY_PEG --below-peg-offset-type PRICE_LEVEL --below-peg-offset-value 1 --new-order-resp-type ACK --self-trade-prevention-mode NONE --recv-window 5000
 ```
 
 ### [POST /api/v3/orderList/opo](https://developers.binance.com/en/docs/catalog/core-trading-spot-trading/api/rest-api/trade#order-list-opo) - New Order List - OPO (TRADE)

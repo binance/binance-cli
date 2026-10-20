@@ -43,9 +43,7 @@ fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> 
         }
     }
 
-    let rest_conf = builder
-        .build()
-        .map_err(|err| Error::new(ErrorKind::Other, err))?;
+    let rest_conf = builder.build().map_err(Error::other)?;
 
     Ok(AlgoRestApi::from_config(rest_conf))
 }
@@ -54,6 +52,8 @@ fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> 
 struct CancelAlgoOrderFutureAlgoArgs {
     #[arg(help = r#"eg. 14511"#, long)]
     algo_id: Option<i64>,
+    #[arg(help = r#"eg. "65ce1630101a480b85915d7e11fd5078""#, long)]
+    client_algo_id: Option<String>,
     #[arg(help = r#"Request validity window in milliseconds"#, long)]
     recv_window: Option<i64>,
     #[arg(short = 'i', long)]
@@ -122,7 +122,9 @@ struct TimeWeightedAveragePriceFutureAlgoArgs {
     side: Option<TimeWeightedAveragePriceFutureAlgoSideEnum>,
     #[arg(
         help = r#"Quantity of base asset; The notional (`quantity` * `mark price(base asset)`) must be more than the
-equivalent of 1,000 USDT and less than the equivalent of 1,000,000 USDT"#,
+equivalent of 1,000 USDT, and the maximum notional varies by symbol: up to 50,000,000 USDT for
+BTCUSDT perpetual, up to 25,000,000 USDT for ETHUSDT perpetual, and up to 5,000,000 USDT for
+other symbols"#,
         long
     )]
     quantity: Option<rust_decimal::Decimal>,
@@ -164,7 +166,9 @@ struct VolumeParticipationFutureAlgoArgs {
     side: Option<VolumeParticipationFutureAlgoSideEnum>,
     #[arg(
         help = r#"Quantity of base asset; The notional (`quantity` * `mark price(base asset)`) must be more than the
-equivalent of 10,000 USDT and less than the equivalent of 1,000,000 USDT"#,
+equivalent of 10,000 USDT, and the maximum notional varies by symbol: up to 50,000,000 USDT for
+BTCUSDT perpetual, up to 25,000,000 USDT for ETHUSDT perpetual, and up to 5,000,000 USDT for
+other symbols"#,
         long
     )]
     quantity: Option<rust_decimal::Decimal>,
@@ -205,6 +209,8 @@ position"#, long, num_args = 0..=1, default_missing_value = "true")]
 struct CancelAlgoOrderSpotAlgoArgs {
     #[arg(help = r#""#, long)]
     algo_id: Option<i64>,
+    #[arg(help = r#""#, long)]
+    client_algo_id: Option<String>,
     #[arg(help = r#"Request validity window in milliseconds"#, long)]
     recv_window: Option<i64>,
     #[arg(short = 'i', long)]
@@ -297,6 +303,45 @@ default value"#,
     #[arg(help = r#"Select a profile"#, long)]
     profile: Option<String>,
 }
+#[derive(Args, Debug)]
+struct VolumeParticipationArgs {
+    #[arg(help = r#"Trading symbol eg. BTCUSDT"#, long)]
+    symbol: Option<String>,
+    #[arg(help = r#"Trading side ( BUY or SELL )"#, long)]
+    side: Option<VolumeParticipationSideEnum>,
+    #[arg(
+        help = r#"Total order quantity in base asset; The notional must be at least the equivalent of 1,000 USDT, and the
+maximum notional per order is 200k, 2mm or 10mm, depending on symbol. Please reduce your size if your
+order is above the maximum notional per order."#,
+        long
+    )]
+    quantity: Option<rust_decimal::Decimal>,
+    #[arg(
+        help = r#"Represent the relative speed of the current execution; ENUM: LOW, MEDIUM, HIGH"#,
+        long
+    )]
+    urgency: Option<VolumeParticipationUrgencyEnum>,
+    #[arg(
+        help = r#"A unique id among Algo orders (length should be 32 characters). If it is not sent, we will give
+default value. Must be unique across all open Algo orders."#,
+        long
+    )]
+    client_algo_id: Option<String>,
+    #[arg(
+        help = r#"Max allowed duration in seconds (minimum 300, maximum 86400). If it is not sent, 86400 is used and the
+order runs until fully filled or cancelled."#,
+        long
+    )]
+    vp_time_limit: Option<i64>,
+    #[arg(help = r#"Cannot be greater than 60000"#, long)]
+    recv_window: Option<i64>,
+    #[arg(short = 'i', long)]
+    interactive: bool,
+    #[arg(help = r#"Send all fields as JSON"#, long)]
+    json: Option<String>,
+    #[arg(help = r#"Select a profile"#, long)]
+    profile: Option<String>,
+}
 
 #[derive(Subcommand)]
 pub enum AlgoCommands {
@@ -308,6 +353,7 @@ Weight(IP): 1
 Security Type: TRADE
 
 Notes:
+- Either `algoId` or `clientAlgoId` must be sent.
 - You need to enable `Futures Trading Permission` for the API key that requests this endpoint.
 - Base URL: `https://api.binance.com`"#, false),
     )]
@@ -390,15 +436,18 @@ Notes:
     )]
     VolumeParticipationFutureAlgo(VolumeParticipationFutureAlgoArgs),
     #[command(
-        about = decode_selected_entities(r#"Cancel an open TWAP order
+        about = decode_selected_entities(r#"Cancel an open TWAP or VP algo order
 
 Weight(IP): 1
 
-Security Type: TRADE"#, false),
+Security Type: TRADE
+
+Notes:
+- Either `algoId` or `clientAlgoId` must be sent."#, false),
     )]
     CancelAlgoOrderSpotAlgo(CancelAlgoOrderSpotAlgoArgs),
     #[command(
-        about = decode_selected_entities(r#"Get all open SPOT TWAP orders
+        about = decode_selected_entities(r#"Get all open Spot TWAP and VP algo orders
 
 Weight(IP): 1
 
@@ -406,7 +455,7 @@ Security Type: USER_DATA"#, false),
     )]
     QueryCurrentAlgoOpenOrdersSpotAlgo(QueryCurrentAlgoOpenOrdersSpotAlgoArgs),
     #[command(
-        about = decode_selected_entities(r#"Get all historical SPOT TWAP orders
+        about = decode_selected_entities(r#"Get all historical Spot TWAP and VP algo orders
 
 Weight(IP): 1
 
@@ -432,6 +481,21 @@ Notes:
 - Total Algo open orders max allowed: `20` orders."#, false),
     )]
     TimeWeightedAveragePriceSpotAlgo(TimeWeightedAveragePriceSpotAlgoArgs),
+    #[command(
+        about = decode_selected_entities(r#"Place a new spot VP (Volume Participation) order with Algo service. A VP order automatically slices the total quantity over time, targeting a percentage of the market volume.
+
+Weight(UID): 3000
+
+Security Type: TRADE
+
+Notes:
+- VP orders do not accept `price` or `timeInForce`; pricing is determined algorithmically based on market volume.
+- `urgency` controls the participation rate: LOW = passive, MEDIUM = neutral, HIGH = aggressive.
+- Receiving `"success": true` does not guarantee execution; use the query order endpoints (`GET /sapi/v1/algo/spot/openOrders` or `GET /sapi/v1/algo/spot/historicalOrders`) to check the final status.
+- You need to enable the `Spot Trading` permission for the API key requesting this endpoint.
+- Base URL: `https://api.binance.com`"#, false),
+    )]
+    VolumeParticipation(VolumeParticipationArgs),
 }
 
 pub async fn handle_algo_command(command: AlgoCommands) -> anyhow::Result<()> {
@@ -471,12 +535,12 @@ pub async fn handle_algo_command(command: AlgoCommands) -> anyhow::Result<()> {
         AlgoCommands::TimeWeightedAveragePriceSpotAlgo(args) => {
             time_weighted_average_price_spot_algo(args).await
         }
+
+        AlgoCommands::VolumeParticipation(args) => volume_participation(args).await,
     }
 }
 
-async fn cancel_algo_order_future_algo(
-    mut args: CancelAlgoOrderFutureAlgoArgs,
-) -> anyhow::Result<()> {
+async fn cancel_algo_order_future_algo(args: CancelAlgoOrderFutureAlgoArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
     let params = match read_stdin_as::<CancelAlgoOrderFutureAlgoParams>() {
@@ -487,22 +551,11 @@ async fn cancel_algo_order_future_algo(
                     io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
                 })?
             }
-            None => {
-                if args.interactive {
-                    if args.algo_id.is_none() {
-                        let algo_id: i64 =
-                            Input::new().with_prompt("Input algo_id:").interact_text()?;
-
-                        args.algo_id = Some(algo_id);
-                    }
-                }
-                CancelAlgoOrderFutureAlgoParams::builder(
-                    args.algo_id
-                        .ok_or_else(|| anyhow::anyhow!("algo_id is required"))?,
-                )
+            None => CancelAlgoOrderFutureAlgoParams::builder()
+                .algo_id(args.algo_id)
+                .client_algo_id(args.client_algo_id)
                 .recv_window(args.recv_window)
-                .build()?
-            }
+                .build()?,
         },
     };
 
@@ -590,17 +643,15 @@ async fn query_sub_orders_future_algo(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.algo_id.is_none() {
-                        let algo_id: i64 =
-                            Input::new().with_prompt("Input algo_id:").interact_text()?;
+                if args.interactive && args.algo_id.is_none() {
+                    let algo_id: i64 =
+                        Input::new().with_prompt("Input algo_id:").interact_text()?;
 
-                        args.algo_id = Some(algo_id);
-                    }
+                    args.algo_id = Some(algo_id);
                 }
                 QuerySubOrdersFutureAlgoParams::builder(
                     args.algo_id
-                        .ok_or_else(|| anyhow::anyhow!("algo_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("algo-id is required"))?,
                 )
                 .page(args.page)
                 .page_size(args.page_size)
@@ -639,7 +690,7 @@ async fn time_weighted_average_price_future_algo(
                         args.symbol = Some(symbol);
                     }
                     if args.side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", TimeWeightedAveragePriceFutureAlgoSideEnum::Buy),
                             ("SELL", TimeWeightedAveragePriceFutureAlgoSideEnum::Sell),
                         ];
@@ -725,7 +776,7 @@ async fn volume_participation_future_algo(
                         args.symbol = Some(symbol);
                     }
                     if args.side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", VolumeParticipationFutureAlgoSideEnum::Buy),
                             ("SELL", VolumeParticipationFutureAlgoSideEnum::Sell),
                         ];
@@ -752,7 +803,7 @@ async fn volume_participation_future_algo(
                         args.quantity = Some(quantity);
                     }
                     if args.urgency.is_none() {
-                        let options = vec![
+                        let options = [
                             ("LOW", VolumeParticipationFutureAlgoUrgencyEnum::Low),
                             ("MEDIUM", VolumeParticipationFutureAlgoUrgencyEnum::Medium),
                             ("HIGH", VolumeParticipationFutureAlgoUrgencyEnum::High),
@@ -801,7 +852,7 @@ async fn volume_participation_future_algo(
     Ok(())
 }
 
-async fn cancel_algo_order_spot_algo(mut args: CancelAlgoOrderSpotAlgoArgs) -> anyhow::Result<()> {
+async fn cancel_algo_order_spot_algo(args: CancelAlgoOrderSpotAlgoArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), true)?;
 
     let params = match read_stdin_as::<CancelAlgoOrderSpotAlgoParams>() {
@@ -810,22 +861,11 @@ async fn cancel_algo_order_spot_algo(mut args: CancelAlgoOrderSpotAlgoArgs) -> a
             Some(json) => read_json_as::<CancelAlgoOrderSpotAlgoParams>(json).ok_or_else(|| {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
-            None => {
-                if args.interactive {
-                    if args.algo_id.is_none() {
-                        let algo_id: i64 =
-                            Input::new().with_prompt("Input algo_id:").interact_text()?;
-
-                        args.algo_id = Some(algo_id);
-                    }
-                }
-                CancelAlgoOrderSpotAlgoParams::builder(
-                    args.algo_id
-                        .ok_or_else(|| anyhow::anyhow!("algo_id is required"))?,
-                )
+            None => CancelAlgoOrderSpotAlgoParams::builder()
+                .algo_id(args.algo_id)
+                .client_algo_id(args.client_algo_id)
                 .recv_window(args.recv_window)
-                .build()?
-            }
+                .build()?,
         },
     };
 
@@ -909,17 +949,15 @@ async fn query_sub_orders_spot_algo(mut args: QuerySubOrdersSpotAlgoArgs) -> any
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.algo_id.is_none() {
-                        let algo_id: i64 =
-                            Input::new().with_prompt("Input algo_id:").interact_text()?;
+                if args.interactive && args.algo_id.is_none() {
+                    let algo_id: i64 =
+                        Input::new().with_prompt("Input algo_id:").interact_text()?;
 
-                        args.algo_id = Some(algo_id);
-                    }
+                    args.algo_id = Some(algo_id);
                 }
                 QuerySubOrdersSpotAlgoParams::builder(
                     args.algo_id
-                        .ok_or_else(|| anyhow::anyhow!("algo_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("algo-id is required"))?,
                 )
                 .page(args.page)
                 .page_size(args.page_size)
@@ -959,7 +997,7 @@ async fn time_weighted_average_price_spot_algo(
                         args.symbol = Some(symbol);
                     }
                     if args.side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", TimeWeightedAveragePriceSpotAlgoSideEnum::Buy),
                             ("SELL", TimeWeightedAveragePriceSpotAlgoSideEnum::Sell),
                         ];
@@ -1014,6 +1052,98 @@ async fn time_weighted_average_price_spot_algo(
     let response = rest_client
         .time_weighted_average_price_spot_algo(params)
         .await?;
+
+    let data = response.data().await?;
+    println!("{}", serde_json::to_string_pretty(&data).unwrap());
+    Ok(())
+}
+
+async fn volume_participation(mut args: VolumeParticipationArgs) -> anyhow::Result<()> {
+    let rest_client = get_client(args.profile.as_deref(), true)?;
+
+    let params = match read_stdin_as::<VolumeParticipationParams>() {
+        Some(params) => params,
+        None => match args.json {
+            Some(json) => read_json_as::<VolumeParticipationParams>(json).ok_or_else(|| {
+                io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
+            })?,
+            None => {
+                if args.interactive {
+                    if args.symbol.is_none() {
+                        let symbol: String =
+                            Input::new().with_prompt("Input symbol:").interact_text()?;
+
+                        args.symbol = Some(symbol);
+                    }
+                    if args.side.is_none() {
+                        let options = [
+                            ("BUY", VolumeParticipationSideEnum::Buy),
+                            ("SELL", VolumeParticipationSideEnum::Sell),
+                        ];
+
+                        let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
+
+                        let selected = Select::new()
+                            .with_prompt("Please select the side")
+                            .items(&labels)
+                            .default(0)
+                            .interact()?;
+
+                        let selected = options[selected].1.clone();
+
+                        println!("Selected option: {:?}", selected);
+
+                        args.side = Some(selected);
+                    }
+                    if args.quantity.is_none() {
+                        let quantity: rust_decimal::Decimal = Input::new()
+                            .with_prompt("Input quantity:")
+                            .interact_text()?;
+
+                        args.quantity = Some(quantity);
+                    }
+                    if args.urgency.is_none() {
+                        let options = [
+                            ("LOW", VolumeParticipationUrgencyEnum::Low),
+                            ("MEDIUM", VolumeParticipationUrgencyEnum::Medium),
+                            ("HIGH", VolumeParticipationUrgencyEnum::High),
+                        ];
+
+                        let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
+
+                        let selected = Select::new()
+                            .with_prompt("Please select the urgency")
+                            .items(&labels)
+                            .default(0)
+                            .interact()?;
+
+                        let selected = options[selected].1.clone();
+
+                        println!("Selected option: {:?}", selected);
+
+                        args.urgency = Some(selected);
+                    }
+                }
+                VolumeParticipationParams::builder(
+                    args.symbol
+                        .ok_or_else(|| anyhow::anyhow!("symbol is required"))?,
+                    args.side
+                        .ok_or_else(|| anyhow::anyhow!("side is required"))?,
+                    args.quantity
+                        .ok_or_else(|| anyhow::anyhow!("quantity is required"))?,
+                    args.urgency
+                        .ok_or_else(|| anyhow::anyhow!("urgency is required"))?,
+                )
+                .client_algo_id(args.client_algo_id)
+                .vp_time_limit(args.vp_time_limit)
+                .recv_window(args.recv_window)
+                .build()?
+            }
+        },
+    };
+
+    // Make the API call
+    let response = rest_client.volume_participation(params).await?;
 
     let data = response.data().await?;
     println!("{}", serde_json::to_string_pretty(&data).unwrap());

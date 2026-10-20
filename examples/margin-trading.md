@@ -330,6 +330,12 @@ binance-cli margin-trading query-margin-accounts-open-oco --is-isolated FALSE --
 binance-cli margin-trading query-margin-accounts-open-orders --symbol BNBBTC --is-isolated FALSE --recv-window 5000
 ```
 
+### [GET /sapi/v1/margin/oto/openOrderList](https://developers.binance.com/en/docs/catalog/core-trading-margin-trading/api/rest-api/trade#query-margin-accounts-open-otootoco-order-lists) - Query Margin Account's Open OTO/OTOCO Order Lists (USER_DATA)
+
+```bash
+binance-cli margin-trading query-margin-accounts-open-otootoco-order-lists --symbol ASTERUSDT --recv-window 5000
+```
+
 ### [GET /sapi/v1/margin/order](https://developers.binance.com/en/docs/catalog/core-trading-margin-trading/api/rest-api/trade#query-margin-accounts-order) - Query Margin Account's Order (USER_DATA)
 
 ```bash

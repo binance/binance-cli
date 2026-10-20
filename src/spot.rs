@@ -47,9 +47,7 @@ fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> 
         }
     }
 
-    let rest_conf = builder
-        .build()
-        .map_err(|err| Error::new(ErrorKind::Other, err))?;
+    let rest_conf = builder.build().map_err(Error::other)?;
 
     Ok(SpotRestApi::from_config(rest_conf))
 }
@@ -732,7 +730,7 @@ struct DeleteOrderArgs {
     )]
     new_client_order_id: Option<String>,
     #[arg(
-        help = r#"Supported values: <br>`ONLY_NEW` - Cancel will succeed if the order status is `NEW`.<br> `ONLY_PARTIALLY_FILLED` - Cancel will succeed if order status is `PARTIALLY_FILLED`."#,
+        help = r#"Supported values: <br>`ONLY_NEW` - Cancel will succeed if the order status is `NEW`.<br> `ONLY_PARTIALLY_FILLED` - Cancel will succeed if order status is `PARTIALLY_FILLED`. For more information please refer to Regarding `cancelRestrictions`."#,
         long
     )]
     cancel_restrictions: Option<DeleteOrderCancelRestrictionsEnum>,
@@ -783,20 +781,11 @@ struct DeleteOrderListArgs {
 struct NewOrderArgs {
     #[arg(help = r#""#, long)]
     symbol: Option<String>,
-    #[arg(
-        help = r#"Please see [Enums](/products/spot/enums#side) for supported values."#,
-        long
-    )]
+    #[arg(help = r#"Please see Enums for supported values."#, long)]
     side: Option<NewOrderSideEnum>,
-    #[arg(
-        help = r#"Please see [Enums](/products/spot/enums#ordertypes) for supported values."#,
-        long
-    )]
+    #[arg(help = r#"Please see Enums for supported values."#, long)]
     r#type: Option<NewOrderTypeEnum>,
-    #[arg(
-        help = r#"Please see [Enums](/products/spot/enums#timeinforce) for supported values."#,
-        long
-    )]
+    #[arg(help = r#"Please see Enums for supported values."#, long)]
     time_in_force: Option<NewOrderTimeInForceEnum>,
     #[arg(help = r#""#, long)]
     quantity: Option<rust_decimal::Decimal>,
@@ -933,10 +922,7 @@ struct OrderCancelReplaceArgs {
     strategy_type: Option<i32>,
     #[arg(help = r#""#, long)]
     stop_price: Option<rust_decimal::Decimal>,
-    #[arg(
-        help = r#"See [Trailing Stop order FAQ](/products/spot/faqs/trailing-stop-faq)"#,
-        long
-    )]
+    #[arg(help = r#"See Trailing Stop order FAQ"#, long)]
     trailing_delta: Option<i64>,
     #[arg(help = r#""#, long)]
     iceberg_qty: Option<rust_decimal::Decimal>,
@@ -946,12 +932,12 @@ struct OrderCancelReplaceArgs {
     )]
     new_order_resp_type: Option<OrderCancelReplaceNewOrderRespTypeEnum>,
     #[arg(
-        help = r#"The allowed enums is dependent on what is configured on the symbol. The possible supported values are: [STP Modes](/products/spot/enums#stpmodes)."#,
+        help = r#"The allowed enums is dependent on what is configured on the symbol. The possible supported values are: STP Modes."#,
         long
     )]
     self_trade_prevention_mode: Option<OrderCancelReplaceSelfTradePreventionModeEnum>,
     #[arg(
-        help = r#"Supported values: <br>`ONLY_NEW` - Cancel will succeed if the order status is `NEW`.<br> `ONLY_PARTIALLY_FILLED ` - Cancel will succeed if order status is `PARTIALLY_FILLED`."#,
+        help = r#"Supported values: <br>`ONLY_NEW` - Cancel will succeed if the order status is `NEW`.<br> `ONLY_PARTIALLY_FILLED ` - Cancel will succeed if order status is `PARTIALLY_FILLED`. For more information please refer to Regarding `cancelRestrictions`."#,
         long
     )]
     cancel_restrictions: Option<OrderCancelReplaceCancelRestrictionsEnum>,
@@ -1024,10 +1010,7 @@ struct OrderListOcoArgs {
         long
     )]
     above_stop_price: Option<rust_decimal::Decimal>,
-    #[arg(
-        help = r#"See [Trailing Stop order FAQ](/products/spot/faqs/trailing-stop-faq)"#,
-        long
-    )]
+    #[arg(help = r#"See Trailing Stop order FAQ"#, long)]
     above_trailing_delta: Option<i64>,
     #[arg(
         help = r#"Required if `aboveType` is `STOP_LOSS_LIMIT` or `TAKE_PROFIT_LIMIT`."#,
@@ -1044,10 +1027,7 @@ struct OrderListOcoArgs {
         long
     )]
     above_strategy_type: Option<i32>,
-    #[arg(
-        help = r#"`PRIMARY_PEG` or `MARKET_PEG`. See [Pegged Orders](/products/spot/faqs/pegged_orders)"#,
-        long
-    )]
+    #[arg(help = r#"`PRIMARY_PEG` or `MARKET_PEG`. See Pegged Orders"#, long)]
     above_peg_price_type: Option<OrderListOcoAbovePegPriceTypeEnum>,
     #[arg(help = r#""#, long)]
     above_peg_offset_type: Option<OrderListOcoAbovePegOffsetTypeEnum>,
@@ -1073,10 +1053,7 @@ struct OrderListOcoArgs {
         long
     )]
     below_stop_price: Option<rust_decimal::Decimal>,
-    #[arg(
-        help = r#"See [Trailing Stop order FAQ](/products/spot/faqs/trailing-stop-faq)"#,
-        long
-    )]
+    #[arg(help = r#"See Trailing Stop order FAQ"#, long)]
     below_trailing_delta: Option<i64>,
     #[arg(
         help = r#"Required if `belowType` is `STOP_LOSS_LIMIT` or `TAKE_PROFIT_LIMIT`."#,
@@ -1093,10 +1070,7 @@ struct OrderListOcoArgs {
         long
     )]
     below_strategy_type: Option<i32>,
-    #[arg(
-        help = r#"See [Pegged Orders](/products/spot/faqs/pegged_orders)"#,
-        long
-    )]
+    #[arg(help = r#"See Pegged Orders"#, long)]
     below_peg_price_type: Option<OrderListOcoBelowPegPriceTypeEnum>,
     #[arg(help = r#""#, long)]
     below_peg_offset_type: Option<OrderListOcoBelowPegOffsetTypeEnum>,
@@ -1105,7 +1079,7 @@ struct OrderListOcoArgs {
     #[arg(help = r#"Select response format: `ACK`, `RESULT`, `FULL`."#, long)]
     new_order_resp_type: Option<OrderListOcoNewOrderRespTypeEnum>,
     #[arg(
-        help = r#"The allowed enums is dependent on what is configured on the symbol. Supported values: [STP Modes](/products/spot/enums#stpmodes)"#,
+        help = r#"The allowed enums is dependent on what is configured on the symbol. Supported values: STP Modes"#,
         long
     )]
     self_trade_prevention_mode: Option<OrderListOcoSelfTradePreventionModeEnum>,
@@ -1127,24 +1101,18 @@ struct OrderListOpoArgs {
     symbol: Option<String>,
     #[arg(help = r#"Supported values: `LIMIT`, `LIMIT_MAKER`"#, long)]
     working_type: Option<OrderListOpoWorkingTypeEnum>,
-    #[arg(
-        help = r#"Supported values: [Order Side](/products/spot/enums#side)"#,
-        long
-    )]
+    #[arg(help = r#"Supported values: Order Side"#, long)]
     working_side: Option<OrderListOpoWorkingSideEnum>,
     #[arg(help = r#"Price for the working order."#, long)]
     working_price: Option<rust_decimal::Decimal>,
     #[arg(help = r#"Sets the quantity for the working order."#, long)]
     working_quantity: Option<rust_decimal::Decimal>,
     #[arg(
-        help = r#"Supported values: [Order Types](/products/spot/enums#ordertypes). Note that `MARKET` orders using `quoteOrderQty` are not supported."#,
+        help = r#"Supported values: Order Types. Note that `MARKET` orders using `quoteOrderQty` are not supported."#,
         long
     )]
     pending_type: Option<OrderListOpoPendingTypeEnum>,
-    #[arg(
-        help = r#"Supported values: [Order Side](/products/spot/enums#side)"#,
-        long
-    )]
+    #[arg(help = r#"Supported values: Order Side"#, long)]
     pending_side: Option<OrderListOpoPendingSideEnum>,
     #[arg(
         help = r#"Arbitrary unique ID among open order lists. Automatically generated if not sent. A new order list with the same `listClientOrderId` is accepted only when the previous one is filled or completely expired. `listClientOrderId` is distinct from the `workingClientOrderId` and the `pendingClientOrderId`."#,
@@ -1152,12 +1120,12 @@ struct OrderListOpoArgs {
     )]
     list_client_order_id: Option<String>,
     #[arg(
-        help = r#"Format of the JSON response. Supported values: [Order Response Type](/products/spot/enums#orderresponsetype)"#,
+        help = r#"Format of the JSON response. Supported values: Order Response Type"#,
         long
     )]
     new_order_resp_type: Option<OrderListOpoNewOrderRespTypeEnum>,
     #[arg(
-        help = r#"The allowed enums is dependent on what is configured on the symbol. Supported values: [STP Modes](/products/spot/enums#stpmodes)"#,
+        help = r#"The allowed enums is dependent on what is configured on the symbol. Supported values: STP Modes"#,
         long
     )]
     self_trade_prevention_mode: Option<OrderListOpoSelfTradePreventionModeEnum>,
@@ -1171,10 +1139,7 @@ struct OrderListOpoArgs {
         long
     )]
     working_iceberg_qty: Option<rust_decimal::Decimal>,
-    #[arg(
-        help = r#"Supported values: [Time In Force](/products/spot/enums#timeinforce)"#,
-        long
-    )]
+    #[arg(help = r#"Supported values: Time In Force"#, long)]
     working_time_in_force: Option<OrderListOpoWorkingTimeInForceEnum>,
     #[arg(
         help = r#"Arbitrary numeric value identifying the working order within an order strategy."#,
@@ -1186,10 +1151,7 @@ struct OrderListOpoArgs {
         long
     )]
     working_strategy_type: Option<i32>,
-    #[arg(
-        help = r#"See [Pegged Orders](/products/spot/faqs/pegged_orders)"#,
-        long
-    )]
+    #[arg(help = r#"See Pegged Orders"#, long)]
     working_peg_price_type: Option<OrderListOpoWorkingPegPriceTypeEnum>,
     #[arg(help = r#""#, long)]
     working_peg_offset_type: Option<OrderListOpoWorkingPegOffsetTypeEnum>,
@@ -1211,10 +1173,7 @@ struct OrderListOpoArgs {
         long
     )]
     pending_iceberg_qty: Option<rust_decimal::Decimal>,
-    #[arg(
-        help = r#"Supported values: [Time In Force](/products/spot/enums#timeinforce)"#,
-        long
-    )]
+    #[arg(help = r#"Supported values: Time In Force"#, long)]
     pending_time_in_force: Option<OrderListOpoPendingTimeInForceEnum>,
     #[arg(
         help = r#"Arbitrary numeric value identifying the pending order within an order strategy."#,
@@ -1226,10 +1185,7 @@ struct OrderListOpoArgs {
         long
     )]
     pending_strategy_type: Option<i32>,
-    #[arg(
-        help = r#"See [Pegged Orders](/products/spot/faqs/pegged_orders)"#,
-        long
-    )]
+    #[arg(help = r#"See Pegged Orders"#, long)]
     pending_peg_price_type: Option<OrderListOpoPendingPegPriceTypeEnum>,
     #[arg(help = r#""#, long)]
     pending_peg_offset_type: Option<OrderListOpoPendingPegOffsetTypeEnum>,
@@ -1253,19 +1209,13 @@ struct OrderListOpocoArgs {
     symbol: Option<String>,
     #[arg(help = r#""#, long)]
     working_type: Option<OrderListOpocoWorkingTypeEnum>,
-    #[arg(
-        help = r#"Supported values: [Order Side](/products/spot/enums#side)"#,
-        long
-    )]
+    #[arg(help = r#"Supported values: Order Side"#, long)]
     working_side: Option<OrderListOpocoWorkingSideEnum>,
     #[arg(help = r#"Price for the working order."#, long)]
     working_price: Option<rust_decimal::Decimal>,
     #[arg(help = r#"Sets the quantity for the working order."#, long)]
     working_quantity: Option<rust_decimal::Decimal>,
-    #[arg(
-        help = r#"Supported values: [Order Side](/products/spot/enums#side)"#,
-        long
-    )]
+    #[arg(help = r#"Supported values: Order Side"#, long)]
     pending_side: Option<OrderListOpocoPendingSideEnum>,
     #[arg(
         help = r#"Supported values: `STOP_LOSS_LIMIT`, `STOP_LOSS`, `LIMIT_MAKER`, `TAKE_PROFIT`, `TAKE_PROFIT_LIMIT`"#,
@@ -1273,17 +1223,17 @@ struct OrderListOpocoArgs {
     )]
     pending_above_type: Option<OrderListOpocoPendingAboveTypeEnum>,
     #[arg(
-        help = r#"Arbitrary unique ID among open order lists. Automatically generated if not sent. A new order list with the same `listClientOrderId` is accepted only when the previous one is filled or completely expired. `listClientOrderId` is distinct from the `workingClientOrderId` and the `pendingClientOrderId`."#,
+        help = r#"Arbitrary unique ID among open order lists. Automatically generated if not sent. A new order list with the same `listClientOrderId` is accepted only when the previous one is filled or completely expired. `listClientOrderId` is distinct from the `workingClientOrderId`, `pendingAboveClientOrderId`, and the `pendingBelowClientOrderId`."#,
         long
     )]
     list_client_order_id: Option<String>,
     #[arg(
-        help = r#"Format of the JSON response. Supported values: [Order Response Type](/products/spot/enums#orderresponsetype)"#,
+        help = r#"Format of the JSON response. Supported values: Order Response Type"#,
         long
     )]
     new_order_resp_type: Option<OrderListOpocoNewOrderRespTypeEnum>,
     #[arg(
-        help = r#"The allowed enums is dependent on what is configured on the symbol. Supported values: [STP Modes](/products/spot/enums#stpmodes)"#,
+        help = r#"The allowed enums is dependent on what is configured on the symbol. Supported values: STP Modes"#,
         long
     )]
     self_trade_prevention_mode: Option<OrderListOpocoSelfTradePreventionModeEnum>,
@@ -1297,10 +1247,7 @@ struct OrderListOpocoArgs {
         long
     )]
     working_iceberg_qty: Option<rust_decimal::Decimal>,
-    #[arg(
-        help = r#"Supported values: [Time In Force](/products/spot/enums#timeinforce)"#,
-        long
-    )]
+    #[arg(help = r#"Supported values: Time In Force"#, long)]
     working_time_in_force: Option<OrderListOpocoWorkingTimeInForceEnum>,
     #[arg(
         help = r#"Arbitrary numeric value identifying the working order within an order strategy."#,
@@ -1312,18 +1259,12 @@ struct OrderListOpocoArgs {
         long
     )]
     working_strategy_type: Option<i32>,
-    #[arg(
-        help = r#"See [Pegged Orders](/products/spot/faqs/pegged_orders)"#,
-        long
-    )]
+    #[arg(help = r#"See Pegged Orders"#, long)]
     working_peg_price_type: Option<OrderListOpocoWorkingPegPriceTypeEnum>,
-    #[arg(
-        help = r#"See [Pegged Orders](/products/spot/faqs/pegged_orders)"#,
-        long
-    )]
+    #[arg(help = r#"See Pegged Orders"#, long)]
     working_peg_offset_type: Option<OrderListOpocoWorkingPegOffsetTypeEnum>,
     #[arg(
-        help = r#"Price level for pegging (max: 100). See [Pegged Orders](/products/spot/faqs/pegged_orders)"#,
+        help = r#"Price level for pegging (max: 100). See Pegged Orders"#,
         long
     )]
     working_peg_offset_value: Option<i32>,
@@ -1342,10 +1283,7 @@ struct OrderListOpocoArgs {
         long
     )]
     pending_above_stop_price: Option<rust_decimal::Decimal>,
-    #[arg(
-        help = r#"See [Trailing Stop order FAQ](/products/spot/faqs/trailing-stop-faq)"#,
-        long
-    )]
+    #[arg(help = r#"See Trailing Stop order FAQ"#, long)]
     pending_above_trailing_delta: Option<rust_decimal::Decimal>,
     #[arg(
         help = r#"This can only be used if `pendingAboveTimeInForce` is `GTC` or `pendingAboveType` is `LIMIT_MAKER`."#,
@@ -1367,18 +1305,12 @@ struct OrderListOpocoArgs {
         long
     )]
     pending_above_strategy_type: Option<i32>,
-    #[arg(
-        help = r#"See [Pegged Orders](/products/spot/faqs/pegged_orders)"#,
-        long
-    )]
+    #[arg(help = r#"See Pegged Orders"#, long)]
     pending_above_peg_price_type: Option<OrderListOpocoPendingAbovePegPriceTypeEnum>,
-    #[arg(
-        help = r#"See [Pegged Orders](/products/spot/faqs/pegged_orders)"#,
-        long
-    )]
+    #[arg(help = r#"See Pegged Orders"#, long)]
     pending_above_peg_offset_type: Option<OrderListOpocoPendingAbovePegOffsetTypeEnum>,
     #[arg(
-        help = r#"Price level for pegging (max: 100). See [Pegged Orders](/products/spot/faqs/pegged_orders)"#,
+        help = r#"Price level for pegging (max: 100). See Pegged Orders"#,
         long
     )]
     pending_above_peg_offset_value: Option<i32>,
@@ -1402,20 +1334,14 @@ struct OrderListOpocoArgs {
         long
     )]
     pending_below_stop_price: Option<rust_decimal::Decimal>,
-    #[arg(
-        help = r#"See [Trailing Stop order FAQ](/products/spot/faqs/trailing-stop-faq)"#,
-        long
-    )]
+    #[arg(help = r#"See Trailing Stop order FAQ"#, long)]
     pending_below_trailing_delta: Option<rust_decimal::Decimal>,
     #[arg(
         help = r#"This can only be used if `pendingBelowTimeInForce` is `GTC` or `pendingBelowType` is `LIMIT_MAKER`."#,
         long
     )]
     pending_below_iceberg_qty: Option<rust_decimal::Decimal>,
-    #[arg(
-        help = r#"Supported values: [Time In Force](/products/spot/enums#timeinforce)"#,
-        long
-    )]
+    #[arg(help = r#"Supported values: Time In Force"#, long)]
     pending_below_time_in_force: Option<OrderListOpocoPendingBelowTimeInForceEnum>,
     #[arg(
         help = r#"Arbitrary numeric value identifying the pending below order within an order strategy."#,
@@ -1427,10 +1353,7 @@ struct OrderListOpocoArgs {
         long
     )]
     pending_below_strategy_type: Option<i32>,
-    #[arg(
-        help = r#"See [Pegged Orders](/products/spot/faqs/pegged_orders)"#,
-        long
-    )]
+    #[arg(help = r#"See Pegged Orders"#, long)]
     pending_below_peg_price_type: Option<OrderListOpocoPendingBelowPegPriceTypeEnum>,
     #[arg(help = r#""#, long)]
     pending_below_peg_offset_type: Option<OrderListOpocoPendingBelowPegOffsetTypeEnum>,
@@ -1454,24 +1377,18 @@ struct OrderListOtoArgs {
     symbol: Option<String>,
     #[arg(help = r#"Supported values: `LIMIT`, `LIMIT_MAKER`"#, long)]
     working_type: Option<OrderListOtoWorkingTypeEnum>,
-    #[arg(
-        help = r#"Supported values: [Order Side](/products/spot/enums#side)"#,
-        long
-    )]
+    #[arg(help = r#"Supported values: Order Side"#, long)]
     working_side: Option<OrderListOtoWorkingSideEnum>,
     #[arg(help = r#""#, long)]
     working_price: Option<rust_decimal::Decimal>,
     #[arg(help = r#"Sets the quantity for the working order."#, long)]
     working_quantity: Option<rust_decimal::Decimal>,
     #[arg(
-        help = r#"Supported values: [Order Types](/products/spot/enums#ordertypes). Note that `MARKET` orders using `quoteOrderQty` are not supported."#,
+        help = r#"Supported values: Order Types. Note that `MARKET` orders using `quoteOrderQty` are not supported."#,
         long
     )]
     pending_type: Option<OrderListOtoPendingTypeEnum>,
-    #[arg(
-        help = r#"Supported values: [Order Side](/products/spot/enums#side)"#,
-        long
-    )]
+    #[arg(help = r#"Supported values: Order Side"#, long)]
     pending_side: Option<OrderListOtoPendingSideEnum>,
     #[arg(help = r#"Sets the quantity for the pending order."#, long)]
     pending_quantity: Option<rust_decimal::Decimal>,
@@ -1481,12 +1398,12 @@ struct OrderListOtoArgs {
     )]
     list_client_order_id: Option<String>,
     #[arg(
-        help = r#"Format of the JSON response. Supported values: [Order Response Type](/products/spot/enums#orderresponsetype)"#,
+        help = r#"Format of the JSON response. Supported values: Order Response Type"#,
         long
     )]
     new_order_resp_type: Option<OrderListOtoNewOrderRespTypeEnum>,
     #[arg(
-        help = r#"The allowed enums is dependent on what is configured on the symbol. Supported values: [STP Modes](/products/spot/enums#stpmodes)"#,
+        help = r#"The allowed enums is dependent on what is configured on the symbol. Supported values: STP Modes"#,
         long
     )]
     self_trade_prevention_mode: Option<OrderListOtoSelfTradePreventionModeEnum>,
@@ -1500,10 +1417,7 @@ struct OrderListOtoArgs {
         long
     )]
     working_iceberg_qty: Option<rust_decimal::Decimal>,
-    #[arg(
-        help = r#"Supported values: [Time In Force](/products/spot/enums#timeinforce)"#,
-        long
-    )]
+    #[arg(help = r#"Supported values: Time In Force"#, long)]
     working_time_in_force: Option<OrderListOtoWorkingTimeInForceEnum>,
     #[arg(
         help = r#"Arbitrary numeric value identifying the working order within an order strategy."#,
@@ -1515,10 +1429,7 @@ struct OrderListOtoArgs {
         long
     )]
     working_strategy_type: Option<i32>,
-    #[arg(
-        help = r#"See [Pegged Orders](/products/spot/faqs/pegged_orders)"#,
-        long
-    )]
+    #[arg(help = r#"See Pegged Orders"#, long)]
     working_peg_price_type: Option<OrderListOtoWorkingPegPriceTypeEnum>,
     #[arg(help = r#""#, long)]
     working_peg_offset_type: Option<OrderListOtoWorkingPegOffsetTypeEnum>,
@@ -1540,10 +1451,7 @@ struct OrderListOtoArgs {
         long
     )]
     pending_iceberg_qty: Option<rust_decimal::Decimal>,
-    #[arg(
-        help = r#"Supported values: [Time In Force](/products/spot/enums#timeinforce)"#,
-        long
-    )]
+    #[arg(help = r#"Supported values: Time In Force"#, long)]
     pending_time_in_force: Option<OrderListOtoPendingTimeInForceEnum>,
     #[arg(
         help = r#"Arbitrary numeric value identifying the pending order within an order strategy."#,
@@ -1555,10 +1463,7 @@ struct OrderListOtoArgs {
         long
     )]
     pending_strategy_type: Option<i32>,
-    #[arg(
-        help = r#"See [Pegged Orders](/products/spot/faqs/pegged_orders)"#,
-        long
-    )]
+    #[arg(help = r#"See Pegged Orders"#, long)]
     pending_peg_price_type: Option<OrderListOtoPendingPegPriceTypeEnum>,
     #[arg(help = r#""#, long)]
     pending_peg_offset_type: Option<OrderListOtoPendingPegOffsetTypeEnum>,
@@ -1582,19 +1487,13 @@ struct OrderListOtocoArgs {
     symbol: Option<String>,
     #[arg(help = r#"Supported values: `LIMIT`, `LIMIT_MAKER`"#, long)]
     working_type: Option<OrderListOtocoWorkingTypeEnum>,
-    #[arg(
-        help = r#"Supported values: [Order Side](/products/spot/enums#side)"#,
-        long
-    )]
+    #[arg(help = r#"Supported values: Order Side"#, long)]
     working_side: Option<OrderListOtocoWorkingSideEnum>,
     #[arg(help = r#""#, long)]
     working_price: Option<rust_decimal::Decimal>,
     #[arg(help = r#"Sets the quantity for the working order."#, long)]
     working_quantity: Option<rust_decimal::Decimal>,
-    #[arg(
-        help = r#"Supported values: [Order Side](/products/spot/enums#side)"#,
-        long
-    )]
+    #[arg(help = r#"Supported values: Order Side"#, long)]
     pending_side: Option<OrderListOtocoPendingSideEnum>,
     #[arg(help = r#"Sets the quantity for the pending orders."#, long)]
     pending_quantity: Option<rust_decimal::Decimal>,
@@ -1604,17 +1503,17 @@ struct OrderListOtocoArgs {
     )]
     pending_above_type: Option<OrderListOtocoPendingAboveTypeEnum>,
     #[arg(
-        help = r#"Arbitrary unique ID among open order lists. Automatically generated if not sent. A new order list with the same `listClientOrderId` is accepted only when the previous one is filled or completely expired. `listClientOrderId` is distinct from the `workingClientOrderId` and the `pendingClientOrderId`."#,
+        help = r#"Arbitrary unique ID among open order lists. Automatically generated if not sent. A new order list with the same `listClientOrderId` is accepted only when the previous one is filled or completely expired. `listClientOrderId` is distinct from the `workingClientOrderId`, `pendingAboveClientOrderId`, and the `pendingBelowClientOrderId`."#,
         long
     )]
     list_client_order_id: Option<String>,
     #[arg(
-        help = r#"Format of the JSON response. Supported values: [Order Response Type](/products/spot/enums#orderresponsetype)"#,
+        help = r#"Format of the JSON response. Supported values: Order Response Type"#,
         long
     )]
     new_order_resp_type: Option<OrderListOtocoNewOrderRespTypeEnum>,
     #[arg(
-        help = r#"The allowed enums is dependent on what is configured on the symbol. Supported values: [STP Modes](/products/spot/enums#stpmodes)"#,
+        help = r#"The allowed enums is dependent on what is configured on the symbol. Supported values: STP Modes"#,
         long
     )]
     self_trade_prevention_mode: Option<OrderListOtocoSelfTradePreventionModeEnum>,
@@ -1628,10 +1527,7 @@ struct OrderListOtocoArgs {
         long
     )]
     working_iceberg_qty: Option<rust_decimal::Decimal>,
-    #[arg(
-        help = r#"Supported values: [Time In Force](/products/spot/enums#timeinforce)"#,
-        long
-    )]
+    #[arg(help = r#"Supported values: Time In Force"#, long)]
     working_time_in_force: Option<OrderListOtocoWorkingTimeInForceEnum>,
     #[arg(
         help = r#"Arbitrary numeric value identifying the working order within an order strategy."#,
@@ -1643,10 +1539,7 @@ struct OrderListOtocoArgs {
         long
     )]
     working_strategy_type: Option<i32>,
-    #[arg(
-        help = r#"See [Pegged Orders](/products/spot/faqs/pegged_orders)"#,
-        long
-    )]
+    #[arg(help = r#"See Pegged Orders"#, long)]
     working_peg_price_type: Option<OrderListOtocoWorkingPegPriceTypeEnum>,
     #[arg(help = r#""#, long)]
     working_peg_offset_type: Option<OrderListOtocoWorkingPegOffsetTypeEnum>,
@@ -1667,10 +1560,7 @@ struct OrderListOtocoArgs {
         long
     )]
     pending_above_stop_price: Option<rust_decimal::Decimal>,
-    #[arg(
-        help = r#"See [Trailing Stop order FAQ](/products/spot/faqs/trailing-stop-faq)"#,
-        long
-    )]
+    #[arg(help = r#"See Trailing Stop order FAQ"#, long)]
     pending_above_trailing_delta: Option<rust_decimal::Decimal>,
     #[arg(
         help = r#"This can only be used if `pendingAboveTimeInForce` is `GTC` or if `pendingAboveType` is `LIMIT_MAKER`."#,
@@ -1692,10 +1582,7 @@ struct OrderListOtocoArgs {
         long
     )]
     pending_above_strategy_type: Option<i32>,
-    #[arg(
-        help = r#"See [Pegged Orders](/products/spot/faqs/pegged_orders)"#,
-        long
-    )]
+    #[arg(help = r#"See Pegged Orders"#, long)]
     pending_above_peg_price_type: Option<OrderListOtocoPendingAbovePegPriceTypeEnum>,
     #[arg(help = r#""#, long)]
     pending_above_peg_offset_type: Option<OrderListOtocoPendingAbovePegOffsetTypeEnum>,
@@ -1721,10 +1608,7 @@ struct OrderListOtocoArgs {
         long
     )]
     pending_below_stop_price: Option<rust_decimal::Decimal>,
-    #[arg(
-        help = r#"See [Trailing Stop order FAQ](/products/spot/faqs/trailing-stop-faq)"#,
-        long
-    )]
+    #[arg(help = r#"See Trailing Stop order FAQ"#, long)]
     pending_below_trailing_delta: Option<rust_decimal::Decimal>,
     #[arg(
         help = r#"This can only be used if `pendingBelowTimeInForce` is `GTC`, or if `pendingBelowType` is `LIMIT_MAKER`."#,
@@ -1746,10 +1630,7 @@ struct OrderListOtocoArgs {
         long
     )]
     pending_below_strategy_type: Option<i32>,
-    #[arg(
-        help = r#"See [Pegged Orders](/products/spot/faqs/pegged_orders)"#,
-        long
-    )]
+    #[arg(help = r#"See Pegged Orders"#, long)]
     pending_below_peg_price_type: Option<OrderListOtocoPendingBelowPegPriceTypeEnum>,
     #[arg(help = r#""#, long)]
     pending_below_peg_offset_type: Option<OrderListOtocoPendingBelowPegOffsetTypeEnum>,
@@ -1807,12 +1688,12 @@ struct OrderOcoArgs {
     #[arg(help = r#"Valid values are `GTC`/`FOK`/`IOC`"#, long)]
     stop_limit_time_in_force: Option<OrderOcoStopLimitTimeInForceEnum>,
     #[arg(
-        help = r#"Format of the JSON response. Supported values: [Order Response Type](/products/spot/enums#orderresponsetype)"#,
+        help = r#"Format of the JSON response. Supported values: Order Response Type"#,
         long
     )]
     new_order_resp_type: Option<OrderOcoNewOrderRespTypeEnum>,
     #[arg(
-        help = r#"The allowed values are dependent on what is configured on the symbol. Supported values: [STP Modes](/products/spot/enums#stpmodes)"#,
+        help = r#"The allowed values are dependent on what is configured on the symbol. Supported values: STP Modes"#,
         long
     )]
     self_trade_prevention_mode: Option<OrderOcoSelfTradePreventionModeEnum>,
@@ -1832,22 +1713,13 @@ struct OrderOcoArgs {
 struct OrderTestArgs {
     #[arg(help = r#""#, long)]
     symbol: Option<String>,
-    #[arg(
-        help = r#"Please see [Enums](/products/spot/enums#side) for supported values."#,
-        long
-    )]
+    #[arg(help = r#"Please see Enums for supported values."#, long)]
     side: Option<OrderTestSideEnum>,
-    #[arg(
-        help = r#"Please see [Enums](/products/spot/enums#ordertypes) for supported values."#,
-        long
-    )]
+    #[arg(help = r#"Please see Enums for supported values."#, long)]
     r#type: Option<OrderTestTypeEnum>,
-    #[arg(help = r#"Default: `false` <br> See [Commissions FAQ](/products/spot/faqs/commission_faq#test-order-diferences) to learn more."#, long, num_args = 0..=1, default_missing_value = "true")]
+    #[arg(help = r#"Default: `false` <br> See Commissions FAQ to learn more."#, long, num_args = 0..=1, default_missing_value = "true")]
     compute_commission_rates: Option<bool>,
-    #[arg(
-        help = r#"Please see [Enums](/products/spot/enums#timeinforce) for supported values."#,
-        long
-    )]
+    #[arg(help = r#"Please see Enums for supported values."#, long)]
     time_in_force: Option<OrderTestTimeInForceEnum>,
     #[arg(help = r#""#, long)]
     quantity: Option<rust_decimal::Decimal>,
@@ -1869,10 +1741,7 @@ struct OrderTestArgs {
         long
     )]
     stop_price: Option<rust_decimal::Decimal>,
-    #[arg(
-        help = r#"See [Trailing Stop order FAQ](/products/spot/faqs/trailing-stop-faq)"#,
-        long
-    )]
+    #[arg(help = r#"See Trailing Stop order FAQ"#, long)]
     trailing_delta: Option<i64>,
     #[arg(
         help = r#"Used with `LIMIT`, `STOP_LOSS_LIMIT`, and `TAKE_PROFIT_LIMIT` to create an iceberg order."#,
@@ -1885,24 +1754,18 @@ struct OrderTestArgs {
     )]
     new_order_resp_type: Option<OrderTestNewOrderRespTypeEnum>,
     #[arg(
-        help = r#"The allowed enums is dependent on what is configured on the symbol. Supported values: [STP Modes](/products/spot/enums#stpmodes)"#,
+        help = r#"The allowed enums is dependent on what is configured on the symbol. Supported values: STP Modes"#,
         long
     )]
     self_trade_prevention_mode: Option<OrderTestSelfTradePreventionModeEnum>,
-    #[arg(
-        help = r#"`PRIMARY_PEG` or `MARKET_PEG`. See [Pegged Orders](/products/spot/faqs/pegged_orders)"#,
-        long
-    )]
+    #[arg(help = r#"`PRIMARY_PEG` or `MARKET_PEG`. See Pegged Orders"#, long)]
     peg_price_type: Option<OrderTestPegPriceTypeEnum>,
     #[arg(
-        help = r#"Price level for pegging (max: 100). See [Pegged Orders](/products/spot/faqs/pegged_orders)"#,
+        help = r#"Price level for pegging (max: 100). See Pegged Orders"#,
         long
     )]
     peg_offset_value: Option<i32>,
-    #[arg(
-        help = r#"Only `PRICE_LEVEL` is supported. See [Pegged Orders](/products/spot/faqs/pegged_orders)"#,
-        long
-    )]
+    #[arg(help = r#"Only `PRICE_LEVEL` is supported. See Pegged Orders"#, long)]
     peg_offset_type: Option<OrderTestPegOffsetTypeEnum>,
     #[arg(
         help = r#"The value cannot be greater than `60000`. Supports up to three decimal places of precision (e.g., 6000.346) so that microseconds may be specified."#,
@@ -1947,7 +1810,7 @@ struct SorOrderArgs {
     )]
     new_order_resp_type: Option<SorOrderNewOrderRespTypeEnum>,
     #[arg(
-        help = r#"The allowed enums is dependent on what is configured on the symbol. The possible supported values are: [STP Modes](/products/spot/enums#stpmodes)."#,
+        help = r#"The allowed enums is dependent on what is configured on the symbol. The possible supported values are: STP Modes."#,
         long
     )]
     self_trade_prevention_mode: Option<SorOrderSelfTradePreventionModeEnum>,
@@ -1967,24 +1830,15 @@ struct SorOrderArgs {
 struct SorOrderTestArgs {
     #[arg(help = r#""#, long)]
     symbol: Option<String>,
-    #[arg(
-        help = r#"Please see [Enums](/products/spot/enums#side) for supported values."#,
-        long
-    )]
+    #[arg(help = r#"Please see Enums for supported values."#, long)]
     side: Option<SorOrderTestSideEnum>,
-    #[arg(
-        help = r#"Please see [Enums](/products/spot/enums#ordertypes) for supported values."#,
-        long
-    )]
+    #[arg(help = r#"Please see Enums for supported values."#, long)]
     r#type: Option<SorOrderTestTypeEnum>,
     #[arg(help = r#""#, long)]
     quantity: Option<rust_decimal::Decimal>,
     #[arg(help = r#""#, long, num_args = 0..=1, default_missing_value = "true")]
     compute_commission_rates: Option<bool>,
-    #[arg(
-        help = r#"Please see [Enums](/products/spot/enums#timeinforce) for supported values."#,
-        long
-    )]
+    #[arg(help = r#"Please see Enums for supported values."#, long)]
     time_in_force: Option<SorOrderTestTimeInForceEnum>,
     #[arg(help = r#""#, long)]
     price: Option<rust_decimal::Decimal>,
@@ -2005,7 +1859,7 @@ struct SorOrderTestArgs {
     )]
     new_order_resp_type: Option<SorOrderTestNewOrderRespTypeEnum>,
     #[arg(
-        help = r#"The allowed enums is dependent on what is configured on the symbol. Supported values: [STP Modes](/products/spot/enums#stpmodes)"#,
+        help = r#"The allowed enums is dependent on what is configured on the symbol. Supported values: STP Modes"#,
         long
     )]
     self_trade_prevention_mode: Option<SorOrderTestSelfTradePreventionModeEnum>,
@@ -2062,7 +1916,10 @@ Notes:
 - If `orderId` is set, it will get orders >= that `orderId`. Otherwise most recent orders are returned.
 - For some historical orders `cummulativeQuoteQty` will be < 0, meaning the data is not available at this time.
 - If `startTime` and/or `endTime` provided, `orderId` is not required.
-- The time between `startTime` and `endTime` can't be longer than 24 hours."#, false),
+- The time between `startTime` and `endTime` can't be longer than 24 hours.
+
+Response Notes:
+**Note:** The payload above does not show all fields that can appear. Please refer to Conditional fields in Order Responses."#, false),
     )]
     AllOrders(AllOrdersArgs),
     #[command(
@@ -2086,7 +1943,10 @@ Security Type: USER_DATA
 Notes:
 **Data Source:** Memory => Database
 
-- If the symbol is not sent, orders for all symbols will be returned in an array."#, false),
+- If the symbol is not sent, orders for all symbols will be returned in an array.
+
+Response Notes:
+**Note:** The payload above does not show all fields that can appear. Please refer to Conditional fields in Order Responses."#, false),
     )]
     GetOpenOrders(GetOpenOrdersArgs),
     #[command(
@@ -2101,7 +1961,10 @@ Notes:
 
 - Either `orderId` or `origClientOrderId` must be sent.
 - If both `orderId` and `origClientOrderId` are provided, the `orderId` is searched first, then the `origClientOrderId` from that result is checked against that order. If both conditions are not met the request will be rejected.
-- For some historical orders `cummulativeQuoteQty` will be < 0, meaning the data is not available at this time."#, false),
+- For some historical orders `cummulativeQuoteQty` will be < 0, meaning the data is not available at this time.
+
+Response Notes:
+**Note:** The payload above does not show all fields that can appear. Please refer to Conditional fields in Order Responses."#, false),
     )]
     GetOrder(GetOrderArgs),
     #[command(
@@ -2278,7 +2141,10 @@ Notes:
 
 Weight(IP): 1
 
-Security Type: NONE"#, false),
+Security Type: NONE
+
+Notes:
+**Data Source:** Memory"#, false),
     )]
     Ping(PingArgs),
     #[command(
@@ -2286,7 +2152,10 @@ Security Type: NONE"#, false),
 
 Weight(IP): 1
 
-Security Type: NONE"#, false),
+Security Type: NONE
+
+Notes:
+**Data Source:** Memory"#, false),
     )]
     Time(TimeArgs),
     #[command(
@@ -2350,7 +2219,7 @@ Weight(IP): 25
 Security Type: MARKET_DATA
 
 Notes:
-- Data Source: Database"#, false),
+**Data Source:** Database"#, false),
     )]
     HistoricalBlockTrades(HistoricalBlockTradesArgs),
     #[command(
@@ -2405,7 +2274,16 @@ Weight(IP): 2
 Security Type: NONE
 
 Notes:
-**Data Source:** Memory"#, false),
+**Data Source:** Memory
+
+If the symbol has never had a reference price set, the request is rejected with:
+
+```json
+{
+    "code": -2043,
+    "msg": "This symbol doesn't have a reference price."
+}
+```"#, false),
     )]
     ReferencePrice(ReferencePriceArgs),
     #[command(
@@ -2583,7 +2461,28 @@ Notes:
 
 - Either `orderId` or `origClientOrderId` must be sent.
 - If both `orderId` and `origClientOrderId` are provided, the `orderId` is searched first, then the `origClientOrderId` from that result is checked against that order. If both conditions are not met the request will be rejected.
-- The performance for canceling an order (single cancel or as part of a cancel-replace) is always better when only `orderId` is sent. Sending `origClientOrderId` or both `orderId` + `origClientOrderId` will be slower."#, false),
+
+Response Notes:
+**Notes:**
+- The payload above does not show all fields that can appear in the order response. Please refer to Conditional fields in Order Responses.
+- The performance for canceling an order (single cancel or as part of a cancel-replace) is always better when only `orderId` is sent. Sending `origClientOrderId` or both `orderId` + `origClientOrderId` will be slower.
+
+**Regarding `cancelRestrictions`**
+
+* If the `cancelRestrictions` value is not any of the supported values, the error will be:
+```json
+{
+    "code": -1145,
+    "msg": "Invalid cancelRestrictions"
+}
+```
+* If the order did not pass the conditions for `cancelRestrictions`, the error will be:
+```json
+{
+    "code": -2011,
+    "msg": "Order was not canceled due to cancel restrictions."
+}
+```"#, false),
     )]
     DeleteOrder(DeleteOrderArgs),
     #[command(
@@ -2627,8 +2526,8 @@ Type | Additional mandatory parameters | Additional Information
 `TAKE_PROFIT_LIMIT` | `timeInForce`, `quantity`, `price`, `stopPrice` or `trailingDelta` |
 `LIMIT_MAKER` | `quantity`, `price`| This is a `LIMIT` order that will be rejected if the order immediately matches and trades as a taker. <br/> This is also known as a POST-ONLY order.
 
-
 Notes on using parameters for Pegged Orders:
+
 * These parameters are allowed for `LIMIT`, `LIMIT_MAKER`, `STOP_LOSS_LIMIT`, `TAKE_PROFIT_LIMIT` orders.
 * If `pegPriceType` is specified, `price` becomes optional. Otherwise, it is still mandatory.
 * `pegPriceType=PRIMARY_PEG` means the primary peg, that is the best price on the same side of the order book as your order.
@@ -2658,7 +2557,10 @@ Unfilled Order Count: 0
 Security Type: TRADE
 
 Notes:
-**Data Source:** Matching Engine"#, false),
+**Data Source:** Matching Engine
+
+Response Notes:
+**Note:** The payload above does not show all fields that can appear. Please refer to Conditional fields in Order Responses."#, false),
     )]
     OrderAmendKeepPriority(OrderAmendKeepPriorityArgs),
     #[command(
@@ -2847,8 +2749,10 @@ Response format varies depending on whether the processing of the message succee
   </tbody>
 </table>
 
+Response Notes:
 **Notes:**
-  - The performance for canceling an order (single cancel or as part of a cancel-replace) is always better when only `orderId` is sent. Sending `origClientOrderId` or both `orderId` + `origClientOrderId` will be slower."#, false),
+- The payload above does not show all fields that can appear. Please refer to Conditional fields in Order Responses.
+- The performance for canceling an order (single cancel or as part of a cancel-replace) is always better when only `orderId` is sent. Sending `origClientOrderId` or both `orderId` + `origClientOrderId` will be slower."#, false),
     )]
     OrderCancelReplace(OrderCancelReplaceArgs),
     #[command(
@@ -2877,7 +2781,7 @@ Notes:
     )]
     OrderListOco(OrderListOcoArgs),
     #[command(
-        about = decode_selected_entities(r#"Place an [OPO](/products/spot/faqs/opo).
+        about = decode_selected_entities(r#"Place an OPO.
 
 - OPOs add 2 orders to the `EXCHANGE_MAX_NUM_ORDERS`` filter and `MAX_NUM_ORDERS`` filter.
 
@@ -2888,11 +2792,14 @@ Unfilled Order Count: 2
 Security Type: TRADE
 
 Notes:
-**Data Source:** Matching Engine"#, false),
+**Data Source:** Matching Engine
+
+Response Notes:
+**Note:** The payload above does not show all fields that can appear. Please refer to Conditional fields in Order Responses."#, false),
     )]
     OrderListOpo(OrderListOpoArgs),
     #[command(
-        about = decode_selected_entities(r#"Place an [OPOCO](/products/spot/faqs/opo).
+        about = decode_selected_entities(r#"Place an OPOCO.
 
 Weight(IP): 1
 
@@ -2901,7 +2808,10 @@ Unfilled Order Count: 3
 Security Type: TRADE
 
 Notes:
-**Data Source:** Matching Engine"#, false),
+**Data Source:** Matching Engine
+
+Response Notes:
+**Note:** The payload above does not show all fields that can appear. Please refer to Conditional fields in Order Responses."#, false),
     )]
     OrderListOpoco(OrderListOpocoArgs),
     #[command(
@@ -2932,7 +2842,10 @@ Depending on the `pendingType` or `workingType`, some optional parameters will b
 |`workingType` = `LIMIT`                               |`workingTimeInForce`           |
 |`pendingType` = `LIMIT`                                |`pendingPrice`, `pendingTimeInForce`          |
 |`pendingType` = `STOP_LOSS` or `TAKE_PROFIT`           |`pendingStopPrice` and/or `pendingTrailingDelta`|
-|`pendingType` = `STOP_LOSS_LIMIT` or `TAKE_PROFIT_LIMIT`|`pendingPrice`, `pendingStopPrice` and/or `pendingTrailingDelta`, `pendingTimeInForce`|"#, false),
+|`pendingType` = `STOP_LOSS_LIMIT` or `TAKE_PROFIT_LIMIT`|`pendingPrice`, `pendingStopPrice` and/or `pendingTrailingDelta`, `pendingTimeInForce`|
+
+Response Notes:
+**Note:** The payload above does not show all fields that can appear. Please refer to Conditional fields in Order Responses."#, false),
     )]
     OrderListOto(OrderListOtoArgs),
     #[command(
@@ -2940,9 +2853,9 @@ Depending on the `pendingType` or `workingType`, some optional parameters will b
 
 - An OTOCO (One-Triggers-One-Cancels-the-Other) is an order list comprised of 3 orders.
 - The first order is called the **working order** and must be `LIMIT` or `LIMIT_MAKER`. Initially, only the working order goes on the order book.
-  - The behavior of the working order is the same as the [OTO](#order-list-oto).
+  - The behavior of the working order is the same as the OTO.
 - OTOCO has 2 pending orders (pending above and pending below), forming an OCO pair. The pending orders are only placed on the order book when the working order gets **fully filled**.
-  - The rules of the pending above and pending below follow the same rules as the [Order list OCO](#order-list-oco).
+  - The rules of the pending above and pending below follow the same rules as the Order list OCO.
 - OTOCOs add **3 orders** to the `EXCHANGE_MAX_NUM_ORDERS` filter and `MAX_NUM_ORDERS` filter.
 
 Weight(IP): 1
@@ -2966,7 +2879,10 @@ Depending on the `pendingAboveType`/`pendingBelowType` or `workingType`, some op
 |`pendingAboveType=STOP_LOSS_LIMIT/TAKE_PROFIT_LIMIT` |`pendingAbovePrice`, `pendingAboveStopPrice` and/or `pendingAboveTrailingDelta`, `pendingAboveTimeInForce`|
 |`pendingBelowType`= `LIMIT_MAKER`                                |`pendingBelowPrice`          |
 |`pendingBelowType= STOP_LOSS/TAKE_PROFIT`         |`pendingBelowStopPrice` and/or `pendingBelowTrailingDelta`|
-|`pendingBelowType=STOP_LOSS_LIMIT/TAKE_PROFIT_LIMIT` |`pendingBelowPrice`, `pendingBelowStopPrice` and/or `pendingBelowTrailingDelta`, `pendingBelowTimeInForce`|"#, false),
+|`pendingBelowType=STOP_LOSS_LIMIT/TAKE_PROFIT_LIMIT` |`pendingBelowPrice`, `pendingBelowStopPrice` and/or `pendingBelowTrailingDelta`, `pendingBelowTimeInForce`|
+
+Response Notes:
+**Note:** The payload above does not show all fields that can appear. Please refer to Conditional fields in Order Responses."#, false),
     )]
     OrderListOtoco(OrderListOtocoArgs),
     #[command(
@@ -3012,7 +2928,7 @@ Notes:
 
 This adds 1 order to the `EXCHANGE_MAX_ORDERS` filter and the `MAX_NUM_ORDERS` filter.
 
-Read [SOR FAQ](/products/spot/faqs/sor_faq) to learn more.
+Read SOR FAQ to learn more.
 
 Weight(IP): 1
 
@@ -3153,13 +3069,11 @@ async fn account_commission(mut args: AccountCommissionArgs) -> anyhow::Result<(
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 AccountCommissionParams::builder(
                     args.symbol
@@ -3215,13 +3129,11 @@ async fn all_orders(mut args: AllOrdersArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 AllOrdersParams::builder(
                     args.symbol
@@ -3303,13 +3215,11 @@ async fn get_order(mut args: GetOrderArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 GetOrderParams::builder(
                     args.symbol
@@ -3366,13 +3276,11 @@ async fn my_allocations(mut args: MyAllocationsArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 MyAllocationsParams::builder(
                     args.symbol
@@ -3407,13 +3315,11 @@ async fn my_filters(mut args: MyFiltersArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 MyFiltersParams::builder(
                     args.symbol
@@ -3443,13 +3349,11 @@ async fn my_prevented_matches(mut args: MyPreventedMatchesArgs) -> anyhow::Resul
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 MyPreventedMatchesParams::builder(
                     args.symbol
@@ -3483,13 +3387,11 @@ async fn my_trades(mut args: MyTradesArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 MyTradesParams::builder(
                     args.symbol
@@ -3566,7 +3468,7 @@ async fn order_amendments(mut args: OrderAmendmentsArgs) -> anyhow::Result<()> {
                     args.symbol
                         .ok_or_else(|| anyhow::anyhow!("symbol is required"))?,
                     args.order_id
-                        .ok_or_else(|| anyhow::anyhow!("order_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("order-id is required"))?,
                 )
                 .from_execution_id(args.from_execution_id)
                 .limit(args.limit)
@@ -3691,13 +3593,11 @@ async fn agg_trades(mut args: AggTradesArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 AggTradesParams::builder(
                     args.symbol
@@ -3730,13 +3630,11 @@ async fn avg_price(mut args: AvgPriceArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 AvgPriceParams::builder(
                     args.symbol
@@ -3765,13 +3663,11 @@ async fn depth(mut args: DepthArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 DepthParams::builder(
                     args.symbol
@@ -3802,13 +3698,11 @@ async fn get_trades(mut args: GetTradesArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 GetTradesParams::builder(
                     args.symbol
@@ -3856,7 +3750,7 @@ async fn historical_block_trades(mut args: HistoricalBlockTradesArgs) -> anyhow:
                     args.symbol
                         .ok_or_else(|| anyhow::anyhow!("symbol is required"))?,
                     args.from_id
-                        .ok_or_else(|| anyhow::anyhow!("from_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("from-id is required"))?,
                 )
                 .limit(args.limit)
                 .build()?
@@ -3882,13 +3776,11 @@ async fn historical_trades(mut args: HistoricalTradesArgs) -> anyhow::Result<()>
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 HistoricalTradesParams::builder(
                     args.symbol
@@ -3994,13 +3886,11 @@ async fn reference_price(mut args: ReferencePriceArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 ReferencePriceParams::builder(
                     args.symbol
@@ -4033,13 +3923,11 @@ async fn reference_price_calculation(
                 })?
             }
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 ReferencePriceCalculationParams::builder(
                     args.symbol
@@ -4274,13 +4162,11 @@ async fn delete_open_orders(mut args: DeleteOpenOrdersArgs) -> anyhow::Result<()
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 DeleteOpenOrdersParams::builder(
                     args.symbol
@@ -4310,13 +4196,11 @@ async fn delete_order(mut args: DeleteOrderArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 DeleteOrderParams::builder(
                     args.symbol
@@ -4350,13 +4234,11 @@ async fn delete_order_list(mut args: DeleteOrderListArgs) -> anyhow::Result<()> 
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 DeleteOrderListParams::builder(
                     args.symbol
@@ -4397,7 +4279,7 @@ async fn new_order(mut args: NewOrderArgs) -> anyhow::Result<()> {
                         args.symbol = Some(symbol);
                     }
                     if args.side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", NewOrderSideEnum::Buy),
                             ("SELL", NewOrderSideEnum::Sell),
                         ];
@@ -4417,7 +4299,7 @@ async fn new_order(mut args: NewOrderArgs) -> anyhow::Result<()> {
                         args.side = Some(selected);
                     }
                     if args.r#type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("MARKET", NewOrderTypeEnum::Market),
                             ("LIMIT", NewOrderTypeEnum::Limit),
                             ("STOP_LOSS", NewOrderTypeEnum::StopLoss),
@@ -4448,7 +4330,7 @@ async fn new_order(mut args: NewOrderArgs) -> anyhow::Result<()> {
                     args.side
                         .ok_or_else(|| anyhow::anyhow!("side is required"))?,
                     args.r#type
-                        .ok_or_else(|| anyhow::anyhow!("r#type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("rtype is required"))?,
                 )
                 .time_in_force(args.time_in_force)
                 .quantity(args.quantity)
@@ -4507,7 +4389,7 @@ async fn order_amend_keep_priority(mut args: OrderAmendKeepPriorityArgs) -> anyh
                     args.symbol
                         .ok_or_else(|| anyhow::anyhow!("symbol is required"))?,
                     args.new_qty
-                        .ok_or_else(|| anyhow::anyhow!("new_qty is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("new-qty is required"))?,
                 )
                 .order_id(args.order_id)
                 .orig_client_order_id(args.orig_client_order_id)
@@ -4544,7 +4426,7 @@ async fn order_cancel_replace(mut args: OrderCancelReplaceArgs) -> anyhow::Resul
                         args.symbol = Some(symbol);
                     }
                     if args.side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", OrderCancelReplaceSideEnum::Buy),
                             ("SELL", OrderCancelReplaceSideEnum::Sell),
                         ];
@@ -4564,7 +4446,7 @@ async fn order_cancel_replace(mut args: OrderCancelReplaceArgs) -> anyhow::Resul
                         args.side = Some(selected);
                     }
                     if args.r#type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("MARKET", OrderCancelReplaceTypeEnum::Market),
                             ("LIMIT", OrderCancelReplaceTypeEnum::Limit),
                             ("STOP_LOSS", OrderCancelReplaceTypeEnum::StopLoss),
@@ -4592,7 +4474,7 @@ async fn order_cancel_replace(mut args: OrderCancelReplaceArgs) -> anyhow::Resul
                         args.r#type = Some(selected);
                     }
                     if args.cancel_replace_mode.is_none() {
-                        let options = vec![
+                        let options = [
                             (
                                 "STOP_ON_FAILURE",
                                 OrderCancelReplaceCancelReplaceModeEnum::StopOnFailure,
@@ -4624,9 +4506,9 @@ async fn order_cancel_replace(mut args: OrderCancelReplaceArgs) -> anyhow::Resul
                     args.side
                         .ok_or_else(|| anyhow::anyhow!("side is required"))?,
                     args.r#type
-                        .ok_or_else(|| anyhow::anyhow!("r#type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("rtype is required"))?,
                     args.cancel_replace_mode
-                        .ok_or_else(|| anyhow::anyhow!("cancel_replace_mode is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("cancel-replace-mode is required"))?,
                 )
                 .time_in_force(args.time_in_force)
                 .quantity(args.quantity)
@@ -4680,7 +4562,7 @@ async fn order_list_oco(mut args: OrderListOcoArgs) -> anyhow::Result<()> {
                         args.symbol = Some(symbol);
                     }
                     if args.side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", OrderListOcoSideEnum::Buy),
                             ("SELL", OrderListOcoSideEnum::Sell),
                         ];
@@ -4707,7 +4589,7 @@ async fn order_list_oco(mut args: OrderListOcoArgs) -> anyhow::Result<()> {
                         args.quantity = Some(quantity);
                     }
                     if args.above_type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("STOP_LOSS_LIMIT", OrderListOcoAboveTypeEnum::StopLossLimit),
                             ("STOP_LOSS", OrderListOcoAboveTypeEnum::StopLoss),
                             ("LIMIT_MAKER", OrderListOcoAboveTypeEnum::LimitMaker),
@@ -4733,7 +4615,7 @@ async fn order_list_oco(mut args: OrderListOcoArgs) -> anyhow::Result<()> {
                         args.above_type = Some(selected);
                     }
                     if args.below_type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("STOP_LOSS", OrderListOcoBelowTypeEnum::StopLoss),
                             ("STOP_LOSS_LIMIT", OrderListOcoBelowTypeEnum::StopLossLimit),
                             ("TAKE_PROFIT", OrderListOcoBelowTypeEnum::TakeProfit),
@@ -4766,9 +4648,9 @@ async fn order_list_oco(mut args: OrderListOcoArgs) -> anyhow::Result<()> {
                     args.quantity
                         .ok_or_else(|| anyhow::anyhow!("quantity is required"))?,
                     args.above_type
-                        .ok_or_else(|| anyhow::anyhow!("above_type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("above-type is required"))?,
                     args.below_type
-                        .ok_or_else(|| anyhow::anyhow!("below_type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("below-type is required"))?,
                 )
                 .list_client_order_id(args.list_client_order_id)
                 .above_client_order_id(args.above_client_order_id)
@@ -4827,7 +4709,7 @@ async fn order_list_opo(mut args: OrderListOpoArgs) -> anyhow::Result<()> {
                         args.symbol = Some(symbol);
                     }
                     if args.working_type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("LIMIT", OrderListOpoWorkingTypeEnum::Limit),
                             ("LIMIT_MAKER", OrderListOpoWorkingTypeEnum::LimitMaker),
                         ];
@@ -4847,7 +4729,7 @@ async fn order_list_opo(mut args: OrderListOpoArgs) -> anyhow::Result<()> {
                         args.working_type = Some(selected);
                     }
                     if args.working_side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", OrderListOpoWorkingSideEnum::Buy),
                             ("SELL", OrderListOpoWorkingSideEnum::Sell),
                         ];
@@ -4881,7 +4763,7 @@ async fn order_list_opo(mut args: OrderListOpoArgs) -> anyhow::Result<()> {
                         args.working_quantity = Some(working_quantity);
                     }
                     if args.pending_type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("LIMIT", OrderListOpoPendingTypeEnum::Limit),
                             ("MARKET", OrderListOpoPendingTypeEnum::Market),
                             ("STOP_LOSS", OrderListOpoPendingTypeEnum::StopLoss),
@@ -4912,7 +4794,7 @@ async fn order_list_opo(mut args: OrderListOpoArgs) -> anyhow::Result<()> {
                         args.pending_type = Some(selected);
                     }
                     if args.pending_side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", OrderListOpoPendingSideEnum::Buy),
                             ("SELL", OrderListOpoPendingSideEnum::Sell),
                         ];
@@ -4936,17 +4818,17 @@ async fn order_list_opo(mut args: OrderListOpoArgs) -> anyhow::Result<()> {
                     args.symbol
                         .ok_or_else(|| anyhow::anyhow!("symbol is required"))?,
                     args.working_type
-                        .ok_or_else(|| anyhow::anyhow!("working_type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("working-type is required"))?,
                     args.working_side
-                        .ok_or_else(|| anyhow::anyhow!("working_side is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("working-side is required"))?,
                     args.working_price
-                        .ok_or_else(|| anyhow::anyhow!("working_price is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("working-price is required"))?,
                     args.working_quantity
-                        .ok_or_else(|| anyhow::anyhow!("working_quantity is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("working-quantity is required"))?,
                     args.pending_type
-                        .ok_or_else(|| anyhow::anyhow!("pending_type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("pending-type is required"))?,
                     args.pending_side
-                        .ok_or_else(|| anyhow::anyhow!("pending_side is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("pending-side is required"))?,
                 )
                 .list_client_order_id(args.list_client_order_id)
                 .new_order_resp_type(args.new_order_resp_type)
@@ -5002,7 +4884,7 @@ async fn order_list_opoco(mut args: OrderListOpocoArgs) -> anyhow::Result<()> {
                         args.symbol = Some(symbol);
                     }
                     if args.working_type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("LIMIT", OrderListOpocoWorkingTypeEnum::Limit),
                             ("LIMIT_MAKER", OrderListOpocoWorkingTypeEnum::LimitMaker),
                         ];
@@ -5022,7 +4904,7 @@ async fn order_list_opoco(mut args: OrderListOpocoArgs) -> anyhow::Result<()> {
                         args.working_type = Some(selected);
                     }
                     if args.working_side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", OrderListOpocoWorkingSideEnum::Buy),
                             ("SELL", OrderListOpocoWorkingSideEnum::Sell),
                         ];
@@ -5056,7 +4938,7 @@ async fn order_list_opoco(mut args: OrderListOpocoArgs) -> anyhow::Result<()> {
                         args.working_quantity = Some(working_quantity);
                     }
                     if args.pending_side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", OrderListOpocoPendingSideEnum::Buy),
                             ("SELL", OrderListOpocoPendingSideEnum::Sell),
                         ];
@@ -5076,7 +4958,7 @@ async fn order_list_opoco(mut args: OrderListOpocoArgs) -> anyhow::Result<()> {
                         args.pending_side = Some(selected);
                     }
                     if args.pending_above_type.is_none() {
-                        let options = vec![
+                        let options = [
                             (
                                 "STOP_LOSS_LIMIT",
                                 OrderListOpocoPendingAboveTypeEnum::StopLossLimit,
@@ -5115,17 +4997,17 @@ async fn order_list_opoco(mut args: OrderListOpocoArgs) -> anyhow::Result<()> {
                     args.symbol
                         .ok_or_else(|| anyhow::anyhow!("symbol is required"))?,
                     args.working_type
-                        .ok_or_else(|| anyhow::anyhow!("working_type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("working-type is required"))?,
                     args.working_side
-                        .ok_or_else(|| anyhow::anyhow!("working_side is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("working-side is required"))?,
                     args.working_price
-                        .ok_or_else(|| anyhow::anyhow!("working_price is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("working-price is required"))?,
                     args.working_quantity
-                        .ok_or_else(|| anyhow::anyhow!("working_quantity is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("working-quantity is required"))?,
                     args.pending_side
-                        .ok_or_else(|| anyhow::anyhow!("pending_side is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("pending-side is required"))?,
                     args.pending_above_type
-                        .ok_or_else(|| anyhow::anyhow!("pending_above_type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("pending-above-type is required"))?,
                 )
                 .list_client_order_id(args.list_client_order_id)
                 .new_order_resp_type(args.new_order_resp_type)
@@ -5193,7 +5075,7 @@ async fn order_list_oto(mut args: OrderListOtoArgs) -> anyhow::Result<()> {
                         args.symbol = Some(symbol);
                     }
                     if args.working_type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("LIMIT", OrderListOtoWorkingTypeEnum::Limit),
                             ("LIMIT_MAKER", OrderListOtoWorkingTypeEnum::LimitMaker),
                         ];
@@ -5213,7 +5095,7 @@ async fn order_list_oto(mut args: OrderListOtoArgs) -> anyhow::Result<()> {
                         args.working_type = Some(selected);
                     }
                     if args.working_side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", OrderListOtoWorkingSideEnum::Buy),
                             ("SELL", OrderListOtoWorkingSideEnum::Sell),
                         ];
@@ -5247,7 +5129,7 @@ async fn order_list_oto(mut args: OrderListOtoArgs) -> anyhow::Result<()> {
                         args.working_quantity = Some(working_quantity);
                     }
                     if args.pending_type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("LIMIT", OrderListOtoPendingTypeEnum::Limit),
                             ("MARKET", OrderListOtoPendingTypeEnum::Market),
                             ("STOP_LOSS", OrderListOtoPendingTypeEnum::StopLoss),
@@ -5278,7 +5160,7 @@ async fn order_list_oto(mut args: OrderListOtoArgs) -> anyhow::Result<()> {
                         args.pending_type = Some(selected);
                     }
                     if args.pending_side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", OrderListOtoPendingSideEnum::Buy),
                             ("SELL", OrderListOtoPendingSideEnum::Sell),
                         ];
@@ -5309,19 +5191,19 @@ async fn order_list_oto(mut args: OrderListOtoArgs) -> anyhow::Result<()> {
                     args.symbol
                         .ok_or_else(|| anyhow::anyhow!("symbol is required"))?,
                     args.working_type
-                        .ok_or_else(|| anyhow::anyhow!("working_type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("working-type is required"))?,
                     args.working_side
-                        .ok_or_else(|| anyhow::anyhow!("working_side is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("working-side is required"))?,
                     args.working_price
-                        .ok_or_else(|| anyhow::anyhow!("working_price is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("working-price is required"))?,
                     args.working_quantity
-                        .ok_or_else(|| anyhow::anyhow!("working_quantity is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("working-quantity is required"))?,
                     args.pending_type
-                        .ok_or_else(|| anyhow::anyhow!("pending_type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("pending-type is required"))?,
                     args.pending_side
-                        .ok_or_else(|| anyhow::anyhow!("pending_side is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("pending-side is required"))?,
                     args.pending_quantity
-                        .ok_or_else(|| anyhow::anyhow!("pending_quantity is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("pending-quantity is required"))?,
                 )
                 .list_client_order_id(args.list_client_order_id)
                 .new_order_resp_type(args.new_order_resp_type)
@@ -5377,7 +5259,7 @@ async fn order_list_otoco(mut args: OrderListOtocoArgs) -> anyhow::Result<()> {
                         args.symbol = Some(symbol);
                     }
                     if args.working_type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("LIMIT", OrderListOtocoWorkingTypeEnum::Limit),
                             ("LIMIT_MAKER", OrderListOtocoWorkingTypeEnum::LimitMaker),
                         ];
@@ -5397,7 +5279,7 @@ async fn order_list_otoco(mut args: OrderListOtocoArgs) -> anyhow::Result<()> {
                         args.working_type = Some(selected);
                     }
                     if args.working_side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", OrderListOtocoWorkingSideEnum::Buy),
                             ("SELL", OrderListOtocoWorkingSideEnum::Sell),
                         ];
@@ -5431,7 +5313,7 @@ async fn order_list_otoco(mut args: OrderListOtocoArgs) -> anyhow::Result<()> {
                         args.working_quantity = Some(working_quantity);
                     }
                     if args.pending_side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", OrderListOtocoPendingSideEnum::Buy),
                             ("SELL", OrderListOtocoPendingSideEnum::Sell),
                         ];
@@ -5458,7 +5340,7 @@ async fn order_list_otoco(mut args: OrderListOtocoArgs) -> anyhow::Result<()> {
                         args.pending_quantity = Some(pending_quantity);
                     }
                     if args.pending_above_type.is_none() {
-                        let options = vec![
+                        let options = [
                             (
                                 "STOP_LOSS_LIMIT",
                                 OrderListOtocoPendingAboveTypeEnum::StopLossLimit,
@@ -5497,19 +5379,19 @@ async fn order_list_otoco(mut args: OrderListOtocoArgs) -> anyhow::Result<()> {
                     args.symbol
                         .ok_or_else(|| anyhow::anyhow!("symbol is required"))?,
                     args.working_type
-                        .ok_or_else(|| anyhow::anyhow!("working_type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("working-type is required"))?,
                     args.working_side
-                        .ok_or_else(|| anyhow::anyhow!("working_side is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("working-side is required"))?,
                     args.working_price
-                        .ok_or_else(|| anyhow::anyhow!("working_price is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("working-price is required"))?,
                     args.working_quantity
-                        .ok_or_else(|| anyhow::anyhow!("working_quantity is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("working-quantity is required"))?,
                     args.pending_side
-                        .ok_or_else(|| anyhow::anyhow!("pending_side is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("pending-side is required"))?,
                     args.pending_quantity
-                        .ok_or_else(|| anyhow::anyhow!("pending_quantity is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("pending-quantity is required"))?,
                     args.pending_above_type
-                        .ok_or_else(|| anyhow::anyhow!("pending_above_type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("pending-above-type is required"))?,
                 )
                 .list_client_order_id(args.list_client_order_id)
                 .new_order_resp_type(args.new_order_resp_type)
@@ -5577,7 +5459,7 @@ async fn order_oco(mut args: OrderOcoArgs) -> anyhow::Result<()> {
                         args.symbol = Some(symbol);
                     }
                     if args.side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", OrderOcoSideEnum::Buy),
                             ("SELL", OrderOcoSideEnum::Sell),
                         ];
@@ -5627,7 +5509,7 @@ async fn order_oco(mut args: OrderOcoArgs) -> anyhow::Result<()> {
                     args.price
                         .ok_or_else(|| anyhow::anyhow!("price is required"))?,
                     args.stop_price
-                        .ok_or_else(|| anyhow::anyhow!("stop_price is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("stop-price is required"))?,
                 )
                 .list_client_order_id(args.list_client_order_id)
                 .limit_client_order_id(args.limit_client_order_id)
@@ -5675,7 +5557,7 @@ async fn order_test(mut args: OrderTestArgs) -> anyhow::Result<()> {
                         args.symbol = Some(symbol);
                     }
                     if args.side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", OrderTestSideEnum::Buy),
                             ("SELL", OrderTestSideEnum::Sell),
                         ];
@@ -5695,7 +5577,7 @@ async fn order_test(mut args: OrderTestArgs) -> anyhow::Result<()> {
                         args.side = Some(selected);
                     }
                     if args.r#type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("MARKET", OrderTestTypeEnum::Market),
                             ("LIMIT", OrderTestTypeEnum::Limit),
                             ("STOP_LOSS", OrderTestTypeEnum::StopLoss),
@@ -5726,7 +5608,7 @@ async fn order_test(mut args: OrderTestArgs) -> anyhow::Result<()> {
                     args.side
                         .ok_or_else(|| anyhow::anyhow!("side is required"))?,
                     args.r#type
-                        .ok_or_else(|| anyhow::anyhow!("r#type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("rtype is required"))?,
                 )
                 .compute_commission_rates(args.compute_commission_rates)
                 .time_in_force(args.time_in_force)
@@ -5776,7 +5658,7 @@ async fn sor_order(mut args: SorOrderArgs) -> anyhow::Result<()> {
                         args.symbol = Some(symbol);
                     }
                     if args.side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", SorOrderSideEnum::Buy),
                             ("SELL", SorOrderSideEnum::Sell),
                         ];
@@ -5796,7 +5678,7 @@ async fn sor_order(mut args: SorOrderArgs) -> anyhow::Result<()> {
                         args.side = Some(selected);
                     }
                     if args.r#type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("MARKET", SorOrderTypeEnum::Market),
                             ("LIMIT", SorOrderTypeEnum::Limit),
                         ];
@@ -5829,7 +5711,7 @@ async fn sor_order(mut args: SorOrderArgs) -> anyhow::Result<()> {
                     args.side
                         .ok_or_else(|| anyhow::anyhow!("side is required"))?,
                     args.r#type
-                        .ok_or_else(|| anyhow::anyhow!("r#type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("rtype is required"))?,
                     args.quantity
                         .ok_or_else(|| anyhow::anyhow!("quantity is required"))?,
                 )
@@ -5873,7 +5755,7 @@ async fn sor_order_test(mut args: SorOrderTestArgs) -> anyhow::Result<()> {
                         args.symbol = Some(symbol);
                     }
                     if args.side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", SorOrderTestSideEnum::Buy),
                             ("SELL", SorOrderTestSideEnum::Sell),
                         ];
@@ -5893,7 +5775,7 @@ async fn sor_order_test(mut args: SorOrderTestArgs) -> anyhow::Result<()> {
                         args.side = Some(selected);
                     }
                     if args.r#type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("MARKET", SorOrderTestTypeEnum::Market),
                             ("LIMIT", SorOrderTestTypeEnum::Limit),
                         ];
@@ -5926,7 +5808,7 @@ async fn sor_order_test(mut args: SorOrderTestArgs) -> anyhow::Result<()> {
                     args.side
                         .ok_or_else(|| anyhow::anyhow!("side is required"))?,
                     args.r#type
-                        .ok_or_else(|| anyhow::anyhow!("r#type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("rtype is required"))?,
                     args.quantity
                         .ok_or_else(|| anyhow::anyhow!("quantity is required"))?,
                 )

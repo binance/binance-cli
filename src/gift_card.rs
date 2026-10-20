@@ -43,9 +43,7 @@ fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> 
         }
     }
 
-    let rest_conf = builder
-        .build()
-        .map_err(|err| Error::new(ErrorKind::Other, err))?;
+    let rest_conf = builder.build().map_err(Error::other)?;
 
     Ok(GiftCardRestApi::from_config(rest_conf))
 }
@@ -164,11 +162,11 @@ a fixed-value BTC gift card and pay with 100 USDT plus minting fee. This gift ca
 100 USDT before redemption, and will be redeemable to BTC equivalent to 100 USDT upon redemption.
 
 * Once successfully created, the amount of baseToken (e.g. USDT) in the fixed-value gift card along with the fee
-would be deducted from your funding wallet.
+would be deducted from your Spot wallet.
   * To get started with, please make sure:
   * You have a Binance account
   * You have passed KYB
-  * You have a sufﬁcient balance(Gift Card amount and fee amount) in your Binance funding wallet
+  * You have a sufﬁcient balance(Gift Card amount and fee amount) in your Binance Spot wallet
   * You need Enable Withdrawals for the API Key which requests this endpoint.
 
 Weight(IP): 1
@@ -182,7 +180,7 @@ Security Type: TRADE"#, false),
 To get started with, please make sure:
   * You have a Binance account
   * You have passed KYB
-  * You have a sufﬁcient balance(Gift Card amount and fee amount) in your Binance funding wallet
+  * You have a sufﬁcient balance(Gift Card amount and fee amount) in your Binance Spot wallet
   * You need `Enable Withdrawals` for the API Key which requests this endpoint.
 
 Weight(IP): 1
@@ -211,7 +209,7 @@ Security Type: USER_DATA"#, false),
     )]
     FetchTokenLimit(FetchTokenLimitArgs),
     #[command(
-        about = decode_selected_entities(r#"This API is for redeeming a Binance Gift Card. Once redeemed, the coins will be deposited in your funding wallet.
+        about = decode_selected_entities(r#"This API is for redeeming a Binance Gift Card. Once redeemed, the coins will be deposited in your Spot wallet.
 
 Weight(IP): 1
 
@@ -300,11 +298,11 @@ async fn create_a_dual_token_gift_card(
                 }
                 CreateADualTokenGiftCardParams::builder(
                     args.base_token
-                        .ok_or_else(|| anyhow::anyhow!("base_token is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("base-token is required"))?,
                     args.face_token
-                        .ok_or_else(|| anyhow::anyhow!("face_token is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("face-token is required"))?,
                     args.base_token_amount
-                        .ok_or_else(|| anyhow::anyhow!("base_token_amount is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("base-token-amount is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -401,18 +399,16 @@ async fn fetch_token_limit(mut args: FetchTokenLimitArgs) -> anyhow::Result<()> 
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.base_token.is_none() {
-                        let base_token: String = Input::new()
-                            .with_prompt("Input base_token:")
-                            .interact_text()?;
+                if args.interactive && args.base_token.is_none() {
+                    let base_token: String = Input::new()
+                        .with_prompt("Input base_token:")
+                        .interact_text()?;
 
-                        args.base_token = Some(base_token);
-                    }
+                    args.base_token = Some(base_token);
                 }
                 FetchTokenLimitParams::builder(
                     args.base_token
-                        .ok_or_else(|| anyhow::anyhow!("base_token is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("base-token is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -438,13 +434,10 @@ async fn redeem_a_binance_gift_card(mut args: RedeemABinanceGiftCardArgs) -> any
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.code.is_none() {
-                        let code: String =
-                            Input::new().with_prompt("Input code:").interact_text()?;
+                if args.interactive && args.code.is_none() {
+                    let code: String = Input::new().with_prompt("Input code:").interact_text()?;
 
-                        args.code = Some(code);
-                    }
+                    args.code = Some(code);
                 }
                 RedeemABinanceGiftCardParams::builder(
                     args.code
@@ -478,18 +471,16 @@ async fn verify_binance_gift_card_by_gift_card_number(
                     io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
                 })?,
             None => {
-                if args.interactive {
-                    if args.reference_no.is_none() {
-                        let reference_no: String = Input::new()
-                            .with_prompt("Input reference_no:")
-                            .interact_text()?;
+                if args.interactive && args.reference_no.is_none() {
+                    let reference_no: String = Input::new()
+                        .with_prompt("Input reference_no:")
+                        .interact_text()?;
 
-                        args.reference_no = Some(reference_no);
-                    }
+                    args.reference_no = Some(reference_no);
                 }
                 VerifyBinanceGiftCardByGiftCardNumberParams::builder(
                     args.reference_no
-                        .ok_or_else(|| anyhow::anyhow!("reference_no is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("reference-no is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?

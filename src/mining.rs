@@ -43,9 +43,7 @@ fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> 
         }
     }
 
-    let rest_conf = builder
-        .build()
-        .map_err(|err| Error::new(ErrorKind::Other, err))?;
+    let rest_conf = builder.build().map_err(Error::other)?;
 
     Ok(MiningRestApi::from_config(rest_conf))
 }
@@ -451,7 +449,7 @@ async fn account_list(mut args: AccountListArgs) -> anyhow::Result<()> {
                     args.algo
                         .ok_or_else(|| anyhow::anyhow!("algo is required"))?,
                     args.user_name
-                        .ok_or_else(|| anyhow::anyhow!("user_name is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("user-name is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -520,9 +518,9 @@ async fn cancel_hashrate_resale_configuration(
                 }
                 CancelHashrateResaleConfigurationParams::builder(
                     args.config_id
-                        .ok_or_else(|| anyhow::anyhow!("config_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("config-id is required"))?,
                     args.user_name
-                        .ok_or_else(|| anyhow::anyhow!("user_name is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("user-name is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -569,7 +567,7 @@ async fn earnings_list(mut args: EarningsListArgs) -> anyhow::Result<()> {
                     args.algo
                         .ok_or_else(|| anyhow::anyhow!("algo is required"))?,
                     args.user_name
-                        .ok_or_else(|| anyhow::anyhow!("user_name is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("user-name is required"))?,
                 )
                 .coin(args.coin)
                 .start_date(args.start_date)
@@ -619,7 +617,7 @@ async fn extra_bonus_list(mut args: ExtraBonusListArgs) -> anyhow::Result<()> {
                     args.algo
                         .ok_or_else(|| anyhow::anyhow!("algo is required"))?,
                     args.user_name
-                        .ok_or_else(|| anyhow::anyhow!("user_name is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("user-name is required"))?,
                 )
                 .coin(args.coin)
                 .start_date(args.start_date)
@@ -650,18 +648,16 @@ async fn hashrate_resale_detail(mut args: HashrateResaleDetailArgs) -> anyhow::R
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.config_id.is_none() {
-                        let config_id: i64 = Input::new()
-                            .with_prompt("Input config_id:")
-                            .interact_text()?;
+                if args.interactive && args.config_id.is_none() {
+                    let config_id: i64 = Input::new()
+                        .with_prompt("Input config_id:")
+                        .interact_text()?;
 
-                        args.config_id = Some(config_id);
-                    }
+                    args.config_id = Some(config_id);
                 }
                 HashrateResaleDetailParams::builder(
                     args.config_id
-                        .ok_or_else(|| anyhow::anyhow!("config_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("config-id is required"))?,
                 )
                 .page_index(args.page_index)
                 .page_size(args.page_size)
@@ -759,17 +755,17 @@ async fn hashrate_resale_request(mut args: HashrateResaleRequestArgs) -> anyhow:
                 }
                 HashrateResaleRequestParams::builder(
                     args.user_name
-                        .ok_or_else(|| anyhow::anyhow!("user_name is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("user-name is required"))?,
                     args.algo
                         .ok_or_else(|| anyhow::anyhow!("algo is required"))?,
                     args.end_date
-                        .ok_or_else(|| anyhow::anyhow!("end_date is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("end-date is required"))?,
                     args.start_date
-                        .ok_or_else(|| anyhow::anyhow!("start_date is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("start-date is required"))?,
                     args.to_pool_user
-                        .ok_or_else(|| anyhow::anyhow!("to_pool_user is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("to-pool-user is required"))?,
                     args.hash_rate
-                        .ok_or_else(|| anyhow::anyhow!("hash_rate is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("hash-rate is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -795,13 +791,10 @@ async fn mining_account_earning(mut args: MiningAccountEarningArgs) -> anyhow::R
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.algo.is_none() {
-                        let algo: String =
-                            Input::new().with_prompt("Input algo:").interact_text()?;
+                if args.interactive && args.algo.is_none() {
+                    let algo: String = Input::new().with_prompt("Input algo:").interact_text()?;
 
-                        args.algo = Some(algo);
-                    }
+                    args.algo = Some(algo);
                 }
                 MiningAccountEarningParams::builder(
                     args.algo
@@ -865,9 +858,9 @@ async fn request_for_detail_miner_list(
                     args.algo
                         .ok_or_else(|| anyhow::anyhow!("algo is required"))?,
                     args.user_name
-                        .ok_or_else(|| anyhow::anyhow!("user_name is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("user-name is required"))?,
                     args.worker_name
-                        .ok_or_else(|| anyhow::anyhow!("worker_name is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("worker-name is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -912,7 +905,7 @@ async fn request_for_miner_list(mut args: RequestForMinerListArgs) -> anyhow::Re
                     args.algo
                         .ok_or_else(|| anyhow::anyhow!("algo is required"))?,
                     args.user_name
-                        .ok_or_else(|| anyhow::anyhow!("user_name is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("user-name is required"))?,
                 )
                 .page_index(args.page_index)
                 .sort(args.sort)
@@ -961,7 +954,7 @@ async fn statistic_list(mut args: StatisticListArgs) -> anyhow::Result<()> {
                     args.algo
                         .ok_or_else(|| anyhow::anyhow!("algo is required"))?,
                     args.user_name
-                        .ok_or_else(|| anyhow::anyhow!("user_name is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("user-name is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?

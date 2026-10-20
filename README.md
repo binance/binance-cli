@@ -8,25 +8,7 @@ A simple CLI that interacts with the Binance API
 
 ## Installation
 
-1. If global npm package `@binance/binance-cli` exists and `binance-cli --version` is `< 2.0.0`, uninstall it:
-
-```sh
-npm uninstall -g @binance/binance-cli
-```
-
-2. Install the latest release:
-
-```sh
-curl --proto '=https' --tlsv1.2 -LsSf \
-  https://github.com/binance/binance-cli/releases/latest/download/binance-cli-installer.sh \
-  | sh
-```
-
-3. Verify:
-
-```sh
-binance-cli --version
-```
+Download the correct binary from [Release](https://github.com/binance/binance-cli/releases) 
 
 ## Usage
 
@@ -131,30 +113,33 @@ binance-cli profile view
 
 #### Available commands
 
-- [Algo Trading](./examples/algo.md)
-- [Alpha](./examples/alpha.md)
-- [C2C](./examples/c2c.md)
-- [Convert](./examples/convert.md)
-- [Copy Trading](./examples/copy-trading.md)
-- [Crypto Loan](./examples/crypto-loan.md)
-- [Derivatives Trading (COIN-M Futures)](./examples/derivatives-trading-coin-futures.md)
-- [Derivatives Trading (Options)](./examples/derivatives-trading-options.md)
-- [Derivatives Trading (Portfolio Margin)](./examples/derivatives-trading-portfolio-margin.md)
-- [Derivatives Trading (Portfolio Margin Pro)](./examples/derivatives-trading-portfolio-margin-pro.md)
-- [Derivatives Trading (USDS-M Futures)](./examples/derivatives-trading-usds-futures.md)
-- [Dual Investment](./examples/dual-investment.md)
-- [Fiat](./examples/fiat.md)
-- [Gift Card](./examples/gift-card.md)
-- [Margin Trading](./examples/margin-trading.md)
-- [Mining](./examples/mining.md)
-- [Pay](./examples/pay.md)
-- [Rebate](./examples/rebate.md)
-- [Simple Earn](./examples/simple-earn.md)
-- [Spot Trading](./examples/spot.md)
-- [Staking](./examples/staking.md)
-- [Sub Account](./examples/sub-account.md)
-- [VIP Loan](./examples/vip-loan.md)
-- [Wallet](./examples/wallet.md)
+- **Algo Trading**: [Rest API](./examples/algo.md)
+- **Alpha**: [Rest API](./examples/alpha.md) - [WebSocket Streams](./examples/alpha-ws-streams.md)
+- **C2C**: [Rest API](./examples/c2c.md)
+- **CMS**: [WebSocket Streams](./examples/alpha-ws-streams.md)
+- **Convert**: [Rest API](./examples/convert.md)
+- **Copy Trading**: [Rest API](./examples/copy-trading.md)
+- **Crypto Loan**: [Rest API](./examples/crypto-loan.md)
+- **Derivatives Trading (COIN-M Futures)**: [Rest API](./examples/derivatives-trading-coin-futures.md) - [WebSocket Streams](./examples/derivatives-trading-coin-futures-ws-streams.md)
+- **Derivatives Trading (Options)**: [Rest API](./examples/derivatives-trading-options.md) - [WebSocket Streams](./examples/derivatives-trading-options-ws-streams.md)
+- **Derivatives Trading (Portfolio Margin)**: [Rest API](./examples/derivatives-trading-portfolio-margin.md) - [WebSocket Streams](./examples/derivatives-trading-portfolio-margin-ws-streams.md)
+- **Derivatives Trading (Portfolio Margin Pro)**: [Rest API](./examples/derivatives-trading-portfolio-margin-pro.md) - [WebSocket Streams](./examples/derivatives-trading-portfolio-margin-pro-ws-streams.md)
+- **Derivatives Trading (USDS-M Futures)**: [Rest API](./examples/derivatives-trading-usds-futures.md) - [WebSocket Streams](./examples/derivatives-trading-usds-futures-ws-streams.md)
+- **Dual Investment**: [Rest API](./examples/dual-investment.md)
+- **Fiat**: [Rest API](./examples/fiat.md)
+- **Gift Card**: [Rest API](./examples/gift-card.md)
+- **Margin Trading**: [Rest API](./examples/margin-trading.md)
+- **Mining**: [Rest API](./examples/mining.md)
+- **Pay**: [Rest API](./examples/pay.md)
+- **Rebate**: [Rest API](./examples/rebate.md)
+- **Simple Earn**: [Rest API](./examples/simple-earn.md)
+- **Spot Trading**: [Rest API](./examples/spot.md) - [WebSocket Streams](./examples/spot-ws-streams.md)
+- **Stocks**: [Rest API](./examples/stocks.md) - [WebSocket Streams](./examples/stocks-ws-streams.md)
+- **Staking**: [Rest API](./examples/staking.md)
+- **Sub Account**: [Rest API](./examples/sub-account.md)
+- **VIP Loan**: [Rest API](./examples/vip-loan.md)
+- **Web3 Prediction**: [Rest API](./examples/w3w-prediction.md) - [WebSocket Streams](./examples/w3w-prediction-ws-streams.md)
+- **Wallet**: [Rest API](./examples/wallet.md)
 
 #### Parameters
 

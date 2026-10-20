@@ -40,9 +40,7 @@ fn get_client(profile: Option<&str>) -> Result<WebsocketStreamsHandle, Error> {
 
     let builder = ConfigurationWebsocketStreams::builder().ws_url(base_path);
 
-    let ws_config = builder
-        .build()
-        .map_err(|err| Error::new(ErrorKind::Other, err))?;
+    let ws_config = builder.build().map_err(Error::other)?;
 
     Ok(DerivativesTradingPortfolioMarginWsStreams::from_config(
         ws_config,
@@ -99,25 +97,23 @@ pub struct UserDataArgs {
 }
 
 async fn user_data(mut args: UserDataArgs) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref())?;
+    let ws_client = get_client(args.profile.as_deref())?;
 
-    if args.interactive {
-        if args.listen_key.is_none() {
-            let listen_key: String = Input::new()
-                .with_prompt("Input listenKey")
-                .interact_text()?;
+    if args.interactive && args.listen_key.is_none() {
+        let listen_key: String = Input::new()
+            .with_prompt("Input listenKey")
+            .interact_text()?;
 
-            args.listen_key = Some(listen_key);
-        }
+        args.listen_key = Some(listen_key);
     }
 
-    let connection = rest_client.connect().await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
     let stream = connection
         .user_data(
             args.listen_key
-                .ok_or_else(|| anyhow::anyhow!("listen_key is required"))?,
+                .ok_or_else(|| anyhow::anyhow!("listen-key is required"))?,
             args.id,
         )
         .await?;

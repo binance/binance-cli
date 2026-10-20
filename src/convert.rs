@@ -43,9 +43,7 @@ fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> 
         }
     }
 
-    let rest_conf = builder
-        .build()
-        .map_err(|err| Error::new(ErrorKind::Other, err))?;
+    let rest_conf = builder.build().map_err(Error::other)?;
 
     Ok(ConvertRestApi::from_config(rest_conf))
 }
@@ -399,18 +397,16 @@ async fn accept_quote(mut args: AcceptQuoteArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.quote_id.is_none() {
-                        let quote_id: String = Input::new()
-                            .with_prompt("Input quote_id:")
-                            .interact_text()?;
+                if args.interactive && args.quote_id.is_none() {
+                    let quote_id: String = Input::new()
+                        .with_prompt("Input quote_id:")
+                        .interact_text()?;
 
-                        args.quote_id = Some(quote_id);
-                    }
+                    args.quote_id = Some(quote_id);
                 }
                 AcceptQuoteParams::builder(
                     args.quote_id
-                        .ok_or_else(|| anyhow::anyhow!("quote_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("quote-id is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -436,18 +432,16 @@ async fn cancel_limit_order(mut args: CancelLimitOrderArgs) -> anyhow::Result<()
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.order_id.is_none() {
-                        let order_id: i64 = Input::new()
-                            .with_prompt("Input order_id:")
-                            .interact_text()?;
+                if args.interactive && args.order_id.is_none() {
+                    let order_id: i64 = Input::new()
+                        .with_prompt("Input order_id:")
+                        .interact_text()?;
 
-                        args.order_id = Some(order_id);
-                    }
+                    args.order_id = Some(order_id);
                 }
                 CancelLimitOrderParams::builder(
                     args.order_id
-                        .ok_or_else(|| anyhow::anyhow!("order_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("order-id is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -491,9 +485,9 @@ async fn get_convert_trade_history(mut args: GetConvertTradeHistoryArgs) -> anyh
                 }
                 GetConvertTradeHistoryParams::builder(
                     args.start_time
-                        .ok_or_else(|| anyhow::anyhow!("start_time is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("start-time is required"))?,
                     args.end_time
-                        .ok_or_else(|| anyhow::anyhow!("end_time is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("end-time is required"))?,
                 )
                 .limit(args.limit)
                 .recv_window(args.recv_window)
@@ -567,7 +561,7 @@ async fn place_limit_order(mut args: PlaceLimitOrderArgs) -> anyhow::Result<()> 
                         args.limit_price = Some(limit_price);
                     }
                     if args.side.is_none() {
-                        let options = vec![
+                        let options = [
                             ("BUY", PlaceLimitOrderSideEnum::Buy),
                             ("SELL", PlaceLimitOrderSideEnum::Sell),
                         ];
@@ -587,7 +581,7 @@ async fn place_limit_order(mut args: PlaceLimitOrderArgs) -> anyhow::Result<()> 
                         args.side = Some(selected);
                     }
                     if args.expired_type.is_none() {
-                        let options = vec![
+                        let options = [
                             ("1_D", PlaceLimitOrderExpiredTypeEnum::ExpiredType1D),
                             ("3_D", PlaceLimitOrderExpiredTypeEnum::ExpiredType3D),
                             ("7_D", PlaceLimitOrderExpiredTypeEnum::ExpiredType7D),
@@ -611,15 +605,15 @@ async fn place_limit_order(mut args: PlaceLimitOrderArgs) -> anyhow::Result<()> 
                 }
                 PlaceLimitOrderParams::builder(
                     args.base_asset
-                        .ok_or_else(|| anyhow::anyhow!("base_asset is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("base-asset is required"))?,
                     args.quote_asset
-                        .ok_or_else(|| anyhow::anyhow!("quote_asset is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("quote-asset is required"))?,
                     args.limit_price
-                        .ok_or_else(|| anyhow::anyhow!("limit_price is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("limit-price is required"))?,
                     args.side
                         .ok_or_else(|| anyhow::anyhow!("side is required"))?,
                     args.expired_type
-                        .ok_or_else(|| anyhow::anyhow!("expired_type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("expired-type is required"))?,
                 )
                 .base_amount(args.base_amount)
                 .quote_amount(args.quote_amount)
@@ -689,9 +683,9 @@ async fn send_quote_request(mut args: SendQuoteRequestArgs) -> anyhow::Result<()
                 }
                 SendQuoteRequestParams::builder(
                     args.from_asset
-                        .ok_or_else(|| anyhow::anyhow!("from_asset is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("from-asset is required"))?,
                     args.to_asset
-                        .ok_or_else(|| anyhow::anyhow!("to_asset is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("to-asset is required"))?,
                 )
                 .from_amount(args.from_amount)
                 .to_amount(args.to_amount)

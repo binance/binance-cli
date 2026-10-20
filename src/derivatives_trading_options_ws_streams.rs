@@ -40,9 +40,7 @@ fn get_client(profile: Option<&str>) -> Result<WebsocketStreamsHandle, Error> {
 
     let builder = ConfigurationWebsocketStreams::builder().ws_url(base_path);
 
-    let ws_config = builder
-        .build()
-        .map_err(|err| Error::new(ErrorKind::Other, err))?;
+    let ws_config = builder.build().map_err(Error::other)?;
 
     Ok(DerivativesTradingOptionsWsStreams::from_config(ws_config))
 }
@@ -327,13 +325,13 @@ Update Speed: 50ms"#, false),
     )]
     NewSymbolInfo(NewSymbolInfoArgs),
     #[command(
-        about = decode_selected_entities(r#"Option open interest for specific underlying asset on specific expiration date. E.g.[ethusdt@openInterest@221125](wss://fstream.binance.com/market/stream?streams=ethusdt@openInterest@221125)
+        about = decode_selected_entities(r#"Option open interest for specific underlying asset on specific expiration date. E.g.ethusdt@openInterest@221125
 
 Update Speed: 60s"#, false),
     )]
     OpenInterest(OpenInterestArgs),
     #[command(
-        about = decode_selected_entities(r#"The mark price for all option symbols on specific underlying asset. E.g.[btcusdt@optionMarkPrice](wss://fstream.binance.com/market/stream?streams=btcusdt@optionMarkPrice)
+        about = decode_selected_entities(r#"The mark price for all option symbols on specific underlying asset. E.g.btcusdt@optionMarkPrice
 
 Update Speed: 1000ms"#, false),
     )]
@@ -363,7 +361,7 @@ Update Speed: 100ms or 500ms"#, false),
     )]
     PartialBookDepthStreams(PartialBookDepthStreamsArgs),
     #[command(
-        about = decode_selected_entities(r#"The Trade Streams push raw trade information for specific symbol or underlying asset. E.g.[btcusdt@optionTrade](wss://fstream.binance.com/public/stream?streams=btcusdt@optionTrade)
+        about = decode_selected_entities(r#"The Trade Streams push raw trade information for specific symbol or underlying asset. E.g.btcusdt@optionTrade
 
 Update Speed: 50ms"#, false),
     )]
@@ -423,7 +421,7 @@ pub async fn handle_derivatives_trading_options_ws_streams_command(
 }
 
 async fn index_price_streams(args: IndexPriceStreamsArgs) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref())?;
+    let ws_client = get_client(args.profile.as_deref())?;
 
     let params = match read_stdin_as::<IndexPriceStreamsParams>() {
         Some(params) => params,
@@ -435,7 +433,7 @@ async fn index_price_streams(args: IndexPriceStreamsArgs) -> anyhow::Result<()> 
         },
     };
 
-    let connection = rest_client.connect().await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
     let stream = connection.index_price_streams(params).await?;
@@ -500,7 +498,7 @@ async fn index_price_streams(args: IndexPriceStreamsArgs) -> anyhow::Result<()> 
 }
 
 async fn kline_candlestick_streams(mut args: KlineCandlestickStreamsArgs) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref())?;
+    let ws_client = get_client(args.profile.as_deref())?;
 
     let params = match read_stdin_as::<KlineCandlestickStreamsParams>() {
         Some(params) => params,
@@ -560,7 +558,7 @@ async fn kline_candlestick_streams(mut args: KlineCandlestickStreamsArgs) -> any
         },
     };
 
-    let connection = rest_client.connect().await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
     let stream = connection.kline_candlestick_streams(params).await?;
@@ -625,7 +623,7 @@ async fn kline_candlestick_streams(mut args: KlineCandlestickStreamsArgs) -> any
 }
 
 async fn new_symbol_info(args: NewSymbolInfoArgs) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref())?;
+    let ws_client = get_client(args.profile.as_deref())?;
 
     let params = match read_stdin_as::<NewSymbolInfoParams>() {
         Some(params) => params,
@@ -637,7 +635,7 @@ async fn new_symbol_info(args: NewSymbolInfoArgs) -> anyhow::Result<()> {
         },
     };
 
-    let connection = rest_client.connect().await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
     let stream = connection.new_symbol_info(params).await?;
@@ -702,7 +700,7 @@ async fn new_symbol_info(args: NewSymbolInfoArgs) -> anyhow::Result<()> {
 }
 
 async fn open_interest(mut args: OpenInterestArgs) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref())?;
+    let ws_client = get_client(args.profile.as_deref())?;
 
     let params = match read_stdin_as::<OpenInterestParams>() {
         Some(params) => params,
@@ -731,7 +729,7 @@ async fn open_interest(mut args: OpenInterestArgs) -> anyhow::Result<()> {
                     args.underlying
                         .ok_or_else(|| anyhow::anyhow!("underlying is required"))?,
                     args.expiration_date
-                        .ok_or_else(|| anyhow::anyhow!("expiration_date is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("expiration-date is required"))?,
                 )
                 .id(args.id)
                 .build()?
@@ -739,7 +737,7 @@ async fn open_interest(mut args: OpenInterestArgs) -> anyhow::Result<()> {
         },
     };
 
-    let connection = rest_client.connect().await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
     let stream = connection.open_interest(params).await?;
@@ -804,7 +802,7 @@ async fn open_interest(mut args: OpenInterestArgs) -> anyhow::Result<()> {
 }
 
 async fn option_mark_price(mut args: OptionMarkPriceArgs) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref())?;
+    let ws_client = get_client(args.profile.as_deref())?;
 
     let params = match read_stdin_as::<OptionMarkPriceParams>() {
         Some(params) => params,
@@ -813,14 +811,12 @@ async fn option_mark_price(mut args: OptionMarkPriceArgs) -> anyhow::Result<()> 
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.underlying.is_none() {
-                        let underlying: String = Input::new()
-                            .with_prompt("Input underlying:")
-                            .interact_text()?;
+                if args.interactive && args.underlying.is_none() {
+                    let underlying: String = Input::new()
+                        .with_prompt("Input underlying:")
+                        .interact_text()?;
 
-                        args.underlying = Some(underlying);
-                    }
+                    args.underlying = Some(underlying);
                 }
                 OptionMarkPriceParams::builder(
                     args.underlying
@@ -832,7 +828,7 @@ async fn option_mark_price(mut args: OptionMarkPriceArgs) -> anyhow::Result<()> 
         },
     };
 
-    let connection = rest_client.connect().await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
     let stream = connection.option_mark_price(params).await?;
@@ -897,7 +893,7 @@ async fn option_mark_price(mut args: OptionMarkPriceArgs) -> anyhow::Result<()> 
 }
 
 async fn diff_book_depth_streams(mut args: DiffBookDepthStreamsArgs) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref())?;
+    let ws_client = get_client(args.profile.as_deref())?;
 
     let params = match read_stdin_as::<DiffBookDepthStreamsParams>() {
         Some(params) => params,
@@ -914,7 +910,7 @@ async fn diff_book_depth_streams(mut args: DiffBookDepthStreamsArgs) -> anyhow::
                         args.symbol = Some(symbol);
                     }
                     if args.update_speed.is_none() {
-                        let options = vec![
+                        let options = [
                             (
                                 "100ms",
                                 DiffBookDepthStreamsUpdateSpeedEnum::UpdateSpeed100ms,
@@ -944,7 +940,7 @@ async fn diff_book_depth_streams(mut args: DiffBookDepthStreamsArgs) -> anyhow::
                     args.symbol
                         .ok_or_else(|| anyhow::anyhow!("symbol is required"))?,
                     args.update_speed
-                        .ok_or_else(|| anyhow::anyhow!("update_speed is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("update-speed is required"))?,
                 )
                 .id(args.id)
                 .build()?
@@ -952,7 +948,7 @@ async fn diff_book_depth_streams(mut args: DiffBookDepthStreamsArgs) -> anyhow::
         },
     };
 
-    let connection = rest_client.connect().await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
     let stream = connection.diff_book_depth_streams(params).await?;
@@ -1017,7 +1013,7 @@ async fn diff_book_depth_streams(mut args: DiffBookDepthStreamsArgs) -> anyhow::
 }
 
 async fn hour24_ticker(mut args: Hour24TickerArgs) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref())?;
+    let ws_client = get_client(args.profile.as_deref())?;
 
     let params = match read_stdin_as::<Hour24TickerParams>() {
         Some(params) => params,
@@ -1026,13 +1022,11 @@ async fn hour24_ticker(mut args: Hour24TickerArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 Hour24TickerParams::builder(
                     args.symbol
@@ -1045,7 +1039,7 @@ async fn hour24_ticker(mut args: Hour24TickerArgs) -> anyhow::Result<()> {
         },
     };
 
-    let connection = rest_client.connect().await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
     let stream = connection.hour24_ticker(params).await?;
@@ -1112,7 +1106,7 @@ async fn hour24_ticker(mut args: Hour24TickerArgs) -> anyhow::Result<()> {
 async fn individual_symbol_book_ticker_streams(
     mut args: IndividualSymbolBookTickerStreamsArgs,
 ) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref())?;
+    let ws_client = get_client(args.profile.as_deref())?;
 
     let params = match read_stdin_as::<IndividualSymbolBookTickerStreamsParams>() {
         Some(params) => params,
@@ -1122,13 +1116,11 @@ async fn individual_symbol_book_ticker_streams(
                     io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
                 })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 IndividualSymbolBookTickerStreamsParams::builder(
                     args.symbol
@@ -1140,7 +1132,7 @@ async fn individual_symbol_book_ticker_streams(
         },
     };
 
-    let connection = rest_client.connect().await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
     let stream = connection
@@ -1207,7 +1199,7 @@ async fn individual_symbol_book_ticker_streams(
 }
 
 async fn partial_book_depth_streams(mut args: PartialBookDepthStreamsArgs) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref())?;
+    let ws_client = get_client(args.profile.as_deref())?;
 
     let params = match read_stdin_as::<PartialBookDepthStreamsParams>() {
         Some(params) => params,
@@ -1224,7 +1216,7 @@ async fn partial_book_depth_streams(mut args: PartialBookDepthStreamsArgs) -> an
                         args.symbol = Some(symbol);
                     }
                     if args.level.is_none() {
-                        let options = vec![
+                        let options = [
                             ("5", PartialBookDepthStreamsLevelEnum::Level5),
                             ("10", PartialBookDepthStreamsLevelEnum::Level10),
                             ("20", PartialBookDepthStreamsLevelEnum::Level20),
@@ -1245,7 +1237,7 @@ async fn partial_book_depth_streams(mut args: PartialBookDepthStreamsArgs) -> an
                         args.level = Some(selected);
                     }
                     if args.update_speed.is_none() {
-                        let options = vec![
+                        let options = [
                             (
                                 "100ms",
                                 PartialBookDepthStreamsUpdateSpeedEnum::UpdateSpeed100ms,
@@ -1277,7 +1269,7 @@ async fn partial_book_depth_streams(mut args: PartialBookDepthStreamsArgs) -> an
                     args.level
                         .ok_or_else(|| anyhow::anyhow!("level is required"))?,
                     args.update_speed
-                        .ok_or_else(|| anyhow::anyhow!("update_speed is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("update-speed is required"))?,
                 )
                 .id(args.id)
                 .build()?
@@ -1285,7 +1277,7 @@ async fn partial_book_depth_streams(mut args: PartialBookDepthStreamsArgs) -> an
         },
     };
 
-    let connection = rest_client.connect().await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
     let stream = connection.partial_book_depth_streams(params).await?;
@@ -1350,7 +1342,7 @@ async fn partial_book_depth_streams(mut args: PartialBookDepthStreamsArgs) -> an
 }
 
 async fn trade_streams(mut args: TradeStreamsArgs) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref())?;
+    let ws_client = get_client(args.profile.as_deref())?;
 
     let params = match read_stdin_as::<TradeStreamsParams>() {
         Some(params) => params,
@@ -1359,13 +1351,11 @@ async fn trade_streams(mut args: TradeStreamsArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.symbol.is_none() {
-                        let symbol: String =
-                            Input::new().with_prompt("Input symbol:").interact_text()?;
+                if args.interactive && args.symbol.is_none() {
+                    let symbol: String =
+                        Input::new().with_prompt("Input symbol:").interact_text()?;
 
-                        args.symbol = Some(symbol);
-                    }
+                    args.symbol = Some(symbol);
                 }
                 TradeStreamsParams::builder(
                     args.symbol
@@ -1377,7 +1367,7 @@ async fn trade_streams(mut args: TradeStreamsArgs) -> anyhow::Result<()> {
         },
     };
 
-    let connection = rest_client.connect().await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
     let stream = connection.trade_streams(params).await?;
@@ -1473,25 +1463,23 @@ pub struct UserDataArgs {
 }
 
 async fn user_data(mut args: UserDataArgs) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref())?;
+    let ws_client = get_client(args.profile.as_deref())?;
 
-    if args.interactive {
-        if args.listen_key.is_none() {
-            let listen_key: String = Input::new()
-                .with_prompt("Input listenKey")
-                .interact_text()?;
+    if args.interactive && args.listen_key.is_none() {
+        let listen_key: String = Input::new()
+            .with_prompt("Input listenKey")
+            .interact_text()?;
 
-            args.listen_key = Some(listen_key);
-        }
+        args.listen_key = Some(listen_key);
     }
 
-    let connection = rest_client.connect().await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
     let stream = connection
         .user_data(
             args.listen_key
-                .ok_or_else(|| anyhow::anyhow!("listen_key is required"))?,
+                .ok_or_else(|| anyhow::anyhow!("listen-key is required"))?,
             args.id,
         )
         .await?;

@@ -43,9 +43,7 @@ fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> 
         }
     }
 
-    let rest_conf = builder
-        .build()
-        .map_err(|err| Error::new(ErrorKind::Other, err))?;
+    let rest_conf = builder.build().map_err(Error::other)?;
 
     Ok(WalletRestApi::from_config(rest_conf))
 }
@@ -295,6 +293,20 @@ struct GetOpenSymbolListArgs {
     profile: Option<String>,
 }
 #[derive(Args, Debug)]
+struct GetSpotAssetTagsArgs {
+    #[arg(
+        help = r#"Tag filter. Supports multiple comma-separated tags with OR semantics (an asset is returned if it matches any one tag); leading/trailing whitespace around each tag is ignored. Returns all eligible assets when omitted."#,
+        long
+    )]
+    tag: Option<String>,
+    #[arg(short = 'i', long)]
+    interactive: bool,
+    #[arg(help = r#"Send all fields as JSON"#, long)]
+    json: Option<String>,
+    #[arg(help = r#"Select a profile"#, long)]
+    profile: Option<String>,
+}
+#[derive(Args, Debug)]
 struct QueryUserDelegationHistoryArgs {
     #[arg(help = r#""#, long)]
     email: Option<String>,
@@ -348,6 +360,9 @@ struct QueryUserUniversalTransferHistoryArgs {
 struct QueryUserWalletBalanceArgs {
     #[arg(help = r#""#, long)]
     quote_asset: Option<String>,
+    #[arg(help = r#"Whether to return the per-asset balance detail for each wallet. When `false` or omitted, the response is
+unchanged from current behavior."#, long, num_args = 0..=1, default_missing_value = "true")]
+    need_balance_detail: Option<bool>,
     #[arg(help = r#""#, long)]
     recv_window: Option<i64>,
     #[arg(short = 'i', long)]
@@ -468,7 +483,7 @@ struct DepositHistoryArgs {
     #[arg(help = r#""#, long)]
     coin: Option<String>,
     #[arg(
-        help = r#"0: pending, 6: credited but cannot withdraw, 7: Wrong Deposit, 8: Waiting User confirm, 1: success"#,
+        help = r#"0: pending, 1: success, 2: rejected, 6: credited but cannot withdraw, 7: Wrong Deposit, 8: Waiting User confirm"#,
         long
     )]
     status: Option<DepositHistoryStatusEnum>,
@@ -586,7 +601,7 @@ query."#,
     )]
     withdraw_order_id: Option<String>,
     #[arg(
-        help = r#"0(0:Email Sent, 2:Awaiting Approval 3:Rejected 4:Processing 6:Completed)"#,
+        help = r#"0(0: Email Sent, 2: Awaiting Approval 3: Rejected 4: Processing 6: Completed)"#,
         long
     )]
     status: Option<i64>,
@@ -699,7 +714,7 @@ struct DepositHistoryTravelRuleArgs {
     network: Option<String>,
     #[arg(help = r#""#, long)]
     coin: Option<String>,
-    #[arg(help = r#"0:Completed,1:Pending,2:Failed"#, long)]
+    #[arg(help = r#"0: Completed,1: Pending,2: Failed"#, long)]
     travel_rule_status: Option<i64>,
     #[arg(help = r#"true: Only return records that pending deposit questionnaire. false/not provided: return all records."#, long, num_args = 0..=1, default_missing_value = "true")]
     pending_questionnaire: Option<bool>,
@@ -788,7 +803,10 @@ struct SubmitDepositQuestionnaireArgs {
     deposit_id: Option<i64>,
     #[arg(help = r#"JSON format questionnaire answers."#, long)]
     questionnaire: Option<String>,
-    #[arg(help = r#"JSON format beneficiary Pii."#, long)]
+    #[arg(
+        help = r#"JSON format beneficiary Pii, see StandardPii section below"#,
+        long
+    )]
     beneficiary_pii: Option<String>,
     #[arg(help = r#""#, long)]
     network: Option<String>,
@@ -860,7 +878,7 @@ query."#,
     network: Option<String>,
     #[arg(help = r#""#, long)]
     coin: Option<String>,
-    #[arg(help = r#"0:Completed,1:Pending,2:Failed"#, long)]
+    #[arg(help = r#"0: Completed,1: Pending,2: Failed"#, long)]
     travel_rule_status: Option<i64>,
     #[arg(help = r#""#, long)]
     offset: Option<i64>,
@@ -895,7 +913,7 @@ query."#,
     network: Option<String>,
     #[arg(help = r#""#, long)]
     coin: Option<String>,
-    #[arg(help = r#"0:Completed,1:Pending,2:Failed"#, long)]
+    #[arg(help = r#"0: Completed,1: Pending,2: Failed"#, long)]
     travel_rule_status: Option<i64>,
     #[arg(help = r#""#, long)]
     offset: Option<i64>,
@@ -1129,6 +1147,14 @@ Security Type: MARKET_DATA"#, false),
     )]
     GetOpenSymbolList(GetOpenSymbolListArgs),
     #[command(
+        about = decode_selected_entities(r#"Get the tags configured for spot-tradable assets.
+
+Weight(IP): 100
+
+Security Type: MARKET_DATA"#, false),
+    )]
+    GetSpotAssetTags(GetSpotAssetTagsArgs),
+    #[command(
         about = decode_selected_entities(r#"Query User Delegation History
 
 Weight(IP): 60
@@ -1356,7 +1382,43 @@ Notes:
 - If `network` not send, return with default network of the coin, but if the address could not match default network, the withdraw will be rejected.
 - You can get `network` in `networkList` of a coin in the response of `Get /sapi/v1/capital/config/getall (HMAC SHA256)`.
 - Questionnaire is different for each local entity, please refer to the `Withdraw Questionnaire Contents` page.
-- If getting error like `Questionnaire format not valid.` or `Questionnaire must not be blank`, please try to verify the format of the questionnaire and use URL-encoded format."#, false),
+- If getting error like `Questionnaire format not valid.` or `Questionnaire must not be blank`, please try to verify the format of the questionnaire and use URL-encoded format.
+
+**StandardPii**
+
+**For Natural Person**
+
+- `piiType` (INTEGER, Mandatory): Fix to 0: Natural Person
+- `latinNames` (List&lt;PiiName&gt;, Mandatory): In case a person have complicated names or multiple names, this parameter is a list
+- `localNames` (List&lt;PiiName&gt;, Optional): In case a person have complicated names or multiple names, this parameter is a list
+- `nationality` (STRING, Optional)
+- `residenceCountry` (STRING, Mandatory)
+- `nationalIdentifier` (STRING, Optional)
+- `nationalIdentifierType` (STRING, Optional)
+- `nationalIdentifierIssueCountry` (STRING, Optional)
+- `dateOfBirth` (STRING, Optional): yyyy-mm-dd. Not required but strongly recommended. Providing DOB could greatly reduce false positive rate during risk checking process.
+- `placeOfBirth` (STRING, Optional)
+- `address` (STRING, Optional)
+
+**For Legal Person**
+
+- `piiType` (INTEGER, Mandatory): Fix to 1: Legal Person
+- `latinName` (STRING, Mandatory): It's company name for Legal Person
+- `localName` (STRING, Optional)
+- `registrationCountry` (STRING, Mandatory)
+- `nationalIdentifier` (STRING, Optional)
+- `nationalIdentifierType` (STRING, Optional)
+- `nationalIdentifierIssueCountry` (STRING, Optional)
+- `registrationDate` (STRING, Optional): yyyy-mm-dd. Not required but strongly recommended.
+- `address` (STRING, Optional)
+- `walletAddress` (STRING, Optional)
+- `walletTag` (STRING, Optional)
+
+**PiiName**
+
+- `firstName` (STRING, Mandatory): Mandatory for Natural person
+- `middleName` (STRING, Optional)
+- `lastName` (STRING, Optional)"#, false),
     )]
     BrokerWithdraw(BrokerWithdrawArgs),
     #[command(
@@ -1404,7 +1466,7 @@ Security Type: USER_DATA"#, false),
     )]
     FetchAddressVerificationList(FetchAddressVerificationListArgs),
     #[command(
-        about = decode_selected_entities(r#"Query the active country list for travel rule questionnaires. Currently, only supports AU entity.
+        about = decode_selected_entities(r#"Query the active country list for travel rule questionnaires. Currently supports AU and BR entities.
 
 Weight(IP): 1
 
@@ -1430,7 +1492,43 @@ Security Type: USER_DATA
 
 Notes:
 - Questionnaire is different for each local entity, please refer to `Deposit Questionnaire Content` page.
-- If getting error like `Questionnaire format not valid.` or `Questionnaire must not be blank`, please try to verify the format of the questionnaire and use URL-encoded format."#, false),
+- If getting error like `Questionnaire format not valid.` or `Questionnaire must not be blank`, please try to verify the format of the questionnaire and use URL-encoded format.
+
+**StandardPii**
+
+**For Natural Person**
+
+- `piiType` (INTEGER, Mandatory): Fix to 0: Natural Person
+- `latinNames` (List&lt;PiiName&gt;, Mandatory): In case a person have complicated names or multiple names, this parameter is a list
+- `localNames` (List&lt;PiiName&gt;, Optional): In case a person have complicated names or multiple names, this parameter is a list
+- `nationality` (STRING, Optional)
+- `residenceCountry` (STRING, Mandatory)
+- `nationalIdentifier` (STRING, Optional)
+- `nationalIdentifierType` (STRING, Optional)
+- `nationalIdentifierIssueCountry` (STRING, Optional)
+- `dateOfBirth` (STRING, Optional): yyyy-mm-dd. Not required but strongly recommended. Providing DOB could greatly reduce false positive rate during risk checking process.
+- `placeOfBirth` (STRING, Optional)
+- `address` (STRING, Optional)
+
+**For Legal Person**
+
+- `piiType` (INTEGER, Mandatory): Fix to 1: Legal Person
+- `latinName` (STRING, Mandatory): It's company name for Legal Person
+- `localName` (STRING, Optional)
+- `registrationCountry` (STRING, Mandatory)
+- `nationalIdentifier` (STRING, Optional)
+- `nationalIdentifierType` (STRING, Optional)
+- `nationalIdentifierIssueCountry` (STRING, Optional)
+- `registrationDate` (STRING, Optional): yyyy-mm-dd. Not required but strongly recommended.
+- `address` (STRING, Optional)
+- `walletAddress` (STRING, Optional)
+- `walletTag` (STRING, Optional)
+
+**PiiName**
+
+- `firstName` (STRING, Mandatory): Mandatory for Natural person
+- `middleName` (STRING, Optional)
+- `lastName` (STRING, Optional)"#, false),
     )]
     SubmitDepositQuestionnaire(SubmitDepositQuestionnaireArgs),
     #[command(
@@ -1556,6 +1654,8 @@ pub async fn handle_wallet_command(command: WalletCommands) -> anyhow::Result<()
         }
 
         WalletCommands::GetOpenSymbolList(args) => get_open_symbol_list(args).await,
+
+        WalletCommands::GetSpotAssetTags(args) => get_spot_asset_tags(args).await,
 
         WalletCommands::QueryUserDelegationHistory(args) => {
             query_user_delegation_history(args).await
@@ -1724,32 +1824,30 @@ async fn daily_account_snapshot(mut args: DailyAccountSnapshotArgs) -> anyhow::R
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.r#type.is_none() {
-                        let options = vec![
-                            ("SPOT", DailyAccountSnapshotTypeEnum::Spot),
-                            ("MARGIN", DailyAccountSnapshotTypeEnum::Margin),
-                            ("FUTURES", DailyAccountSnapshotTypeEnum::Futures),
-                        ];
+                if args.interactive && args.r#type.is_none() {
+                    let options = [
+                        ("SPOT", DailyAccountSnapshotTypeEnum::Spot),
+                        ("MARGIN", DailyAccountSnapshotTypeEnum::Margin),
+                        ("FUTURES", DailyAccountSnapshotTypeEnum::Futures),
+                    ];
 
-                        let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
+                    let labels: Vec<&str> = options.iter().map(|item| item.0).collect();
 
-                        let selected = Select::new()
-                            .with_prompt("Please select the r#type")
-                            .items(&labels)
-                            .default(0)
-                            .interact()?;
+                    let selected = Select::new()
+                        .with_prompt("Please select the r#type")
+                        .items(&labels)
+                        .default(0)
+                        .interact()?;
 
-                        let selected = options[selected].1.clone();
+                    let selected = options[selected].1.clone();
 
-                        println!("Selected option: {:?}", selected);
+                    println!("Selected option: {:?}", selected);
 
-                        args.r#type = Some(selected);
-                    }
+                    args.r#type = Some(selected);
                 }
                 DailyAccountSnapshotParams::builder(
                     args.r#type
-                        .ok_or_else(|| anyhow::anyhow!("r#type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("rtype is required"))?,
                 )
                 .start_time(args.start_time)
                 .end_time(args.end_time)
@@ -1902,13 +2000,10 @@ async fn dust_convert(mut args: DustConvertArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.asset.is_none() {
-                        let asset: String =
-                            Input::new().with_prompt("Input asset:").interact_text()?;
+                if args.interactive && args.asset.is_none() {
+                    let asset: String = Input::new().with_prompt("Input asset:").interact_text()?;
 
-                        args.asset = Some(asset);
-                    }
+                    args.asset = Some(asset);
                 }
                 DustConvertParams::builder(
                     args.asset
@@ -1942,18 +2037,16 @@ async fn dust_convertible_assets(mut args: DustConvertibleAssetsArgs) -> anyhow:
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.target_asset.is_none() {
-                        let target_asset: String = Input::new()
-                            .with_prompt("Input target_asset:")
-                            .interact_text()?;
+                if args.interactive && args.target_asset.is_none() {
+                    let target_asset: String = Input::new()
+                        .with_prompt("Input target_asset:")
+                        .interact_text()?;
 
-                        args.target_asset = Some(target_asset);
-                    }
+                    args.target_asset = Some(target_asset);
                 }
                 DustConvertibleAssetsParams::builder(
                     args.target_asset
-                        .ok_or_else(|| anyhow::anyhow!("target_asset is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("target-asset is required"))?,
                 )
                 .account_type(args.account_type)
                 .dust_quota_asset_to_target_asset_price(args.dust_quota_asset_to_target_asset_price)
@@ -1980,13 +2073,10 @@ async fn dust_transfer(mut args: DustTransferArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.asset.is_none() {
-                        let asset: String =
-                            Input::new().with_prompt("Input asset:").interact_text()?;
+                if args.interactive && args.asset.is_none() {
+                    let asset: String = Input::new().with_prompt("Input asset:").interact_text()?;
 
-                        args.asset = Some(asset);
-                    }
+                    args.asset = Some(asset);
                 }
                 DustTransferParams::builder(
                     args.asset
@@ -2118,9 +2208,9 @@ async fn get_cloud_mining_payment_and_refund_history(
                 }
                 GetCloudMiningPaymentAndRefundHistoryParams::builder(
                     args.start_time
-                        .ok_or_else(|| anyhow::anyhow!("start_time is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("start-time is required"))?,
                     args.end_time
-                        .ok_or_else(|| anyhow::anyhow!("end_time is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("end-time is required"))?,
                 )
                 .tran_id(args.tran_id)
                 .client_tran_id(args.client_tran_id)
@@ -2147,6 +2237,27 @@ async fn get_open_symbol_list(args: GetOpenSymbolListArgs) -> anyhow::Result<()>
 
     // Make the API call
     let response = rest_client.get_open_symbol_list().await?;
+
+    let data = response.data().await?;
+    println!("{}", serde_json::to_string_pretty(&data).unwrap());
+    Ok(())
+}
+
+async fn get_spot_asset_tags(args: GetSpotAssetTagsArgs) -> anyhow::Result<()> {
+    let rest_client = get_client(args.profile.as_deref(), false)?;
+
+    let params = match read_stdin_as::<GetSpotAssetTagsParams>() {
+        Some(params) => params,
+        None => match args.json {
+            Some(json) => read_json_as::<GetSpotAssetTagsParams>(json).ok_or_else(|| {
+                io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
+            })?,
+            None => GetSpotAssetTagsParams::builder().tag(args.tag).build()?,
+        },
+    };
+
+    // Make the API call
+    let response = rest_client.get_spot_asset_tags(params).await?;
 
     let data = response.data().await?;
     println!("{}", serde_json::to_string_pretty(&data).unwrap());
@@ -2193,9 +2304,9 @@ async fn query_user_delegation_history(
                     args.email
                         .ok_or_else(|| anyhow::anyhow!("email is required"))?,
                     args.start_time
-                        .ok_or_else(|| anyhow::anyhow!("start_time is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("start-time is required"))?,
                     args.end_time
-                        .ok_or_else(|| anyhow::anyhow!("end_time is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("end-time is required"))?,
                 )
                 .r#type(args.r#type)
                 .asset(args.asset)
@@ -2228,17 +2339,15 @@ async fn query_user_universal_transfer_history(
                     io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
                 })?,
             None => {
-                if args.interactive {
-                    if args.r#type.is_none() {
-                        let r#type: String =
-                            Input::new().with_prompt("Input r#type:").interact_text()?;
+                if args.interactive && args.r#type.is_none() {
+                    let r#type: String =
+                        Input::new().with_prompt("Input r#type:").interact_text()?;
 
-                        args.r#type = Some(r#type);
-                    }
+                    args.r#type = Some(r#type);
                 }
                 QueryUserUniversalTransferHistoryParams::builder(
                     args.r#type
-                        .ok_or_else(|| anyhow::anyhow!("r#type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("rtype is required"))?,
                 )
                 .start_time(args.start_time)
                 .end_time(args.end_time)
@@ -2273,6 +2382,7 @@ async fn query_user_wallet_balance(args: QueryUserWalletBalanceArgs) -> anyhow::
             })?,
             None => QueryUserWalletBalanceParams::builder()
                 .quote_asset(args.quote_asset)
+                .need_balance_detail(args.need_balance_detail)
                 .recv_window(args.recv_window)
                 .build()?,
         },
@@ -2497,7 +2607,7 @@ async fn user_universal_transfer(mut args: UserUniversalTransferArgs) -> anyhow:
                 }
                 UserUniversalTransferParams::builder(
                     args.r#type
-                        .ok_or_else(|| anyhow::anyhow!("r#type is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("rtype is required"))?,
                     args.asset
                         .ok_or_else(|| anyhow::anyhow!("asset is required"))?,
                     args.amount
@@ -2552,13 +2662,10 @@ async fn deposit_address(mut args: DepositAddressArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.coin.is_none() {
-                        let coin: String =
-                            Input::new().with_prompt("Input coin:").interact_text()?;
+                if args.interactive && args.coin.is_none() {
+                    let coin: String = Input::new().with_prompt("Input coin:").interact_text()?;
 
-                        args.coin = Some(coin);
-                    }
+                    args.coin = Some(coin);
                 }
                 DepositAddressParams::builder(
                     args.coin
@@ -2624,13 +2731,10 @@ async fn fetch_deposit_address_list_with_network(
                     io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
                 })?,
             None => {
-                if args.interactive {
-                    if args.coin.is_none() {
-                        let coin: String =
-                            Input::new().with_prompt("Input coin:").interact_text()?;
+                if args.interactive && args.coin.is_none() {
+                    let coin: String = Input::new().with_prompt("Input coin:").interact_text()?;
 
-                        args.coin = Some(coin);
-                    }
+                    args.coin = Some(coin);
                 }
                 FetchDepositAddressListWithNetworkParams::builder(
                     args.coin
@@ -2892,11 +2996,11 @@ async fn broker_withdraw(mut args: BrokerWithdrawArgs) -> anyhow::Result<()> {
                     args.amount
                         .ok_or_else(|| anyhow::anyhow!("amount is required"))?,
                     args.withdraw_order_id
-                        .ok_or_else(|| anyhow::anyhow!("withdraw_order_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("withdraw-order-id is required"))?,
                     args.questionnaire
                         .ok_or_else(|| anyhow::anyhow!("questionnaire is required"))?,
                     args.originator_pii
-                        .ok_or_else(|| anyhow::anyhow!("originator_pii is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("originator-pii is required"))?,
                 )
                 .address_tag(args.address_tag)
                 .network(args.network)
@@ -3069,18 +3173,16 @@ async fn get_region_list(mut args: GetRegionListArgs) -> anyhow::Result<()> {
                 io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
             })?,
             None => {
-                if args.interactive {
-                    if args.country_code.is_none() {
-                        let country_code: String = Input::new()
-                            .with_prompt("Input country_code:")
-                            .interact_text()?;
+                if args.interactive && args.country_code.is_none() {
+                    let country_code: String = Input::new()
+                        .with_prompt("Input country_code:")
+                        .interact_text()?;
 
-                        args.country_code = Some(country_code);
-                    }
+                    args.country_code = Some(country_code);
                 }
                 GetRegionListParams::builder(
                     args.country_code
-                        .ok_or_else(|| anyhow::anyhow!("country_code is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("country-code is required"))?,
                 )
                 .recv_window(args.recv_window)
                 .build()?
@@ -3142,13 +3244,13 @@ async fn submit_deposit_questionnaire(
                 }
                 SubmitDepositQuestionnaireParams::builder(
                     args.sub_account_id
-                        .ok_or_else(|| anyhow::anyhow!("sub_account_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("sub-account-id is required"))?,
                     args.deposit_id
-                        .ok_or_else(|| anyhow::anyhow!("deposit_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("deposit-id is required"))?,
                     args.questionnaire
                         .ok_or_else(|| anyhow::anyhow!("questionnaire is required"))?,
                     args.beneficiary_pii
-                        .ok_or_else(|| anyhow::anyhow!("beneficiary_pii is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("beneficiary-pii is required"))?,
                 )
                 .network(args.network)
                 .coin(args.coin)
@@ -3198,7 +3300,7 @@ async fn submit_deposit_questionnaire_travel_rule(
                 }
                 SubmitDepositQuestionnaireTravelRuleParams::builder(
                     args.tran_id
-                        .ok_or_else(|| anyhow::anyhow!("tran_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("tran-id is required"))?,
                     args.questionnaire
                         .ok_or_else(|| anyhow::anyhow!("questionnaire is required"))?,
                 )
@@ -3249,7 +3351,7 @@ async fn submit_deposit_questionnaire_v2(
                 }
                 SubmitDepositQuestionnaireV2Params::builder(
                     args.deposit_id
-                        .ok_or_else(|| anyhow::anyhow!("deposit_id is required"))?,
+                        .ok_or_else(|| anyhow::anyhow!("deposit-id is required"))?,
                     args.questionnaire
                         .ok_or_else(|| anyhow::anyhow!("questionnaire is required"))?,
                 )
