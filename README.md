@@ -134,7 +134,7 @@ binance-cli profile view
 - **Algo Trading**: [Rest API](./examples/algo.md)
 - **Alpha**: [Rest API](./examples/alpha.md) - [WebSocket Streams](./examples/alpha-ws-streams.md)
 - **C2C**: [Rest API](./examples/c2c.md)
-- **CMS**: [WebSocket Streams](./examples/alpha-ws-streams.md)
+- **CMS**: [WebSocket Streams](./examples/cms-ws-streams.md)
 - **Convert**: [Rest API](./examples/convert.md)
 - **Copy Trading**: [Rest API](./examples/copy-trading.md)
 - **Crypto Loan**: [Rest API](./examples/crypto-loan.md)
