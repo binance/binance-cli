@@ -42,6 +42,21 @@ binance-cli --help
 
 <img src="./assets/help.gif" alt="binance-cli demo" width="1400" align="center">
 
+### REST request timeout
+
+All REST product commands and custom `request` use a 15000 ms HTTP request timeout
+by default. Override it with a positive integer in milliseconds:
+
+```sh
+BINANCE_HTTP_TIMEOUT_MS=30000 binance-cli spot ping
+BINANCE_HTTP_TIMEOUT_MS=30000 binance-cli derivatives-trading-portfolio-margin account-information
+```
+
+This setting applies to signed and public requests. Unset variables use the default;
+zero, negative, empty, non-integer and overflowing values fail before a request is sent.
+WebSocket settings are unaffected. `recvWindow` controls the signature validity
+window, not the HTTP request timeout.
+
 ### Authentication
 
 #### Using Environment variable

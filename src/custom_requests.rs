@@ -68,7 +68,8 @@ impl TryFrom<CliConfiguration> for ConfigurationRestApi {
             None => None,
         };
 
-        let mut builder = ConfigurationRestApiBuilder::default();
+        let mut builder =
+            ConfigurationRestApiBuilder::default().timeout(crate::utils::rest_timeout_ms()?);
 
         if !cli.api_key.is_empty() {
             builder = builder.api_key(cli.api_key);

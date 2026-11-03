@@ -117,7 +117,7 @@ use clap_complete::{Shell, generate};
     name = "binance-cli",
     next_line_help = false,
     term_width = 150,
-    after_help = "Environment Variables:\n  BINANCE_API_KEY\n  BINANCE_SECRET_KEY\n  BINANCE_API_ENV                   API Environment (prod | testnet | demo)\n  BINANCE_<PRODUCT>_BASE_PATH       Base path of the product (e.g. \"https://api.binance.com\" for Spot)"
+    after_help = "Environment Variables:\n  BINANCE_API_KEY\n  BINANCE_SECRET_KEY\n  BINANCE_API_ENV                   API Environment (prod | testnet | demo)\n  BINANCE_HTTP_TIMEOUT_MS           REST request timeout in milliseconds (positive integer, default: 15000)\n  BINANCE_<PRODUCT>_BASE_PATH       Base path of the product (e.g. \"https://api.binance.com\" for Spot)"
 )]
 #[command(version)]
 #[command(about = "A simple CLI that interacts with the Binance API")]

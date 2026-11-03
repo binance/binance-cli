@@ -10,6 +10,55 @@ use std::{env, fs, process};
 static STDIN_RAW: OnceLock<String> = OnceLock::new();
 static USER_AGENT_INIT: OnceLock<()> = OnceLock::new();
 
+/// Read the HTTP request timeout shared by all REST commands, in milliseconds.
+///
+/// Args:
+/// - No arguments; read BINANCE_HTTP_TIMEOUT_MS, defaulting to 15000 when unset.
+///
+/// Returns:
+/// - A positive timeout, or InvalidInput without echoing an invalid value.
+///
+/// Examples:
+/// - An unset variable returns Ok(15000); a value of 30000 returns Ok(30000).
+/// - Values of 0 or abc return InvalidInput.
+pub fn rest_timeout_ms() -> io::Result<u64> {
+    match env::var("BINANCE_HTTP_TIMEOUT_MS") {
+        Ok(value) => parse_rest_timeout_ms(Some(&value)),
+        Err(env::VarError::NotPresent) => parse_rest_timeout_ms(None),
+        Err(env::VarError::NotUnicode(_)) => Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "BINANCE_HTTP_TIMEOUT_MS must be a positive integer in milliseconds",
+        )),
+    }
+}
+
+/// Parse a REST timeout without modifying the process environment.
+///
+/// Args:
+/// - value: The environment variable text; None means the variable is unset.
+///
+/// Returns:
+/// - Positive milliseconds, or InvalidInput for empty, zero, negative, invalid or overflowing values.
+///
+/// Examples:
+/// - parse_rest_timeout_ms(None) returns Ok(15000).
+/// - parse_rest_timeout_ms(Some("30000")) returns Ok(30000).
+fn parse_rest_timeout_ms(value: Option<&str>) -> io::Result<u64> {
+    match value {
+        None => Ok(15_000),
+        Some(value) => value
+            .parse::<u64>()
+            .ok()
+            .filter(|value| *value > 0)
+            .ok_or_else(|| {
+                io::Error::new(
+                    io::ErrorKind::InvalidInput,
+                    "BINANCE_HTTP_TIMEOUT_MS must be a positive integer in milliseconds",
+                )
+            }),
+    }
+}
+
 pub fn decode_selected_entities(input: &str, is_full: bool) -> String {
     let description = if is_full {
         input
@@ -342,4 +391,37 @@ pub async fn wait_for_shutdown() {
     tokio::signal::ctrl_c()
         .await
         .expect("failed to listen for Ctrl+C");
+}
+
+#[cfg(test)]
+mod timeout_tests {
+    use super::parse_rest_timeout_ms;
+    use std::io::ErrorKind;
+
+    /// Verify the default and explicit positive timeout values.
+    /// Args: None.
+    /// Returns: Nothing; failed assertions fail the test.
+    /// Examples: Unset returns 15000; a value of 30000 returns 30000.
+    #[test]
+    fn accepts_default_and_positive_timeout() {
+        assert_eq!(parse_rest_timeout_ms(None).unwrap(), 15_000);
+        assert_eq!(parse_rest_timeout_ms(Some("30000")).unwrap(), 30_000);
+        assert_eq!(parse_rest_timeout_ms(Some("1")).unwrap(), 1);
+    }
+
+    /// Verify invalid timeouts cannot disable the deadline or leak their input.
+    /// Args: None.
+    /// Returns: Nothing; all invalid values must return InvalidInput.
+    /// Examples: 0, -1, an empty string, abc and u64 overflow are rejected.
+    #[test]
+    fn rejects_invalid_timeout() {
+        for value in ["0", "-1", "", "abc", "18446744073709551616"] {
+            let error = parse_rest_timeout_ms(Some(value)).unwrap_err();
+            assert_eq!(error.kind(), ErrorKind::InvalidInput);
+            assert_eq!(
+                error.to_string(),
+                "BINANCE_HTTP_TIMEOUT_MS must be a positive integer in milliseconds"
+            );
+        }
+    }
 }

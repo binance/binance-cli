@@ -36,7 +36,9 @@ fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> 
         }
     });
 
-    let mut builder = ConfigurationRestApi::builder().base_path(base_path);
+    let mut builder = ConfigurationRestApi::builder()
+        .base_path(base_path)
+        .timeout(crate::utils::rest_timeout_ms()?);
 
     if is_signed {
         builder = builder
