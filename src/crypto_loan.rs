@@ -33,13 +33,20 @@ fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> 
 
     let mut builder = ConfigurationRestApi::builder().base_path(base_path);
 
+    if let Some(timeout) = client_config.timeout {
+        builder = builder.timeout(timeout);
+    }
+
     if is_signed {
         builder = builder
             .api_key(client_config.api_key)
             .api_secret(client_config.api_secret);
 
-        if client_config.private_key.is_some() {
-            builder = builder.private_key(PrivateKey::File(client_config.private_key.unwrap()));
+        if let Some(private_key) = client_config.private_key {
+            builder = builder.private_key(PrivateKey::File(private_key));
+            if let Some(private_key_passphrase) = client_config.private_key_passphrase {
+                builder = builder.private_key_passphrase(private_key_passphrase);
+            }
         }
     }
 
@@ -286,102 +293,6 @@ struct GetFlexibleLoanRepaymentHistoryArgs {
     #[arg(help = r#"Select a profile"#, long)]
     profile: Option<String>,
 }
-#[derive(Args, Debug)]
-struct GetCryptoLoansIncomeHistoryArgs {
-    #[arg(help = r#""#, long)]
-    asset: Option<String>,
-    #[arg(help = r#"All types will be returned by default."#, long)]
-    r#type: Option<GetCryptoLoansIncomeHistoryTypeEnum>,
-    #[arg(help = r#""#, long)]
-    start_time: Option<i64>,
-    #[arg(help = r#""#, long)]
-    end_time: Option<i64>,
-    #[arg(help = r#"Number of records to return"#, long)]
-    limit: Option<i64>,
-    #[arg(help = r#"Request validity window in milliseconds"#, long)]
-    recv_window: Option<i64>,
-    #[arg(short = 'i', long)]
-    interactive: bool,
-    #[arg(help = r#"Send all fields as JSON"#, long)]
-    json: Option<String>,
-    #[arg(help = r#"Select a profile"#, long)]
-    profile: Option<String>,
-}
-#[derive(Args, Debug)]
-struct GetLoanBorrowHistoryArgs {
-    #[arg(help = r#"orderId in `POST /sapi/v1/loan/borrow`"#, long)]
-    order_id: Option<i64>,
-    #[arg(help = r#""#, long)]
-    loan_coin: Option<String>,
-    #[arg(help = r#""#, long)]
-    collateral_coin: Option<String>,
-    #[arg(help = r#""#, long)]
-    start_time: Option<i64>,
-    #[arg(help = r#""#, long)]
-    end_time: Option<i64>,
-    #[arg(help = r#"Current querying page"#, long)]
-    current: Option<i64>,
-    #[arg(help = r#"Number of records to return"#, long)]
-    limit: Option<i64>,
-    #[arg(help = r#"Request validity window in milliseconds"#, long)]
-    recv_window: Option<i64>,
-    #[arg(short = 'i', long)]
-    interactive: bool,
-    #[arg(help = r#"Send all fields as JSON"#, long)]
-    json: Option<String>,
-    #[arg(help = r#"Select a profile"#, long)]
-    profile: Option<String>,
-}
-#[derive(Args, Debug)]
-struct GetLoanLtvAdjustmentHistoryArgs {
-    #[arg(help = r#"orderId in `POST /sapi/v1/loan/borrow`"#, long)]
-    order_id: Option<i64>,
-    #[arg(help = r#""#, long)]
-    loan_coin: Option<String>,
-    #[arg(help = r#""#, long)]
-    collateral_coin: Option<String>,
-    #[arg(help = r#""#, long)]
-    start_time: Option<i64>,
-    #[arg(help = r#""#, long)]
-    end_time: Option<i64>,
-    #[arg(help = r#"Current querying page"#, long)]
-    current: Option<i64>,
-    #[arg(help = r#"Number of records to return"#, long)]
-    limit: Option<i64>,
-    #[arg(help = r#"Request validity window in milliseconds"#, long)]
-    recv_window: Option<i64>,
-    #[arg(short = 'i', long)]
-    interactive: bool,
-    #[arg(help = r#"Send all fields as JSON"#, long)]
-    json: Option<String>,
-    #[arg(help = r#"Select a profile"#, long)]
-    profile: Option<String>,
-}
-#[derive(Args, Debug)]
-struct GetLoanRepaymentHistoryArgs {
-    #[arg(help = r#"orderId in `POST /sapi/v1/loan/borrow`"#, long)]
-    order_id: Option<i64>,
-    #[arg(help = r#""#, long)]
-    loan_coin: Option<String>,
-    #[arg(help = r#""#, long)]
-    collateral_coin: Option<String>,
-    #[arg(help = r#""#, long)]
-    start_time: Option<i64>,
-    #[arg(help = r#""#, long)]
-    end_time: Option<i64>,
-    #[arg(help = r#"Current querying page"#, long)]
-    current: Option<i64>,
-    #[arg(help = r#"Number of records to return"#, long)]
-    limit: Option<i64>,
-    #[arg(help = r#"Request validity window in milliseconds"#, long)]
-    recv_window: Option<i64>,
-    #[arg(short = 'i', long)]
-    interactive: bool,
-    #[arg(help = r#"Send all fields as JSON"#, long)]
-    json: Option<String>,
-    #[arg(help = r#"Select a profile"#, long)]
-    profile: Option<String>,
-}
 
 #[derive(Subcommand)]
 pub enum CryptoLoanCommands {
@@ -445,7 +356,7 @@ Notes:
     )]
     GetFlexibleLoanAssetsData(GetFlexibleLoanAssetsDataArgs),
     #[command(
-        about = decode_selected_entities(r#"Get Flexible Loan Borrow History. It can be used to check history before 2024-02-27 08:00.
+        about = decode_selected_entities(r#"Get Flexible Loan Borrow History.
 
 Weight(IP): 400
 
@@ -494,7 +405,7 @@ Notes:
     )]
     GetFlexibleLoanLiquidationHistory(GetFlexibleLoanLiquidationHistoryArgs),
     #[command(
-        about = decode_selected_entities(r#"Get Flexible Loan LTV Adjustment History. It can be used to check history before 2024-02-27 08:00.
+        about = decode_selected_entities(r#"Get Flexible Loan LTV Adjustment History.
 
 Weight(UID): 400
 
@@ -518,7 +429,7 @@ Notes:
     )]
     GetFlexibleLoanOngoingOrders(GetFlexibleLoanOngoingOrdersArgs),
     #[command(
-        about = decode_selected_entities(r#"Get Flexible Loan Repayment History. It can be used to check history before 2024-02-27 08:00.
+        about = decode_selected_entities(r#"Get Flexible Loan Repayment History.
 
 Weight(IP): 400
 
@@ -530,54 +441,6 @@ Notes:
 - Rate limit: 5 requests per second per account."#, false),
     )]
     GetFlexibleLoanRepaymentHistory(GetFlexibleLoanRepaymentHistoryArgs),
-    #[command(
-        about = decode_selected_entities(r#"Get Crypto Loans Income History
-
-Weight(UID): 6000
-
-Security Type: USER_DATA
-
-Notes:
-- If `startTime` and `endTime` are both omitted, the most recent 7 days of data are returned.
-- The maximum interval between `startTime` and `endTime` is 30 days."#, false),
-    )]
-    GetCryptoLoansIncomeHistory(GetCryptoLoansIncomeHistoryArgs),
-    #[command(
-        about = decode_selected_entities(r#"Get Loan Borrow History
-
-Weight(IP): 400
-
-Security Type: USER_DATA
-
-Notes:
-- If `startTime` and `endTime` are not sent, the recent 90-day data is returned.
-- The max interval between `startTime` and `endTime` is 180 days."#, false),
-    )]
-    GetLoanBorrowHistory(GetLoanBorrowHistoryArgs),
-    #[command(
-        about = decode_selected_entities(r#"Get Loan LTV Adjustment History
-
-Weight(IP): 400
-
-Security Type: USER_DATA
-
-Notes:
-- If `startTime` and `endTime` are not sent, the recent 90-day data is returned.
-- The max interval between `startTime` and `endTime` is 180 days."#, false),
-    )]
-    GetLoanLtvAdjustmentHistory(GetLoanLtvAdjustmentHistoryArgs),
-    #[command(
-        about = decode_selected_entities(r#"Get Loan Repayment History
-
-Weight(IP): 400
-
-Security Type: USER_DATA
-
-Notes:
-- If `startTime` and `endTime` are not sent, the recent 90-day data is returned.
-- The max interval between `startTime` and `endTime` is 180 days."#, false),
-    )]
-    GetLoanRepaymentHistory(GetLoanRepaymentHistoryArgs),
 }
 
 pub async fn handle_crypto_loan_command(command: CryptoLoanCommands) -> anyhow::Result<()> {
@@ -623,18 +486,6 @@ pub async fn handle_crypto_loan_command(command: CryptoLoanCommands) -> anyhow::
         CryptoLoanCommands::GetFlexibleLoanRepaymentHistory(args) => {
             get_flexible_loan_repayment_history(args).await
         }
-
-        CryptoLoanCommands::GetCryptoLoansIncomeHistory(args) => {
-            get_crypto_loans_income_history(args).await
-        }
-
-        CryptoLoanCommands::GetLoanBorrowHistory(args) => get_loan_borrow_history(args).await,
-
-        CryptoLoanCommands::GetLoanLtvAdjustmentHistory(args) => {
-            get_loan_ltv_adjustment_history(args).await
-        }
-
-        CryptoLoanCommands::GetLoanRepaymentHistory(args) => get_loan_repayment_history(args).await,
     }
 }
 
@@ -1138,132 +989,6 @@ async fn get_flexible_loan_repayment_history(
     let response = rest_client
         .get_flexible_loan_repayment_history(params)
         .await?;
-
-    let data = response.data().await?;
-    println!("{}", serde_json::to_string_pretty(&data).unwrap());
-    Ok(())
-}
-
-async fn get_crypto_loans_income_history(
-    args: GetCryptoLoansIncomeHistoryArgs,
-) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref(), true)?;
-
-    let params = match read_stdin_as::<GetCryptoLoansIncomeHistoryParams>() {
-        Some(params) => params,
-        None => match args.json {
-            Some(json) => {
-                read_json_as::<GetCryptoLoansIncomeHistoryParams>(json).ok_or_else(|| {
-                    io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
-                })?
-            }
-            None => GetCryptoLoansIncomeHistoryParams::builder()
-                .asset(args.asset)
-                .r#type(args.r#type)
-                .start_time(args.start_time)
-                .end_time(args.end_time)
-                .limit(args.limit)
-                .recv_window(args.recv_window)
-                .build()?,
-        },
-    };
-
-    // Make the API call
-    let response = rest_client.get_crypto_loans_income_history(params).await?;
-
-    let data = response.data().await?;
-    println!("{}", serde_json::to_string_pretty(&data).unwrap());
-    Ok(())
-}
-
-async fn get_loan_borrow_history(args: GetLoanBorrowHistoryArgs) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref(), true)?;
-
-    let params = match read_stdin_as::<GetLoanBorrowHistoryParams>() {
-        Some(params) => params,
-        None => match args.json {
-            Some(json) => read_json_as::<GetLoanBorrowHistoryParams>(json).ok_or_else(|| {
-                io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
-            })?,
-            None => GetLoanBorrowHistoryParams::builder()
-                .order_id(args.order_id)
-                .loan_coin(args.loan_coin)
-                .collateral_coin(args.collateral_coin)
-                .start_time(args.start_time)
-                .end_time(args.end_time)
-                .current(args.current)
-                .limit(args.limit)
-                .recv_window(args.recv_window)
-                .build()?,
-        },
-    };
-
-    // Make the API call
-    let response = rest_client.get_loan_borrow_history(params).await?;
-
-    let data = response.data().await?;
-    println!("{}", serde_json::to_string_pretty(&data).unwrap());
-    Ok(())
-}
-
-async fn get_loan_ltv_adjustment_history(
-    args: GetLoanLtvAdjustmentHistoryArgs,
-) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref(), true)?;
-
-    let params = match read_stdin_as::<GetLoanLtvAdjustmentHistoryParams>() {
-        Some(params) => params,
-        None => match args.json {
-            Some(json) => {
-                read_json_as::<GetLoanLtvAdjustmentHistoryParams>(json).ok_or_else(|| {
-                    io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
-                })?
-            }
-            None => GetLoanLtvAdjustmentHistoryParams::builder()
-                .order_id(args.order_id)
-                .loan_coin(args.loan_coin)
-                .collateral_coin(args.collateral_coin)
-                .start_time(args.start_time)
-                .end_time(args.end_time)
-                .current(args.current)
-                .limit(args.limit)
-                .recv_window(args.recv_window)
-                .build()?,
-        },
-    };
-
-    // Make the API call
-    let response = rest_client.get_loan_ltv_adjustment_history(params).await?;
-
-    let data = response.data().await?;
-    println!("{}", serde_json::to_string_pretty(&data).unwrap());
-    Ok(())
-}
-
-async fn get_loan_repayment_history(args: GetLoanRepaymentHistoryArgs) -> anyhow::Result<()> {
-    let rest_client = get_client(args.profile.as_deref(), true)?;
-
-    let params = match read_stdin_as::<GetLoanRepaymentHistoryParams>() {
-        Some(params) => params,
-        None => match args.json {
-            Some(json) => read_json_as::<GetLoanRepaymentHistoryParams>(json).ok_or_else(|| {
-                io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
-            })?,
-            None => GetLoanRepaymentHistoryParams::builder()
-                .order_id(args.order_id)
-                .loan_coin(args.loan_coin)
-                .collateral_coin(args.collateral_coin)
-                .start_time(args.start_time)
-                .end_time(args.end_time)
-                .current(args.current)
-                .limit(args.limit)
-                .recv_window(args.recv_window)
-                .build()?,
-        },
-    };
-
-    // Make the API call
-    let response = rest_client.get_loan_repayment_history(params).await?;
 
     let data = response.data().await?;
     println!("{}", serde_json::to_string_pretty(&data).unwrap());

@@ -40,8 +40,11 @@ fn get_client(profile: Option<&str>) -> Result<WebsocketStreamsHandle, Error> {
         .api_key(client_config.api_key)
         .api_secret(client_config.api_secret);
 
-    if client_config.private_key.is_some() {
-        builder = builder.private_key(PrivateKey::File(client_config.private_key.unwrap()));
+    if let Some(private_key) = client_config.private_key {
+        builder = builder.private_key(PrivateKey::File(private_key));
+        if let Some(private_key_passphrase) = client_config.private_key_passphrase {
+            builder = builder.private_key_passphrase(private_key_passphrase);
+        }
     }
 
     let ws_config = builder.build().map_err(Error::other)?;

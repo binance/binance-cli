@@ -1,13 +1,13 @@
-use crate::utils::{wait_for_shutdown, init_user_agent, get_client_configuration, decode_selected_entities, read_json_as, read_stdin_as};
-use binance_sdk::cms::websocket_streams::{self as models, *};
-use binance_sdk::config::{ConfigurationWebsocketStreams, PrivateKey};
-use binance_sdk::constants::{ CMS_WS_STREAMS_PROD_URL, };
-use binance_sdk::cms::websocket_streams::WebsocketStreamsHandle;
+use crate::utils::{
+    decode_selected_entities, get_client_configuration, init_user_agent, wait_for_shutdown,
+};
 use binance_sdk::cms::CmsWsStreams;
+use binance_sdk::cms::websocket_streams::WebsocketStreamsHandle;
+use binance_sdk::cms::websocket_streams::*;
+use binance_sdk::config::{ConfigurationWebsocketStreams, PrivateKey};
+use binance_sdk::constants::CMS_WS_STREAMS_PROD_URL;
 use clap::{Args, Subcommand};
-use dialoguer::{Input, Select};
 use std::env;
-use std::io;
 use std::io::{Error, ErrorKind};
 
 fn get_client(profile: Option<&str>) -> Result<WebsocketStreamsHandle, Error> {
@@ -19,78 +19,77 @@ fn get_client(profile: Option<&str>) -> Result<WebsocketStreamsHandle, Error> {
         .or(client_config.env)
         .unwrap_or_else(|| "prod".to_string());
 
-    let base_path = client_config.base_path_ws_streams.unwrap_or(match api_env.as_str() {
-        "prod" => CMS_WS_STREAMS_PROD_URL.to_string(),
-        _ => {
-            return Err(Error::new(
-                ErrorKind::InvalidInput,
-                "Invalid api env, valid values: prod",
-            ));
-        }
-    });
+    let base_path = client_config
+        .base_path_ws_streams
+        .unwrap_or(match api_env.as_str() {
+            "prod" => CMS_WS_STREAMS_PROD_URL.to_string(),
+            _ => {
+                return Err(Error::new(
+                    ErrorKind::InvalidInput,
+                    "Invalid api env, valid values: prod",
+                ));
+            }
+        });
 
     let mut builder = ConfigurationWebsocketStreams::builder().ws_url(base_path);
 
     builder = builder
-    .api_key(client_config.api_key)
-    .api_secret(client_config.api_secret);
+        .api_key(client_config.api_key)
+        .api_secret(client_config.api_secret);
 
-    if client_config.private_key.is_some() {
-        builder = builder.private_key(PrivateKey::File(client_config.private_key.unwrap()));
+    if let Some(private_key) = client_config.private_key {
+        builder = builder.private_key(PrivateKey::File(private_key));
+        if let Some(private_key_passphrase) = client_config.private_key_passphrase {
+            builder = builder.private_key_passphrase(private_key_passphrase);
+        }
     }
 
-    let ws_config = builder
-        .build()
-        .map_err(|err| Error::new(ErrorKind::Other, err))?;
+    let ws_config = builder.build().map_err(Error::other)?;
 
-        
     Ok(CmsWsStreams::from_config(ws_config))
 }
 
-
 #[derive(Args, Debug)]
 struct ComAnnouncementEnArgs {
-#[arg(help = r#"Select a profile"#, long)]
-profile: Option<String>,
-#[arg(help = r#"Pretty-print the JSON output"#, long)]
-pretty: bool,
-#[arg(help = r#"Stop listening after the given number of messages"#, long = "stream-limit")]
-stream_limit: Option<u64>,
-#[arg(help = r#"Stop listening after the given duration in milliseconds"#, long = "stream-duration")]
-stream_duration: Option<u64>,
+    #[arg(help = r#"Select a profile"#, long)]
+    profile: Option<String>,
+    #[arg(help = r#"Pretty-print the JSON output"#, long)]
+    pretty: bool,
+    #[arg(
+        help = r#"Stop listening after the given number of messages"#,
+        long = "stream-limit"
+    )]
+    stream_limit: Option<u64>,
+    #[arg(
+        help = r#"Stop listening after the given duration in milliseconds"#,
+        long = "stream-duration"
+    )]
+    stream_duration: Option<u64>,
 }
-
 
 #[derive(Subcommand)]
 pub enum CmsWebsocketStreamsCommands {
-  
     #[command(
         about = decode_selected_entities(r#"Receive push notifications when Binance publishes announcements in English (language code: en)."#, false),
     )]
-  ComAnnouncementEn(ComAnnouncementEnArgs),
+    ComAnnouncementEn(ComAnnouncementEnArgs),
 }
 
-pub async fn handle_cms_ws_streams_command(command: CmsWebsocketStreamsCommands) -> anyhow::Result<()> {
+pub async fn handle_cms_ws_streams_command(
+    command: CmsWebsocketStreamsCommands,
+) -> anyhow::Result<()> {
     match command {
-        
-          CmsWebsocketStreamsCommands::ComAnnouncementEn (args) => com_announcement_en(args).await,
-        
+        CmsWebsocketStreamsCommands::ComAnnouncementEn(args) => com_announcement_en(args).await,
     }
 }
 
-
-async fn com_announcement_en(mut args: ComAnnouncementEnArgs) -> anyhow::Result<()> {
+async fn com_announcement_en(args: ComAnnouncementEnArgs) -> anyhow::Result<()> {
     let ws_client = get_client(args.profile.as_deref())?;
 
-
-    let connection = ws_client
-        .connect()
-        .await?;
+    let connection = ws_client.connect().await?;
 
     // Make the API call
-    let stream = connection
-        .com_announcement_en()
-        .await?;
+    let stream = connection.com_announcement_en().await?;
 
     let message_count = std::sync::Arc::new(std::sync::atomic::AtomicU64::new(0));
     let stop = std::sync::Arc::new(tokio::sync::Notify::new());
@@ -112,9 +111,8 @@ async fn com_announcement_en(mut args: ComAnnouncementEnArgs) -> anyhow::Result<
         println!("{}", output.unwrap());
 
         if let Some(limit) = stream_limit {
-            let count = message_count_for_handler
-                .fetch_add(1, std::sync::atomic::Ordering::Relaxed)
-                + 1;
+            let count =
+                message_count_for_handler.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
 
             if count >= limit {
                 stop_for_handler.notify_one();
@@ -151,4 +149,3 @@ async fn com_announcement_en(mut args: ComAnnouncementEnArgs) -> anyhow::Result<
 
     Ok(())
 }
-

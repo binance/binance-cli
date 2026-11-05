@@ -136,6 +136,8 @@ pub struct CliConfiguration {
     pub base_path: Option<String>,
     pub base_path_ws_streams: Option<String>,
     pub private_key: Option<String>,
+    pub private_key_passphrase: Option<String>,
+    pub timeout: Option<u64>,
 }
 
 fn parse_key_value_content(content: &str) -> HashMap<String, String> {
@@ -215,6 +217,18 @@ pub fn get_profile_config(profile_name: &str, package_name: &str) -> Option<CliC
         None
     };
 
+    let private_key_passphrase = if !package_name.is_empty() {
+        creds.get("private-key-passphrase").cloned()
+    } else {
+        None
+    };
+
+    let timeout = if !package_name.is_empty() {
+        creds.get("timeout").cloned()
+    } else {
+        None
+    };
+
     Some(CliConfiguration {
         api_key,
         api_secret,
@@ -231,6 +245,12 @@ pub fn get_profile_config(profile_name: &str, package_name: &str) -> Option<CliC
         .filter(|v| !v.is_empty())
         .or(base_path_ws_streams),
         private_key: None,
+        private_key_passphrase,
+        timeout: env::var("BINANCE_HTTP_TIMEOUT_MS")
+            .ok()
+            .filter(|v| !v.is_empty())
+            .and_then(|v| v.parse().ok())
+            .or(timeout.and_then(|v| v.parse().ok())),
     })
 }
 
@@ -253,6 +273,11 @@ pub fn get_session_creds(profile: Option<&str>, package_name: &str) -> Option<Cl
             ))
             .ok(),
             private_key: None,
+            private_key_passphrase: env::var("BINANCE_PRIVATE_KEY_PASSPHRASE").ok(),
+            timeout: env::var("BINANCE_HTTP_TIMEOUT_MS")
+                .ok()
+                .filter(|v| !v.is_empty())
+                .and_then(|v| v.parse().ok()),
         });
     }
 
@@ -267,7 +292,12 @@ pub fn get_session_creds(profile: Option<&str>, package_name: &str) -> Option<Cl
                 package_name
             ))
             .ok(),
+            timeout: env::var("BINANCE_HTTP_TIMEOUT_MS")
+                .ok()
+                .filter(|v| !v.is_empty())
+                .and_then(|v| v.parse().ok()),
             private_key: None,
+            private_key_passphrase: None,
         });
     };
 

@@ -193,7 +193,7 @@ binance-cli futures-usds compressed-aggregate-trades-list --symbol BTCUSDT --fro
 ### [GET /fapi/v1/continuousKlines](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-usd-s-m-futures/api/rest-api/market-data#continuous-contract-kline-candlestick-data) - Continuous Contract Kline/Candlestick Data
 
 ```bash
-binance-cli futures-usds continuous-contract-kline-candlestick-data --pair BTCUSDT --contract-type PERPETUAL --interval INTERVAL_1m --start-time 1623319461670 --end-time 1641782889000 --limit 50
+binance-cli futures-usds continuous-contract-kline-candlestick-data --pair BTCUSDT --contract-type PERPETUAL --interval INTERVAL_1s --start-time 1623319461670 --end-time 1641782889000 --limit 50
 ```
 
 ### [GET /fapi/v1/exchangeInfo](https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-usd-s-m-futures/api/rest-api/market-data#exchange-information) - Exchange Information

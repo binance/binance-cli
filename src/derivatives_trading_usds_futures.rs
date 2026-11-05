@@ -40,13 +40,20 @@ fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> 
 
     let mut builder = ConfigurationRestApi::builder().base_path(base_path);
 
+    if let Some(timeout) = client_config.timeout {
+        builder = builder.timeout(timeout);
+    }
+
     if is_signed {
         builder = builder
             .api_key(client_config.api_key)
             .api_secret(client_config.api_secret);
 
-        if client_config.private_key.is_some() {
-            builder = builder.private_key(PrivateKey::File(client_config.private_key.unwrap()));
+        if let Some(private_key) = client_config.private_key {
+            builder = builder.private_key(PrivateKey::File(private_key));
+            if let Some(private_key_passphrase) = client_config.private_key_passphrase {
+                builder = builder.private_key_passphrase(private_key_passphrase);
+            }
         }
     }
 
@@ -1725,7 +1732,7 @@ Weight(IP): 1000
 Security Type: USER_DATA
 
 Notes:
-- Request Limitation is 5 times per month, shared by front end download page and rest api
+- The request limit is 100 times per month, shared across the front end download page and rest api, as well as between USDⓈ-M and COIN-M contracts.
 - The time between `startTime` and `endTime` can not be longer than 1 year"#, false),
     )]
     GetDownloadIdForFuturesTransactionHistory(GetDownloadIdForFuturesTransactionHistoryArgs),
@@ -2532,13 +2539,13 @@ Notes:
     - "triggerProtect" of a symbol can be got from `GET /fapi/v1/exchangeInfo`
   - `STOP`, `STOP_MARKET`:
     - BUY: latest price ("MARK_PRICE" or "CONTRACT_PRICE") >= `triggerPrice`
-    - SELL: latest price ("MARK_PRICE" or "CONTRACT_PRICE")
+    - SELL: latest price ("MARK_PRICE" or "CONTRACT_PRICE") <= `triggerPrice`
   - `TAKE_PROFIT`, `TAKE_PROFIT_MARKET`:
-    - BUY: latest price ("MARK_PRICE" or "CONTRACT_PRICE")
+    - BUY: latest price ("MARK_PRICE" or "CONTRACT_PRICE") <= `triggerPrice`
     - SELL: latest price ("MARK_PRICE" or "CONTRACT_PRICE") >= `triggerPrice`
   - `TRAILING_STOP_MARKET`:
-    - BUY: the lowest price after order placed = the lowest price * (1 + `callbackRate`)
-    - SELL: the highest price after order placed >= `activatePrice`, and the latest price
+    - BUY: the lowest price after order placed <= `activatePrice`, and the latest price >= the lowest price * (1 + `callbackRate`)
+    - SELL: the highest price after order placed >= `activatePrice`, and the latest price <= the highest price * (1 - `callbackRate`)
 - For `TRAILING_STOP_MARKET`, if you got such error code. > `{"code": -2021, "msg": "Order would immediately trigger."}` > means that the parameters you send do not meet the following requirements:
   - BUY: `activatePrice` should be smaller than latest price.
   - SELL: `activatePrice` should be larger than latest price.
@@ -2712,13 +2719,13 @@ Additional mandatory parameters based on `type`:
     - "triggerProtect" of a symbol can be got from `GET /fapi/v1/exchangeInfo`
   - `STOP`, `STOP_MARKET`:
     - BUY: latest price ("MARK_PRICE" or "CONTRACT_PRICE") >= `stopPrice`
-    - SELL: latest price ("MARK_PRICE" or "CONTRACT_PRICE")
+    - SELL: latest price ("MARK_PRICE" or "CONTRACT_PRICE") <= `stopPrice`
   - `TAKE_PROFIT`, `TAKE_PROFIT_MARKET`:
-    - BUY: latest price ("MARK_PRICE" or "CONTRACT_PRICE")
+    - BUY: latest price ("MARK_PRICE" or "CONTRACT_PRICE") <= `stopPrice`
     - SELL: latest price ("MARK_PRICE" or "CONTRACT_PRICE") >= `stopPrice`
   - `TRAILING_STOP_MARKET`:
-    - BUY: the lowest price after order placed ``= the lowest price * (1 + `callbackRate`)
-    - SELL: the highest price after order placed >= `activationPrice`, and the latest price
+    - BUY: the lowest price after order placed <= `activationPrice`, and the latest price >= the lowest price * (1 + `callbackRate`)
+    - SELL: the highest price after order placed >= `activationPrice`, and the latest price <= the highest price * (1 - `callbackRate`)
 - For `TRAILING_STOP_MARKET`, if you got such error code. > `{"code": -2021, "msg": "Order would immediately trigger."}` > means that the parameters you send do not meet the following requirements:
   - BUY: `activationPrice` should be smaller than latest price.
   - SELL: `activationPrice` should be larger than latest price.
@@ -4188,6 +4195,7 @@ async fn continuous_contract_kline_candlestick_data(
                         if args.interval.is_none() {
                             let options =
                                 vec![
+                        ("1s", ContinuousContractKlineCandlestickDataIntervalEnum::Interval1s),
                         ("1m", ContinuousContractKlineCandlestickDataIntervalEnum::Interval1m),
                         ("3m", ContinuousContractKlineCandlestickDataIntervalEnum::Interval3m),
                         ("5m", ContinuousContractKlineCandlestickDataIntervalEnum::Interval5m),

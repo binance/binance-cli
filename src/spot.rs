@@ -37,13 +37,20 @@ fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> 
 
     let mut builder = ConfigurationRestApi::builder().base_path(base_path);
 
+    if let Some(timeout) = client_config.timeout {
+        builder = builder.timeout(timeout);
+    }
+
     if is_signed {
         builder = builder
             .api_key(client_config.api_key)
             .api_secret(client_config.api_secret);
 
-        if client_config.private_key.is_some() {
-            builder = builder.private_key(PrivateKey::File(client_config.private_key.unwrap()));
+        if let Some(private_key) = client_config.private_key {
+            builder = builder.private_key(PrivateKey::File(private_key));
+            if let Some(private_key_passphrase) = client_config.private_key_passphrase {
+                builder = builder.private_key_passphrase(private_key_passphrase);
+            }
         }
     }
 
@@ -530,7 +537,10 @@ struct ReferencePriceArgs {
 struct ReferencePriceCalculationArgs {
     #[arg(help = r#""#, long)]
     symbol: Option<String>,
-    #[arg(help = r#"Supported values: `TRADING`, `HALT`, `BREAK`"#, long)]
+    #[arg(
+        help = r#"Supported values: `TRADING`, `HALT`, `BREAK`, `CANCEL_ONLY`"#,
+        long
+    )]
     symbol_status: Option<ReferencePriceCalculationSymbolStatusEnum>,
     #[arg(short = 'i', long)]
     interactive: bool,
