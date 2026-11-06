@@ -87,7 +87,7 @@ binance-cli derivatives-portfolio-margin get-cm-current-position-mode --recv-win
 ### [GET /papi/v1/cm/income](https://developers.binance.com/en/docs/catalog/advanced-trading-derivatives-trading-portfolio-margin/api/rest-api/account#get-cm-income-history) - Get CM Income History (USER_DATA)
 
 ```bash
-binance-cli derivatives-portfolio-margin get-cm-income-history --symbol BTCUSD_200925 --income-type TRANSFER --start-time 1623319461670 --end-time 1641782889000 --page 1 --limit 100 --recv-window 5000
+binance-cli derivatives-portfolio-margin get-cm-income-history --symbol BTCUSD_200925 --income-type TRANSFER --start-time 1623319461670 --end-time 1641782889000 --limit 100 --recv-window 5000
 ```
 
 ### [GET /papi/v1/um/order/asyn](https://developers.binance.com/en/docs/catalog/advanced-trading-derivatives-trading-portfolio-margin/api/rest-api/account#get-download-id-for-um-futures-order-history) - Get Download Id For UM Futures Order History (USER_DATA)
@@ -153,7 +153,7 @@ binance-cli derivatives-portfolio-margin get-um-futures-transaction-download-lin
 ### [GET /papi/v1/um/income](https://developers.binance.com/en/docs/catalog/advanced-trading-derivatives-trading-portfolio-margin/api/rest-api/account#get-um-income-history) - Get UM Income History (USER_DATA)
 
 ```bash
-binance-cli derivatives-portfolio-margin get-um-income-history --symbol symbol_example --income-type TRANSFER --start-time 1623319461670 --end-time 1641782889000 --page 1 --limit 100 --recv-window 5000
+binance-cli derivatives-portfolio-margin get-um-income-history --symbol symbol_example --income-type TRANSFER --start-time 1623319461670 --end-time 1641782889000 --limit 100 --recv-window 5000
 ```
 
 ### [GET /papi/v1/cm/commissionRate](https://developers.binance.com/en/docs/catalog/advanced-trading-derivatives-trading-portfolio-margin/api/rest-api/account#get-user-commission-rate-for-cm) - Get User Commission Rate for CM (USER_DATA)

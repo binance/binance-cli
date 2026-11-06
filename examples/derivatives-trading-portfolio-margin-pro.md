@@ -75,7 +75,7 @@ binance-cli derivatives-portfolio-margin-pro get-transferable-earn-asset-balance
 ### [POST /sapi/v1/portfolio/repay](https://developers.binance.com/en/docs/catalog/advanced-trading-derivatives-trading-portfolio-margin-pro/api/rest-api/account#portfolio-margin-pro-bankruptcy-loan-repay) - Portfolio Margin Pro Bankruptcy Loan Repay (TRADE)
 
 ```bash
-binance-cli derivatives-portfolio-margin-pro portfolio-margin-pro-bankruptcy-loan-repay --from SPOT --recv-window 5000
+binance-cli derivatives-portfolio-margin-pro portfolio-margin-pro-bankruptcy-loan-repay --recv-window 5000
 ```
 
 ### [GET /sapi/v1/portfolio/pmLoan](https://developers.binance.com/en/docs/catalog/advanced-trading-derivatives-trading-portfolio-margin-pro/api/rest-api/account#query-portfolio-margin-pro-bankruptcy-loan-amount) - Query Portfolio Margin Pro Bankruptcy Loan Amount (USER_DATA)
@@ -99,7 +99,7 @@ binance-cli derivatives-portfolio-margin-pro query-portfolio-margin-pro-negative
 ### [POST /sapi/v1/portfolio/repay-futures-negative-balance](https://developers.binance.com/en/docs/catalog/advanced-trading-derivatives-trading-portfolio-margin-pro/api/rest-api/account#repay-futures-negative-balance) - Repay futures Negative Balance (USER_DATA)
 
 ```bash
-binance-cli derivatives-portfolio-margin-pro repay-futures-negative-balance --from SPOT --recv-window 5000
+binance-cli derivatives-portfolio-margin-pro repay-futures-negative-balance --recv-window 5000
 ```
 
 ### [POST /sapi/v1/portfolio/margin-call-level](https://developers.binance.com/en/docs/catalog/advanced-trading-derivatives-trading-portfolio-margin-pro/api/rest-api/account#set-margin-call-level) - Set Margin Call Level (USER_DATA)

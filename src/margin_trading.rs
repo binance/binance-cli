@@ -33,13 +33,20 @@ fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> 
 
     let mut builder = ConfigurationRestApi::builder().base_path(base_path);
 
+    if let Some(timeout) = client_config.timeout {
+        builder = builder.timeout(timeout);
+    }
+
     if is_signed {
         builder = builder
             .api_key(client_config.api_key)
             .api_secret(client_config.api_secret);
 
-        if client_config.private_key.is_some() {
-            builder = builder.private_key(PrivateKey::File(client_config.private_key.unwrap()));
+        if let Some(private_key) = client_config.private_key {
+            builder = builder.private_key(PrivateKey::File(private_key));
+            if let Some(private_key_passphrase) = client_config.private_key_passphrase {
+                builder = builder.private_key_passphrase(private_key_passphrase);
+            }
         }
     }
 
@@ -1233,6 +1240,11 @@ struct CloseUserDataStreamArgs {
     profile: Option<String>,
 }
 #[derive(Args, Debug)]
+struct CloseUserDataStreamV2Args {
+    #[arg(help = r#"Select a profile"#, long)]
+    profile: Option<String>,
+}
+#[derive(Args, Debug)]
 struct KeepaliveUserDataStreamArgs {
     #[arg(help = r#""#, long)]
     listen_key: Option<String>,
@@ -1244,7 +1256,23 @@ struct KeepaliveUserDataStreamArgs {
     profile: Option<String>,
 }
 #[derive(Args, Debug)]
+struct KeepaliveUserDataStreamV2Args {
+    #[arg(help = r#""#, long)]
+    listen_key: Option<String>,
+    #[arg(short = 'i', long)]
+    interactive: bool,
+    #[arg(help = r#"Send all fields as JSON"#, long)]
+    json: Option<String>,
+    #[arg(help = r#"Select a profile"#, long)]
+    profile: Option<String>,
+}
+#[derive(Args, Debug)]
 struct StartUserDataStreamArgs {
+    #[arg(help = r#"Select a profile"#, long)]
+    profile: Option<String>,
+}
+#[derive(Args, Debug)]
+struct StartUserDataStreamV2Args {
     #[arg(help = r#"Select a profile"#, long)]
     profile: Option<String>,
 }
@@ -2097,6 +2125,14 @@ Security Type: USER_STREAM"#, false),
     )]
     CloseUserDataStream(CloseUserDataStreamArgs),
     #[command(
+        about = decode_selected_entities(r#"Close out a user data stream.
+
+Weight(IP): 1
+
+Security Type: USER_STREAM"#, false),
+    )]
+    CloseUserDataStreamV2(CloseUserDataStreamV2Args),
+    #[command(
         about = decode_selected_entities(r#"Keepalive a user data stream to prevent a time out.
 
 Weight(UID): 1
@@ -2105,6 +2141,14 @@ Security Type: USER_STREAM"#, false),
     )]
     KeepaliveUserDataStream(KeepaliveUserDataStreamArgs),
     #[command(
+        about = decode_selected_entities(r#"Keepalive a user data stream to prevent a time out.
+
+Weight(IP): 1
+
+Security Type: USER_STREAM"#, false),
+    )]
+    KeepaliveUserDataStreamV2(KeepaliveUserDataStreamV2Args),
+    #[command(
         about = decode_selected_entities(r#"Start a new user data stream.
 
 Weight(UID): 1
@@ -2112,6 +2156,14 @@ Weight(UID): 1
 Security Type: USER_STREAM"#, false),
     )]
     StartUserDataStream(StartUserDataStreamArgs),
+    #[command(
+        about = decode_selected_entities(r#"Start a new user data stream.
+
+Weight(IP): 1
+
+Security Type: USER_STREAM"#, false),
+    )]
+    StartUserDataStreamV2(StartUserDataStreamV2Args),
 }
 
 pub async fn handle_margin_trading_command(command: MarginTradingCommands) -> anyhow::Result<()> {
@@ -2326,11 +2378,19 @@ pub async fn handle_margin_trading_command(command: MarginTradingCommands) -> an
 
         MarginTradingCommands::CloseUserDataStream(args) => close_user_data_stream(args).await,
 
+        MarginTradingCommands::CloseUserDataStreamV2(args) => close_user_data_stream_v2(args).await,
+
         MarginTradingCommands::KeepaliveUserDataStream(args) => {
             keepalive_user_data_stream(args).await
         }
 
+        MarginTradingCommands::KeepaliveUserDataStreamV2(args) => {
+            keepalive_user_data_stream_v2(args).await
+        }
+
         MarginTradingCommands::StartUserDataStream(args) => start_user_data_stream(args).await,
+
+        MarginTradingCommands::StartUserDataStreamV2(args) => start_user_data_stream_v2(args).await,
     }
 }
 
@@ -4884,6 +4944,17 @@ async fn close_user_data_stream(args: CloseUserDataStreamArgs) -> anyhow::Result
     Ok(())
 }
 
+async fn close_user_data_stream_v2(args: CloseUserDataStreamV2Args) -> anyhow::Result<()> {
+    let rest_client = get_client(args.profile.as_deref(), false)?;
+
+    // Make the API call
+    let response = rest_client.close_user_data_stream_v2().await?;
+
+    let data = response.data().await?;
+    println!("{}", serde_json::to_string_pretty(&data).unwrap());
+    Ok(())
+}
+
 async fn keepalive_user_data_stream(mut args: KeepaliveUserDataStreamArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), false)?;
 
@@ -4918,11 +4989,60 @@ async fn keepalive_user_data_stream(mut args: KeepaliveUserDataStreamArgs) -> an
     Ok(())
 }
 
+async fn keepalive_user_data_stream_v2(
+    mut args: KeepaliveUserDataStreamV2Args,
+) -> anyhow::Result<()> {
+    let rest_client = get_client(args.profile.as_deref(), false)?;
+
+    let params = match read_stdin_as::<KeepaliveUserDataStreamV2Params>() {
+        Some(params) => params,
+        None => match args.json {
+            Some(json) => {
+                read_json_as::<KeepaliveUserDataStreamV2Params>(json).ok_or_else(|| {
+                    io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
+                })?
+            }
+            None => {
+                if args.interactive && args.listen_key.is_none() {
+                    let listen_key: String = Input::new()
+                        .with_prompt("Input listen_key:")
+                        .interact_text()?;
+
+                    args.listen_key = Some(listen_key);
+                }
+                KeepaliveUserDataStreamV2Params::builder(
+                    args.listen_key
+                        .ok_or_else(|| anyhow::anyhow!("listen-key is required"))?,
+                )
+                .build()?
+            }
+        },
+    };
+
+    // Make the API call
+    let response = rest_client.keepalive_user_data_stream_v2(params).await?;
+
+    let data = response.data().await?;
+    println!("{}", serde_json::to_string_pretty(&data).unwrap());
+    Ok(())
+}
+
 async fn start_user_data_stream(args: StartUserDataStreamArgs) -> anyhow::Result<()> {
     let rest_client = get_client(args.profile.as_deref(), false)?;
 
     // Make the API call
     let response = rest_client.start_user_data_stream().await?;
+
+    let data = response.data().await?;
+    println!("{}", serde_json::to_string_pretty(&data).unwrap());
+    Ok(())
+}
+
+async fn start_user_data_stream_v2(args: StartUserDataStreamV2Args) -> anyhow::Result<()> {
+    let rest_client = get_client(args.profile.as_deref(), false)?;
+
+    // Make the API call
+    let response = rest_client.start_user_data_stream_v2().await?;
 
     let data = response.data().await?;
     println!("{}", serde_json::to_string_pretty(&data).unwrap());

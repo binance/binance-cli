@@ -71,29 +71,3 @@ binance-cli crypto-loan get-flexible-loan-ongoing-orders --loan-coin BUSD --coll
 ```bash
 binance-cli crypto-loan get-flexible-loan-repayment-history --loan-coin BUSD --collateral-coin BNB --start-time 1623319461670 --end-time 1641782889000 --current 1 --limit 10 --recv-window 5000
 ```
-
-## StableRate
-
-### [GET /sapi/v1/loan/income](https://developers.binance.com/en/docs/catalog/investment-and-services-crypto-loan/api/rest-api/stable-rate#get-crypto-loans-income-history) - Get Crypto Loans Income History (USER_DATA)
-
-```bash
-binance-cli crypto-loan get-crypto-loans-income-history --asset BUSD --rtype borrowIn --start-time 1623319461670 --end-time 1641782889000 --limit 10 --recv-window 5000
-```
-
-### [GET /sapi/v1/loan/borrow/history](https://developers.binance.com/en/docs/catalog/investment-and-services-crypto-loan/api/rest-api/stable-rate#get-loan-borrow-history) - Get Loan Borrow History (USER_DATA)
-
-```bash
-binance-cli crypto-loan get-loan-borrow-history --order-id 1 --loan-coin BUSD --collateral-coin BNB --start-time 1623319461670 --end-time 1641782889000 --current 1 --limit 10 --recv-window 5000
-```
-
-### [GET /sapi/v1/loan/ltv/adjustment/history](https://developers.binance.com/en/docs/catalog/investment-and-services-crypto-loan/api/rest-api/stable-rate#get-loan-ltv-adjustment-history) - Get Loan LTV Adjustment History (USER_DATA)
-
-```bash
-binance-cli crypto-loan get-loan-ltv-adjustment-history --order-id 1 --loan-coin BUSD --collateral-coin BNB --start-time 1623319461670 --end-time 1641782889000 --current 1 --limit 10 --recv-window 5000
-```
-
-### [GET /sapi/v1/loan/repay/history](https://developers.binance.com/en/docs/catalog/investment-and-services-crypto-loan/api/rest-api/stable-rate#get-loan-repayment-history) - Get Loan Repayment History (USER_DATA)
-
-```bash
-binance-cli crypto-loan get-loan-repayment-history --order-id 1 --loan-coin BUSD --collateral-coin BNB --start-time 1623319461670 --end-time 1641782889000 --current 1 --limit 10 --recv-window 5000
-```

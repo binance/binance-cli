@@ -394,14 +394,32 @@ binance-cli margin-trading query-max-transfer-out-amount --asset BTC --isolated-
 binance-cli margin-trading close-user-data-stream
 ```
 
+### [DELETE /sapi/v2/margin/listen-key](https://developers.binance.com/en/docs/catalog/core-trading-margin-trading/api/rest-api/user-data-stream#close-user-data-stream-v2) - Close User Data Stream V2 (USER_STREAM)
+
+```bash
+binance-cli margin-trading close-user-data-stream-v2
+```
+
 ### [PUT /sapi/v1/margin/listen-key](https://developers.binance.com/en/docs/catalog/core-trading-margin-trading/api/rest-api/user-data-stream#keepalive-user-data-stream) - Keepalive User Data Stream (USER_STREAM)
 
 ```bash
 binance-cli margin-trading keepalive-user-data-stream --listen-key listen_key_example
 ```
 
+### [PUT /sapi/v2/margin/listen-key](https://developers.binance.com/en/docs/catalog/core-trading-margin-trading/api/rest-api/user-data-stream#keepalive-user-data-stream-v2) - Keepalive User Data Stream V2 (USER_STREAM)
+
+```bash
+binance-cli margin-trading keepalive-user-data-stream-v2 --listen-key listen_key_example
+```
+
 ### [POST /sapi/v1/margin/listen-key](https://developers.binance.com/en/docs/catalog/core-trading-margin-trading/api/rest-api/user-data-stream#start-user-data-stream) - Start User Data Stream (USER_STREAM)
 
 ```bash
 binance-cli margin-trading start-user-data-stream
+```
+
+### [POST /sapi/v2/margin/listen-key](https://developers.binance.com/en/docs/catalog/core-trading-margin-trading/api/rest-api/user-data-stream#start-user-data-stream-v2) - Start User Data Stream V2 (USER_STREAM)
+
+```bash
+binance-cli margin-trading start-user-data-stream-v2
 ```

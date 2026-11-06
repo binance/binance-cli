@@ -33,13 +33,20 @@ fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> 
 
     let mut builder = ConfigurationRestApi::builder().base_path(base_path);
 
+    if let Some(timeout) = client_config.timeout {
+        builder = builder.timeout(timeout);
+    }
+
     if is_signed {
         builder = builder
             .api_key(client_config.api_key)
             .api_secret(client_config.api_secret);
 
-        if client_config.private_key.is_some() {
-            builder = builder.private_key(PrivateKey::File(client_config.private_key.unwrap()));
+        if let Some(private_key) = client_config.private_key {
+            builder = builder.private_key(PrivateKey::File(private_key));
+            if let Some(private_key_passphrase) = client_config.private_key_passphrase {
+                builder = builder.private_key_passphrase(private_key_passphrase);
+            }
         }
     }
 
@@ -206,6 +213,10 @@ struct CreateSubAccountApiKeyArgs {
     can_universal_transfer: Option<bool>,
     #[arg(help = r#"Vanilla options permission, default false"#, long, num_args = 0..=1, default_missing_value = "true")]
     can_vanilla_options: Option<bool>,
+    #[arg(help = r#"FIX API Trading permission. Only supported for API Keys using an Ed25519 public key. Setting it to `true` for any other key type returns `-9000` `Unsupported operation`"#, long, num_args = 0..=1, default_missing_value = "true")]
+    can_fix_api_trading: Option<bool>,
+    #[arg(help = r#"FIX API Reading permission. Only supported for API Keys using an Ed25519 public key. Setting it to `true` for any other key type returns `-9000` `Unsupported operation`"#, long, num_args = 0..=1, default_missing_value = "true")]
+    can_fix_api_reading: Option<bool>,
     #[arg(
         help = r#"Required when status=2. IP address list, max 500 chars"#,
         long
@@ -215,6 +226,52 @@ struct CreateSubAccountApiKeyArgs {
     third_party_name: Option<String>,
     #[arg(
         help = r#"Ed25519 public key (optional, for Ed25519 type API Key)"#,
+        long
+    )]
+    public_key: Option<String>,
+    #[arg(help = r#""#, long)]
+    recv_window: Option<i64>,
+    #[arg(short = 'i', long)]
+    interactive: bool,
+    #[arg(help = r#"Send all fields as JSON"#, long)]
+    json: Option<String>,
+    #[arg(help = r#"Select a profile"#, long)]
+    profile: Option<String>,
+}
+#[derive(Args, Debug)]
+struct CreateSubAccountApiKeyV2Args {
+    #[arg(help = r#"Sub-account email"#, long)]
+    email: Option<String>,
+    #[arg(help = r#"API Key name"#, long)]
+    api_name: Option<String>,
+    #[arg(
+        help = r#"IP restriction status. 1 = unrestricted, 2 = restricted to trusted IPs, 3 = third-party IP restriction"#,
+        long
+    )]
+    status: Option<i64>,
+    #[arg(help = r#"Spot & Margin trading permission, default false"#, long, num_args = 0..=1, default_missing_value = "true")]
+    can_trade: Option<bool>,
+    #[arg(help = r#"Margin borrow/repay permission, default false"#, long, num_args = 0..=1, default_missing_value = "true")]
+    can_margin_loan_repay: Option<bool>,
+    #[arg(help = r#"Futures trading permission, default false"#, long, num_args = 0..=1, default_missing_value = "true")]
+    can_futures_trade: Option<bool>,
+    #[arg(help = r#"Universal transfer permission, default false"#, long, num_args = 0..=1, default_missing_value = "true")]
+    can_universal_transfer: Option<bool>,
+    #[arg(help = r#"Vanilla options permission, default false"#, long, num_args = 0..=1, default_missing_value = "true")]
+    can_vanilla_options: Option<bool>,
+    #[arg(help = r#"FIX API Trading permission. Only supported for API Keys using an Ed25519 public key. Setting it to `true` for any other key type returns `-9000` `Unsupported operation`"#, long, num_args = 0..=1, default_missing_value = "true")]
+    can_fix_api_trading: Option<bool>,
+    #[arg(help = r#"FIX API Reading permission. Only supported for API Keys using an Ed25519 public key. Setting it to `true` for any other key type returns `-9000` `Unsupported operation`"#, long, num_args = 0..=1, default_missing_value = "true")]
+    can_fix_api_reading: Option<bool>,
+    #[arg(
+        help = r#"Required when status=2. IP address list, max 500 chars"#,
+        long
+    )]
+    ip_address: Option<String>,
+    #[arg(help = r#"Required when status=3. Third-party name"#, long)]
+    third_party_name: Option<String>,
+    #[arg(
+        help = r#"RSA or Ed25519 public key (optional). Must be sent in the request body; it is rejected if passed in the URL query string"#,
         long
     )]
     public_key: Option<String>,
@@ -293,6 +350,10 @@ struct ModifySubAccountApiKeyPermissionArgs {
     can_universal_transfer: Option<bool>,
     #[arg(help = r#"Vanilla options permission"#, long, num_args = 0..=1, default_missing_value = "true")]
     can_vanilla_options: Option<bool>,
+    #[arg(help = r#"FIX API Trading permission. If omitted, the existing value is unchanged. Only supported for API Keys using an Ed25519 public key. Setting it to `true` for any other key type returns `-9000` `Unsupported operation`"#, long, num_args = 0..=1, default_missing_value = "true")]
+    can_fix_api_trading: Option<bool>,
+    #[arg(help = r#"FIX API Reading permission. If omitted, the existing value is unchanged. Only supported for API Keys using an Ed25519 public key. Setting it to `true` for any other key type returns `-9000` `Unsupported operation`"#, long, num_args = 0..=1, default_missing_value = "true")]
+    can_fix_api_reading: Option<bool>,
     #[arg(help = r#""#, long)]
     recv_window: Option<i64>,
     #[arg(short = 'i', long)]
@@ -1111,6 +1172,21 @@ Notes:
     )]
     CreateSubAccountApiKey(CreateSubAccountApiKeyArgs),
     #[command(
+        about = decode_selected_entities(r#"Create a new API Key for a sub-account.
+
+Weight(UID): 3000
+
+Security Type: USER_DATA
+
+Notes:
+- `status=2` requires `ipAddress`
+- `status=3` requires `thirdPartyName`
+- Asset Sub Account is not supported
+- The caller must pass the KYC IP restriction check
+- `publicKey` is rejected if passed in the URL query string. The example sends it in the request body with `--data-urlencode`"#, false),
+    )]
+    CreateSubAccountApiKeyV2(CreateSubAccountApiKeyV2Args),
+    #[command(
         about = decode_selected_entities(r#"Delete IP List For a Sub-account API Key
 
 Weight(UID): 3000
@@ -1574,6 +1650,10 @@ pub async fn handle_sub_account_command(command: SubAccountCommands) -> anyhow::
         }
 
         SubAccountCommands::CreateSubAccountApiKey(args) => create_sub_account_api_key(args).await,
+
+        SubAccountCommands::CreateSubAccountApiKeyV2(args) => {
+            create_sub_account_api_key_v2(args).await
+        }
 
         SubAccountCommands::DeleteIpListForASubAccountApiKey(args) => {
             delete_ip_list_for_a_sub_account_api_key(args).await
@@ -2112,6 +2192,8 @@ async fn create_sub_account_api_key(mut args: CreateSubAccountApiKeyArgs) -> any
                 .can_futures_trade(args.can_futures_trade)
                 .can_universal_transfer(args.can_universal_transfer)
                 .can_vanilla_options(args.can_vanilla_options)
+                .can_fix_api_trading(args.can_fix_api_trading)
+                .can_fix_api_reading(args.can_fix_api_reading)
                 .ip_address(args.ip_address)
                 .third_party_name(args.third_party_name)
                 .public_key(args.public_key)
@@ -2123,6 +2205,73 @@ async fn create_sub_account_api_key(mut args: CreateSubAccountApiKeyArgs) -> any
 
     // Make the API call
     let response = rest_client.create_sub_account_api_key(params).await?;
+
+    let data = response.data().await?;
+    println!("{}", serde_json::to_string_pretty(&data).unwrap());
+    Ok(())
+}
+
+async fn create_sub_account_api_key_v2(
+    mut args: CreateSubAccountApiKeyV2Args,
+) -> anyhow::Result<()> {
+    let rest_client = get_client(args.profile.as_deref(), true)?;
+
+    let params = match read_stdin_as::<CreateSubAccountApiKeyV2Params>() {
+        Some(params) => params,
+        None => match args.json {
+            Some(json) => {
+                read_json_as::<CreateSubAccountApiKeyV2Params>(json).ok_or_else(|| {
+                    io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
+                })?
+            }
+            None => {
+                if args.interactive {
+                    if args.email.is_none() {
+                        let email: String =
+                            Input::new().with_prompt("Input email:").interact_text()?;
+
+                        args.email = Some(email);
+                    }
+                    if args.api_name.is_none() {
+                        let api_name: String = Input::new()
+                            .with_prompt("Input api_name:")
+                            .interact_text()?;
+
+                        args.api_name = Some(api_name);
+                    }
+                    if args.status.is_none() {
+                        let status: i64 =
+                            Input::new().with_prompt("Input status:").interact_text()?;
+
+                        args.status = Some(status);
+                    }
+                }
+                CreateSubAccountApiKeyV2Params::builder(
+                    args.email
+                        .ok_or_else(|| anyhow::anyhow!("email is required"))?,
+                    args.api_name
+                        .ok_or_else(|| anyhow::anyhow!("api-name is required"))?,
+                    args.status
+                        .ok_or_else(|| anyhow::anyhow!("status is required"))?,
+                )
+                .can_trade(args.can_trade)
+                .can_margin_loan_repay(args.can_margin_loan_repay)
+                .can_futures_trade(args.can_futures_trade)
+                .can_universal_transfer(args.can_universal_transfer)
+                .can_vanilla_options(args.can_vanilla_options)
+                .can_fix_api_trading(args.can_fix_api_trading)
+                .can_fix_api_reading(args.can_fix_api_reading)
+                .ip_address(args.ip_address)
+                .third_party_name(args.third_party_name)
+                .public_key(args.public_key)
+                .recv_window(args.recv_window)
+                .build()?
+            }
+        },
+    };
+
+    // Make the API call
+    let response = rest_client.create_sub_account_api_key_v2(params).await?;
 
     let data = response.data().await?;
     println!("{}", serde_json::to_string_pretty(&data).unwrap());
@@ -2324,6 +2473,8 @@ async fn modify_sub_account_api_key_permission(
                 .can_futures_trade(args.can_futures_trade)
                 .can_universal_transfer(args.can_universal_transfer)
                 .can_vanilla_options(args.can_vanilla_options)
+                .can_fix_api_trading(args.can_fix_api_trading)
+                .can_fix_api_reading(args.can_fix_api_reading)
                 .recv_window(args.recv_window)
                 .build()?
             }

@@ -2,10 +2,13 @@ use anyhow::{Context, Result, bail};
 use clap::{ArgAction, Args, Subcommand, ValueEnum};
 use dialoguer::{Confirm, Input, MultiSelect, Password, Select};
 use std::collections::HashMap;
+use std::fmt::{Display, Write};
 use std::fs;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
+
+use crate::utils::is_hmac_secret_key;
 
 #[derive(Args)]
 pub struct ProfileArgs {
@@ -49,6 +52,15 @@ struct CreateArgs {
     /// Enter your API secret or path to private key
     #[arg(long = "api-secret")]
     api_secret: Option<String>,
+
+    /// Private key passphrase
+    #[arg(long)]
+    #[arg(long = "private-key-passphrase")]
+    private_key_passphrase: Option<String>,
+
+    /// Enter the request timeout in ms [default: 1000]
+    #[arg(long = "timeout")]
+    timeout: Option<u64>,
 
     /// Select and use the new profile
     ///
@@ -314,6 +326,37 @@ fn create_profile(mut args: CreateArgs) -> Result<()> {
             args.api_secret = Some(api_secret);
         }
 
+        if args
+            .api_secret
+            .as_deref()
+            .is_some_and(|secret| !is_hmac_secret_key(secret))
+            && args.private_key_passphrase.is_none()
+        {
+            let private_key_passphrase = Password::new()
+                .with_prompt("Please input your private key passphrase")
+                .allow_empty_password(true)
+                .interact()?;
+
+            args.private_key_passphrase = if private_key_passphrase.is_empty() {
+                None
+            } else {
+                Some(private_key_passphrase)
+            };
+        }
+
+        if args.timeout.is_none() {
+            let timeout: String = Input::new()
+                .with_prompt("Please input the request timeout [Default: 1000]")
+                .allow_empty(true)
+                .interact()?;
+
+            args.timeout = if timeout.trim().is_empty() {
+                None
+            } else {
+                Some(timeout.trim().parse()?)
+            };
+        }
+
         if args.select.is_none() {
             let default_select = !active_profile_path()?.exists();
 
@@ -375,12 +418,20 @@ fn create_profile(mut args: CreateArgs) -> Result<()> {
 
     let escaped_api_secret = api_secret.replace('\n', "\\n");
 
-    let profile_content = format!(
-        "api-key={}\napi-secret={}\nenv={}",
-        api_key,
-        escaped_api_secret,
+    let mut profile_content = String::new();
+    let _ = write!(
+        profile_content,
+        "api-key={api_key}\napi-secret={escaped_api_secret}\nenv={}",
         env.as_str()
     );
+
+    if let Some(p) = args.private_key_passphrase.as_deref() {
+        push_line(&mut profile_content, "private-key-passphrase", p);
+    }
+
+    if let Some(t) = args.timeout {
+        push_line(&mut profile_content, "timeout", t);
+    }
 
     fs::write(&path, profile_content)?;
 
@@ -554,4 +605,8 @@ fn delete_profiles(mut args: DeleteArgs) -> Result<()> {
     }
 
     Ok(())
+}
+
+fn push_line(out: &mut String, key: &str, value: impl Display) {
+    let _ = write!(out, "\n{key}={value}");
 }

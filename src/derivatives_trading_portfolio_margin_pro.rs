@@ -40,13 +40,20 @@ fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> 
 
     let mut builder = ConfigurationRestApi::builder().base_path(base_path);
 
+    if let Some(timeout) = client_config.timeout {
+        builder = builder.timeout(timeout);
+    }
+
     if is_signed {
         builder = builder
             .api_key(client_config.api_key)
             .api_secret(client_config.api_secret);
 
-        if client_config.private_key.is_some() {
-            builder = builder.private_key(PrivateKey::File(client_config.private_key.unwrap()));
+        if let Some(private_key) = client_config.private_key {
+            builder = builder.private_key(PrivateKey::File(private_key));
+            if let Some(private_key_passphrase) = client_config.private_key_passphrase {
+                builder = builder.private_key_passphrase(private_key_passphrase);
+            }
         }
     }
 
@@ -219,8 +226,6 @@ struct GetTransferableEarnAssetBalanceForPortfolioMarginArgs {
 #[derive(Args, Debug)]
 struct PortfolioMarginProBankruptcyLoanRepayArgs {
     #[arg(help = r#""#, long)]
-    from: Option<PortfolioMarginProBankruptcyLoanRepayFromEnum>,
-    #[arg(help = r#""#, long)]
     recv_window: Option<i64>,
     #[arg(short = 'i', long)]
     interactive: bool,
@@ -280,8 +285,6 @@ struct QueryPortfolioMarginProNegativeBalanceInterestHistoryArgs {
 }
 #[derive(Args, Debug)]
 struct RepayFuturesNegativeBalanceArgs {
-    #[arg(help = r#""#, long)]
-    from: Option<RepayFuturesNegativeBalanceFromEnum>,
     #[arg(help = r#""#, long)]
     recv_window: Option<i64>,
     #[arg(short = 'i', long)]
@@ -488,7 +491,8 @@ Weight(UID): 3000
 Security Type: TRADE
 
 Notes:
-- Please note that the API Key has enabled Spot & Margin Trading permissions to access this endpoint."#, false),
+- Please note that the API Key has enabled Spot & Margin Trading permissions to access this endpoint.
+- USDT is taken from the Spot account and transferred to the Cross Margin account to repay the loan."#, false),
     )]
     PortfolioMarginProBankruptcyLoanRepay(PortfolioMarginProBankruptcyLoanRepayArgs),
     #[command(
@@ -533,7 +537,10 @@ Security Type: USER_DATA"#, false),
 
 Weight(IP): 1500
 
-Security Type: USER_DATA"#, false),
+Security Type: USER_DATA
+
+Notes:
+- The negative balance is repaid from the Cross Margin account."#, false),
     )]
     RepayFuturesNegativeBalance(RepayFuturesNegativeBalanceArgs),
     #[command(
@@ -1075,7 +1082,6 @@ async fn portfolio_margin_pro_bankruptcy_loan_repay(
                     io::Error::new(io::ErrorKind::InvalidInput, "failed to parse json params")
                 })?,
             None => PortfolioMarginProBankruptcyLoanRepayParams::builder()
-                .from(args.from)
                 .recv_window(args.recv_window)
                 .build()?,
         },
@@ -1202,7 +1208,6 @@ async fn repay_futures_negative_balance(
                 })?
             }
             None => RepayFuturesNegativeBalanceParams::builder()
-                .from(args.from)
                 .recv_window(args.recv_window)
                 .build()?,
         },

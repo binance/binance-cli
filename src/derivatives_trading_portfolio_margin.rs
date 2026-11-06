@@ -38,13 +38,20 @@ fn get_client(profile: Option<&str>, is_signed: bool) -> Result<RestApi, Error> 
 
     let mut builder = ConfigurationRestApi::builder().base_path(base_path);
 
+    if let Some(timeout) = client_config.timeout {
+        builder = builder.timeout(timeout);
+    }
+
     if is_signed {
         builder = builder
             .api_key(client_config.api_key)
             .api_secret(client_config.api_secret);
 
-        if client_config.private_key.is_some() {
-            builder = builder.private_key(PrivateKey::File(client_config.private_key.unwrap()));
+        if let Some(private_key) = client_config.private_key {
+            builder = builder.private_key(PrivateKey::File(private_key));
+            if let Some(private_key_passphrase) = client_config.private_key_passphrase {
+                builder = builder.private_key_passphrase(private_key_passphrase);
+            }
         }
     }
 
@@ -259,8 +266,6 @@ struct GetCmIncomeHistoryArgs {
     start_time: Option<i64>,
     #[arg(help = r#"Timestamp in ms to get funding until INCLUSIVE."#, long)]
     end_time: Option<i64>,
-    #[arg(help = r#""#, long)]
-    page: Option<i64>,
     #[arg(help = r#"Number of results returned."#, long)]
     limit: Option<i64>,
     #[arg(help = r#""#, long)]
@@ -425,8 +430,6 @@ struct GetUmIncomeHistoryArgs {
     start_time: Option<i64>,
     #[arg(help = r#"Timestamp in ms to get funding until INCLUSIVE."#, long)]
     end_time: Option<i64>,
-    #[arg(help = r#"Page number."#, long)]
-    page: Option<i64>,
     #[arg(help = r#"Number of results returned."#, long)]
     limit: Option<i64>,
     #[arg(help = r#""#, long)]
@@ -1297,7 +1300,7 @@ struct NewUmAlgoOrderArgs {
     )]
     activate_price: Option<rust_decimal::Decimal>,
     #[arg(
-        help = r#"Used with `TRAILING_STOP_MARKET`, min 0.1, max 10 (1 = 1%)"#,
+        help = r#"Used with `TRAILING_STOP_MARKET`, min 0.1, max 20 (1 = 1%)"#,
         long
     )]
     callback_rate: Option<rust_decimal::Decimal>,
@@ -2620,12 +2623,16 @@ Notes:
   - Condition orders will be triggered when:
   - `STOP`, `STOP_MARKET`:
   - BUY: "MARK_PRICE" >= `stopPrice`
-  - SELL: "MARK_PRICE" = `stopPrice`
+  - SELL: "MARK_PRICE" <= `stopPrice`
+  - `TAKE_PROFIT`, `TAKE_PROFIT_MARKET`:
+  - BUY: "MARK_PRICE" <= `stopPrice`
+  - SELL: "MARK_PRICE" >= `stopPrice`
   - `TRAILING_STOP_MARKET`:
-  - BUY: the lowest mark price after order placed ``= the lowest mark price
-  - (1 + `callbackRate`)
-  - SELL: the highest mark price after order placed >= `activationPrice`, and the latest mark price = `stopPrice`
-  - SELL: latest price ("MARK_PRICE" or "CONTRACT_PRICE") = `stopPrice`"#, false),
+  - BUY: the lowest mark price after order placed <= `activationPrice`, and the latest mark price >= the lowest mark price * (1 + `callbackRate`)
+  - SELL: the highest mark price after order placed >= `activationPrice`, and the latest mark price <= the highest mark price * (1 - `callbackRate`)
+  - For `TRAILING_STOP_MARKET`, if you got such error code. `{"code": -2021, "msg": "Order would immediately trigger."}` means that the parameters you send do not meet the following requirements:
+  - BUY: `activationPrice` should be smaller than latest mark price.
+  - SELL: `activationPrice` should be larger than latest mark price."#, false),
     )]
     NewCmConditionalOrder(NewCmConditionalOrderArgs),
     #[command(
@@ -3794,7 +3801,6 @@ async fn get_cm_income_history(args: GetCmIncomeHistoryArgs) -> anyhow::Result<(
                 .income_type(args.income_type)
                 .start_time(args.start_time)
                 .end_time(args.end_time)
-                .page(args.page)
                 .limit(args.limit)
                 .recv_window(args.recv_window)
                 .build()?,
@@ -4201,7 +4207,6 @@ async fn get_um_income_history(args: GetUmIncomeHistoryArgs) -> anyhow::Result<(
                 .income_type(args.income_type)
                 .start_time(args.start_time)
                 .end_time(args.end_time)
-                .page(args.page)
                 .limit(args.limit)
                 .recv_window(args.recv_window)
                 .build()?,

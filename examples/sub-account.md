@@ -59,7 +59,15 @@ binance-cli sub-account add-ip-restriction-for-sub-account-api-key --email 123@t
 ### [POST /sapi/v1/sub-account/subAccountApi](https://developers.binance.com/en/docs/catalog/vip-and-institutional-sub-account/api/rest-api/api-management#create-sub-account-api-key) - Create Sub-account API Key (For Master Account) (USER_DATA)
 
 ```bash
-binance-cli sub-account create-sub-account-api-key --email 123@test.com --api-name myKey --status 2 --can-trade true --can-margin-loan-repay false --can-futures-trade false --can-universal-transfer false --can-vanilla-options false --ip-address 69.210.67.14 --third-party-name thirdParty --public-key  --recv-window 5000
+binance-cli sub-account create-sub-account-api-key --email 123@test.com --api-name myKey --status 2 --can-trade true --can-margin-loan-repay false --can-futures-trade false --can-universal-transfer false --can-vanilla-options false --can-fix-api-trading true --can-fix-api-reading false --ip-address 69.210.67.14 --third-party-name thirdParty --public-key  --recv-window 5000
+```
+
+### [POST /sapi/v2/sub-account/subAccountApi](https://developers.binance.com/en/docs/catalog/vip-and-institutional-sub-account/api/rest-api/api-management#create-sub-account-api-key-v2) - Create Sub-account API Key V2 (For Master Account) (USER_DATA)
+
+```bash
+binance-cli sub-account create-sub-account-api-key-v2 --email 123@test.com --api-name my-fix-api --status 2 --can-trade true --can-margin-loan-repay false --can-futures-trade false --can-universal-transfer false --can-vanilla-options false --can-fix-api-trading true --can-fix-api-reading true --ip-address 1.2.3.4 --third-party-name thirdParty --public-key -----BEGIN PUBLIC KEY-----
+MCowBQYDK2VwAyEAptEM59ao3nOD2baduIA830qZU4k4mqfvv7PwHVAfZhg=
+-----END PUBLIC KEY----- --recv-window 5000
 ```
 
 ### [DELETE /sapi/v1/sub-account/subAccountApi/ipRestriction/ipList](https://developers.binance.com/en/docs/catalog/vip-and-institutional-sub-account/api/rest-api/api-management#delete-ip-list-for-asub-account-api-key) - Delete IP List For a Sub-account API Key (For Master Account) (USER_DATA)
@@ -83,7 +91,7 @@ binance-cli sub-account get-ip-restriction-for-a-sub-account-api-key --email 123
 ### [POST /sapi/v1/sub-account/subAccountApiPermission](https://developers.binance.com/en/docs/catalog/vip-and-institutional-sub-account/api/rest-api/api-management#modify-sub-account-api-key-permission) - Modify Sub-account API Key Permission (For Master Account) (USER_DATA)
 
 ```bash
-binance-cli sub-account modify-sub-account-api-key-permission --email 123@test.com --sub-account-api-key k5V49ldtn4tszj6W3hystegdfvmGbqDzjmkCtpTvC0G74WhK7yd4rfCTo4lShf --can-trade true --can-margin-loan-repay false --can-futures-trade true --can-universal-transfer false --can-vanilla-options false --recv-window 5000
+binance-cli sub-account modify-sub-account-api-key-permission --email 123@test.com --sub-account-api-key k5V49ldtn4tszj6W3hystegdfvmGbqDzjmkCtpTvC0G74WhK7yd4rfCTo4lShf --can-trade true --can-margin-loan-repay false --can-futures-trade true --can-universal-transfer false --can-vanilla-options false --can-fix-api-trading true --can-fix-api-reading false --recv-window 5000
 ```
 
 ### [GET /sapi/v1/sub-account/subAccountApi](https://developers.binance.com/en/docs/catalog/vip-and-institutional-sub-account/api/rest-api/api-management#query-sub-account-api-key) - Query Sub-account API Key (For Master Account) (USER_DATA)
